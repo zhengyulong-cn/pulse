@@ -1,0 +1,35 @@
+import Fastify from 'fastify'
+import swagger from '@fastify/swagger'
+import swaggerUi from '@fastify/swagger-ui'
+
+import { healthRoutes } from './routes/health.js'
+
+export const buildApp = () => {
+  const app = Fastify({
+    bodyLimit: Number(process.env.BODY_LIMIT_BYTES ?? 16 * 1024 * 1024),
+    logger: {
+      level: process.env.LOG_LEVEL ?? 'info',
+    },
+    requestIdHeader: 'x-request-id',
+    genReqId: () => crypto.randomUUID(),
+  })
+
+  app.register(swagger, {
+    openapi: {
+      info: {
+        title: 'Pulse Server API',
+        description: 'Pulse Fastify Server API',
+        version: '1.0.0',
+      },
+    },
+  })
+  app.register(swaggerUi, {
+    routePrefix: '/docs',
+    uiConfig: {
+      docExpansion: 'list',
+    },
+  })
+  app.register(healthRoutes)
+
+  return app
+}

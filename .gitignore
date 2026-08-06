@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Tooling and OS files
+.DS_Store
+*.log
+*.tsbuildinfo
