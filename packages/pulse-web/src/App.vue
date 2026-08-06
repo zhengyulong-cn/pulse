@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { Camera } from '@lucide/vue';
+import Layout from "./layouts/Layout.vue";
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 </script>
 
 <template>
-  <p>
-    <Camera :size="48" color="pink" :stroke-width="1" />
-    <VueQueryDevtools />
-  </p>
+  <Layout>
+    <template v-slot:layoutContent>
+      <router-view />
+    </template>
+  </Layout>
+  <VueQueryDevtools />
 </template>
 
 <style scoped></style>

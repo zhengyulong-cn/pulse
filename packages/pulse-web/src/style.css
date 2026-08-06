@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@theme {
+  --color-page: #f8fafc;
+  --color-page-foreground: #020617;
+  --color-header: #09090b;
+  --color-header-foreground: #ffffff;
+  --color-header-muted: #a1a1aa;
+  --color-header-navigation: #e4e4e7;
+  --color-header-border: rgb(255 255 255 / 0.1);
+  --color-header-hover: rgb(255 255 255 / 0.08);
+  --color-brand: #60a5fa;
+  --color-brand-hover: #93c5fd;
+  --color-brand-foreground: #0f172a;
+}

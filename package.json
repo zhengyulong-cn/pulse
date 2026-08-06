@@ -8,6 +8,7 @@
     "pnpm": ">=11.0.0"
   },
   "scripts": {
+    "dev:web": "pnpm --filter pulse-web run dev",
     "dev:fastify": "pnpm --filter pulse-server run dev"
   }
 }
