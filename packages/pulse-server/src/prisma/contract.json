@@ -4,39 +4,81 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
-    "post": {
-      "model": "Post",
+    "tradeRecord": {
+      "model": "TradeRecord",
       "namespace": "public"
     },
-    "user": {
-      "model": "User",
+    "tradingAccount": {
+      "model": "TradingAccount",
       "namespace": "public"
     }
   },
   "domain": {
     "namespaces": {
       "public": {
+        "enum": {
+          "TradeDirection": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "LONG",
+                "value": "LONG"
+              },
+              {
+                "name": "SHORT",
+                "value": "SHORT"
+              }
+            ]
+          }
+        },
         "models": {
-          "Post": {
+          "TradeRecord": {
             "fields": {
-              "authorId": {
+              "accountId": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
                 }
               },
-              "content": {
+              "closePrice": {
                 "nullable": true,
                 "type": {
-                  "codecId": "pg/text@1",
+                  "codecId": "pg/numeric@1",
                   "kind": "scalar"
                 }
               },
-              "createdAt": {
-                "nullable": false,
+              "closeTime": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "direction": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "TradeDirection",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "extraJson": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/json@1",
+                  "kind": "scalar"
+                }
+              },
+              "fee": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
                   "kind": "scalar"
                 }
               },
@@ -47,73 +89,122 @@
                   "kind": "scalar"
                 }
               },
-              "title": {
+              "openPrice": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "openTime": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "quantity": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "realizedPnl": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "underlyingCode": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
-              "updatedAt": {
+              "underlyingName": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/timestamptz@1",
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               }
             },
             "relations": {
-              "author": {
+              "account": {
                 "cardinality": "N:1",
                 "on": {
                   "localFields": [
-                    "authorId"
+                    "accountId"
                   ],
                   "targetFields": [
                     "id"
                   ]
                 },
                 "to": {
-                  "model": "User",
+                  "model": "TradingAccount",
                   "namespace": "public"
                 }
               }
             },
             "storage": {
               "fields": {
-                "authorId": {
-                  "column": "authorId"
+                "accountId": {
+                  "column": "accountId"
                 },
-                "content": {
-                  "column": "content"
+                "closePrice": {
+                  "column": "closePrice"
                 },
-                "createdAt": {
-                  "column": "createdAt"
+                "closeTime": {
+                  "column": "closeTime"
+                },
+                "direction": {
+                  "column": "direction"
+                },
+                "extraJson": {
+                  "column": "extraJson"
+                },
+                "fee": {
+                  "column": "fee"
                 },
                 "id": {
                   "column": "id"
                 },
-                "title": {
-                  "column": "title"
+                "openPrice": {
+                  "column": "openPrice"
                 },
-                "updatedAt": {
-                  "column": "updatedAt"
+                "openTime": {
+                  "column": "openTime"
+                },
+                "quantity": {
+                  "column": "quantity"
+                },
+                "realizedPnl": {
+                  "column": "realizedPnl"
+                },
+                "underlyingCode": {
+                  "column": "underlyingCode"
+                },
+                "underlyingName": {
+                  "column": "underlyingName"
                 }
               },
               "namespaceId": "public",
-              "table": "post"
+              "table": "tradeRecord"
             }
           },
-          "User": {
+          "TradingAccount": {
             "fields": {
-              "createdAt": {
+              "account": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/timestamptz@1",
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
-              "email": {
+              "currency": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
@@ -128,21 +219,7 @@
                 }
               },
               "name": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "updatedAt": {
                 "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz@1",
-                  "kind": "scalar"
-                }
-              },
-              "username": {
-                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -150,45 +227,39 @@
               }
             },
             "relations": {
-              "posts": {
+              "tradeRecords": {
                 "cardinality": "1:N",
                 "on": {
                   "localFields": [
                     "id"
                   ],
                   "targetFields": [
-                    "authorId"
+                    "accountId"
                   ]
                 },
                 "to": {
-                  "model": "Post",
+                  "model": "TradeRecord",
                   "namespace": "public"
                 }
               }
             },
             "storage": {
               "fields": {
-                "createdAt": {
-                  "column": "createdAt"
+                "account": {
+                  "column": "account"
                 },
-                "email": {
-                  "column": "email"
+                "currency": {
+                  "column": "currency"
                 },
                 "id": {
                   "column": "id"
                 },
                 "name": {
                   "column": "name"
-                },
-                "updatedAt": {
-                  "column": "updatedAt"
-                },
-                "username": {
-                  "column": "username"
                 }
               },
               "namespaceId": "public",
-              "table": "user"
+              "table": "tradingAccount"
             }
           }
         }
@@ -200,25 +271,54 @@
       "public": {
         "entries": {
           "table": {
-            "post": {
+            "tradeRecord": {
+              "checks": [
+                {
+                  "column": "direction",
+                  "name": "tradeRecord_direction_check",
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "TradeDirection",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                }
+              ],
               "columns": {
-                "authorId": {
+                "accountId": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
                   "nullable": false
                 },
-                "content": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
+                "closePrice": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
                   "nullable": true
                 },
-                "createdAt": {
+                "closeTime": {
                   "codecId": "pg/timestamptz@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
                   "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "direction": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "TradeDirection",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "extraJson": {
+                  "codecId": "pg/json@1",
+                  "nativeType": "json",
+                  "nullable": true
+                },
+                "fee": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
                   "nullable": false
                 },
                 "id": {
@@ -230,14 +330,34 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
-                "title": {
+                "openPrice": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false
+                },
+                "openTime": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "quantity": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false
+                },
+                "realizedPnl": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": true
+                },
+                "underlyingCode": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
                 },
-                "updatedAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "nativeType": "timestamptz",
+                "underlyingName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": false
                 }
               },
@@ -245,27 +365,35 @@
                 {
                   "source": {
                     "columns": [
-                      "authorId"
+                      "accountId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "post"
+                    "tableName": "tradeRecord"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "user"
+                    "tableName": "tradingAccount"
                   }
                 }
               ],
               "indexes": [
                 {
                   "columns": [
-                    "authorId"
+                    "accountId"
                   ],
-                  "name": "post_authorId_idx_e47547ed",
-                  "prefix": "post_authorId_idx",
+                  "name": "tradeRecord_accountId_idx_cbfb3085",
+                  "prefix": "tradeRecord_accountId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "openTime"
+                  ],
+                  "name": "tradeRecord_openTime_idx_459da85f",
+                  "prefix": "tradeRecord_openTime_idx",
                   "unique": false
                 }
               ],
@@ -276,18 +404,14 @@
               },
               "uniques": []
             },
-            "user": {
+            "tradingAccount": {
               "columns": {
-                "createdAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
-                  "nativeType": "timestamptz",
+                "account": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": false
                 },
-                "email": {
+                "currency": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
@@ -304,17 +428,7 @@
                 "name": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
-                  "nullable": true
-                },
-                "updatedAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "nativeType": "timestamptz",
                   "nullable": false
-                },
-                "username": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
                 }
               },
               "foreignKeys": [],
@@ -327,9 +441,18 @@
               "uniques": [
                 {
                   "columns": [
-                    "email"
+                    "account"
                   ]
                 }
+              ]
+            }
+          },
+          "valueSet": {
+            "TradeDirection": {
+              "kind": "valueSet",
+              "values": [
+                "LONG",
+                "SHORT"
               ]
             }
           }
@@ -338,44 +461,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "7744c762870196749db0d32259d0b86fcccb18461369236a1c469f304f66ca2f"
-  },
-  "execution": {
-    "executionHash": "4abff323cc88151ef9c9a0ec90122cfee6d46814a118cdb66a9fdd94a4123463",
-    "mutations": {
-      "defaults": [
-        {
-          "onCreate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "onUpdate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "updatedAt",
-            "namespace": "public",
-            "table": "post"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "onUpdate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "updatedAt",
-            "namespace": "public",
-            "table": "user"
-          }
-        }
-      ]
-    }
+    "storageHash": "6715453c65fca093a7b6fe92175e61dcc214a3fc140df5f44edd5291c135849a"
   },
   "capabilities": {
     "postgres": {

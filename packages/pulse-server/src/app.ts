@@ -2,7 +2,8 @@ import Fastify from 'fastify'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 
-import { healthRoutes } from './routes/health.js'
+import { registerDatabase } from './plugins/database.js'
+import { routes } from './routes/index.js'
 
 export const buildApp = () => {
   const app = Fastify({
@@ -13,6 +14,8 @@ export const buildApp = () => {
     requestIdHeader: 'x-request-id',
     genReqId: () => crypto.randomUUID(),
   })
+
+  registerDatabase(app)
 
   app.register(swagger, {
     openapi: {
@@ -29,7 +32,7 @@ export const buildApp = () => {
       docExpansion: 'list',
     },
   })
-  app.register(healthRoutes)
+  app.register(routes)
 
   return app
 }

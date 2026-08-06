@@ -1,6 +1,6 @@
 import { markRaw } from "vue"
 import { type RouteRecordRaw } from "vue-router"
-import { ChartNoAxesCombined, Database } from "@lucide/vue"
+import { ChartNoAxesCombined, Database, Wallet } from "@lucide/vue"
 
 export const RouterModules: RouteRecordRaw[] = [
   {
@@ -9,6 +9,14 @@ export const RouterModules: RouteRecordRaw[] = [
     meta: {
       icon: markRaw(ChartNoAxesCombined),
       title: "市场行情",
+    },
+  },
+  {
+    path: "/accounts",
+    component: () => import("@/views/accounts/AccountsRecord.vue"),
+    meta: {
+      icon: markRaw(Wallet),
+      title: "账户",
     },
   },
   {
