@@ -1,45 +1,17 @@
 import type { FastifyPluginAsync } from 'fastify'
-import dayjs from 'dayjs'
-import type { FieldInputTypes } from '../../prisma/contract.js'
+import {
+  tradeRecordService,
+  type CreateTradeRecordBody,
+  type CreateTradeRecordsBatchBody,
+  type TradeRecordQuery,
+  type UpdateTradeRecordBody,
+} from './service.js'
 
 type TradeRecordParams = {
   id: number
 }
 
-type TradeRecordQuery = {
-  accountId?: number
-}
-
-type DecimalInput = number | string
-
-type CreateTradeRecordBody = {
-  accountId: number
-  underlyingName: string
-  underlyingCode: string
-  marketRegion: 'A_SHARE' | 'HONG_KONG' | 'MAINLAND_FUTURES' | 'INTERNATIONAL_FUTURES' | 'FOREX' | 'CRYPTO'
-  direction: 'LONG' | 'SHORT'
-  quantity: DecimalInput
-  openTime: string
-  openPrice: DecimalInput
-  closeTime?: string | null
-  closePrice?: DecimalInput | null
-  realizedPnl?: DecimalInput | null
-  fee: DecimalInput
-  extraJson?: Record<string, unknown> | null
-}
-
-type UpdateTradeRecordBody = Partial<CreateTradeRecordBody>
-type BatchTradeRecordInput = Omit<CreateTradeRecordBody, 'accountId' | 'fee'> & { fee?: DecimalInput }
-type CreateTradeRecordsBatchBody = {
-  accountId: number
-  records: BatchTradeRecordInput[]
-}
-type TradeRecordInput = FieldInputTypes['public']['TradeRecord']
-type TradeRecordUpdateInput = { -readonly [Key in keyof TradeRecordInput]?: TradeRecordInput[Key] }
-
 const decimalSchema = { anyOf: [{ type: 'number' }, { type: 'string', minLength: 1 }] } as const
-
-const parseDateTime = (value: string) => dayjs(value).toDate()
 
 const tradeRecordSchema = {
   type: 'object',
@@ -108,42 +80,6 @@ const idParamsSchema = {
   },
 } as const
 
-const normalizeTradeRecordForCreate = (tradeRecord: CreateTradeRecordBody) => ({
-  accountId: tradeRecord.accountId,
-  underlyingName: tradeRecord.underlyingName,
-  underlyingCode: tradeRecord.underlyingCode,
-  marketRegion: tradeRecord.marketRegion,
-  direction: tradeRecord.direction,
-  quantity: String(tradeRecord.quantity),
-  openTime: parseDateTime(tradeRecord.openTime),
-  openPrice: String(tradeRecord.openPrice),
-  fee: String(tradeRecord.fee),
-  ...(tradeRecord.closeTime === undefined ? {} : { closeTime: tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime) }),
-  ...(tradeRecord.closePrice === undefined ? {} : { closePrice: tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice) }),
-  ...(tradeRecord.realizedPnl === undefined ? {} : { realizedPnl: tradeRecord.realizedPnl === null ? null : String(tradeRecord.realizedPnl) }),
-  ...(tradeRecord.extraJson === undefined ? {} : { extraJson: tradeRecord.extraJson as TradeRecordInput['extraJson'] }),
-})
-
-const normalizeTradeRecordForUpdate = (tradeRecord: UpdateTradeRecordBody): TradeRecordUpdateInput => {
-  const normalized: TradeRecordUpdateInput = {}
-
-  if (tradeRecord.accountId !== undefined) normalized.accountId = tradeRecord.accountId
-  if (tradeRecord.underlyingName !== undefined) normalized.underlyingName = tradeRecord.underlyingName
-  if (tradeRecord.underlyingCode !== undefined) normalized.underlyingCode = tradeRecord.underlyingCode
-  if (tradeRecord.marketRegion !== undefined) normalized.marketRegion = tradeRecord.marketRegion
-  if (tradeRecord.direction !== undefined) normalized.direction = tradeRecord.direction
-  if (tradeRecord.quantity !== undefined) normalized.quantity = String(tradeRecord.quantity)
-  if (tradeRecord.openTime !== undefined) normalized.openTime = parseDateTime(tradeRecord.openTime)
-  if (tradeRecord.openPrice !== undefined) normalized.openPrice = String(tradeRecord.openPrice)
-  if (tradeRecord.closeTime !== undefined) normalized.closeTime = tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime)
-  if (tradeRecord.closePrice !== undefined) normalized.closePrice = tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice)
-  if (tradeRecord.realizedPnl !== undefined) normalized.realizedPnl = tradeRecord.realizedPnl === null ? null : String(tradeRecord.realizedPnl)
-  if (tradeRecord.fee !== undefined) normalized.fee = String(tradeRecord.fee)
-  if (tradeRecord.extraJson !== undefined) normalized.extraJson = tradeRecord.extraJson as TradeRecordInput['extraJson']
-
-  return normalized
-}
-
 export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
   app.get<{ Querystring: TradeRecordQuery }>(
     '/trade-records',
@@ -153,18 +89,22 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
         summary: 'List trade records',
         querystring: {
           type: 'object',
-          properties: { accountId: { type: 'integer', minimum: 1 } },
+          required: ['accountId'],
+          properties: {
+            accountId: { type: 'integer', minimum: 1 },
+            keyword: { type: 'string', minLength: 1 },
+            marketRegion: { type: 'string', enum: ['A_SHARE', 'HONG_KONG', 'MAINLAND_FUTURES', 'INTERNATIONAL_FUTURES', 'FOREX', 'CRYPTO'] },
+            pnl: { type: 'string', enum: ['PROFIT', 'LOSS', 'BREAKEVEN', 'UNSETTLED'] },
+            openDateStart: { type: 'string', format: 'date' },
+            openDateEnd: { type: 'string', format: 'date' },
+            sortBy: { type: 'string', enum: ['openTime', 'closeTime'] },
+            sortOrder: { type: 'string', enum: ['asc', 'desc'] },
+          },
         },
         response: { 200: { type: 'array', items: tradeRecordSchema } },
       },
     },
-    async (request) => {
-      const tradeRecords = request.query.accountId === undefined
-        ? app.db.orm.public.TradeRecord.orderBy((tradeRecord) => tradeRecord.openTime.desc())
-        : app.db.orm.public.TradeRecord.where({ accountId: request.query.accountId }).orderBy((tradeRecord) => tradeRecord.openTime.desc())
-
-      return tradeRecords.all()
-    },
+    async (request) => tradeRecordService.list(app.db, request.query),
   )
 
   app.get<{ Params: TradeRecordParams }>(
@@ -178,7 +118,7 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const tradeRecord = await app.db.orm.public.TradeRecord.where({ id: request.params.id }).first()
+      const tradeRecord = await tradeRecordService.findById(app.db, request.params.id)
 
       if (!tradeRecord) {
         return reply.code(404).send({ message: 'Trade record not found.' })
@@ -215,17 +155,9 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const account = await app.db.orm.public.TradingAccount.where({ id: request.body.accountId }).first()
+      const tradeRecords = await tradeRecordService.createBatch(app.db, request.body)
 
-      if (!account) {
-        return reply.code(404).send({ message: 'Trading account not found.' })
-      }
-
-      const tradeRecords = await Promise.all(
-        request.body.records.map((tradeRecord) => app.db.orm.public.TradeRecord.create(
-          normalizeTradeRecordForCreate({ ...tradeRecord, accountId: request.body.accountId, fee: tradeRecord.fee ?? '0' }),
-        )),
-      )
+      if (!tradeRecords) return reply.code(404).send({ message: 'Trading account not found.' })
 
       return reply.code(201).send(tradeRecords)
     },
@@ -246,13 +178,9 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const account = await app.db.orm.public.TradingAccount.where({ id: request.body.accountId }).first()
+      const tradeRecord = await tradeRecordService.create(app.db, request.body)
 
-      if (!account) {
-        return reply.code(404).send({ message: 'Trading account not found.' })
-      }
-
-      const tradeRecord = await app.db.orm.public.TradeRecord.create(normalizeTradeRecordForCreate(request.body))
+      if (!tradeRecord) return reply.code(404).send({ message: 'Trading account not found.' })
       return reply.code(201).send(tradeRecord)
     },
   )
@@ -269,23 +197,12 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      if (request.body.accountId !== undefined) {
-        const account = await app.db.orm.public.TradingAccount.where({ id: request.body.accountId }).first()
+      const result = await tradeRecordService.update(app.db, request.params.id, request.body)
 
-        if (!account) {
-          return reply.code(404).send({ message: 'Trading account not found.' })
-        }
-      }
+      if (result.status === 'account-not-found') return reply.code(404).send({ message: 'Trading account not found.' })
+      if (result.status === 'record-not-found') return reply.code(404).send({ message: 'Trade record not found.' })
 
-      const tradeRecord = await app.db.orm.public.TradeRecord.where({ id: request.params.id }).update(
-        normalizeTradeRecordForUpdate(request.body),
-      )
-
-      if (!tradeRecord) {
-        return reply.code(404).send({ message: 'Trade record not found.' })
-      }
-
-      return tradeRecord
+      return result.tradeRecord
     },
   )
 
@@ -300,7 +217,7 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const tradeRecord = await app.db.orm.public.TradeRecord.where({ id: request.params.id }).delete()
+      const tradeRecord = await tradeRecordService.delete(app.db, request.params.id)
 
       if (!tradeRecord) {
         return reply.code(404).send({ message: 'Trade record not found.' })

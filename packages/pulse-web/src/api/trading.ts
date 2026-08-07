@@ -41,6 +41,16 @@ export type BatchTradeRecordInput = Omit<CreateTradeRecordInput, 'accountId' | '
   fee?: string | number
 }
 
+export type TradeRecordReq = {
+  keyword?: string
+  marketRegion?: MarketRegion
+  pnl?: 'PROFIT' | 'LOSS' | 'BREAKEVEN' | 'UNSETTLED'
+  openDateStart?: string
+  openDateEnd?: string
+  sortBy?: 'openTime' | 'closeTime'
+  sortOrder?: 'asc' | 'desc'
+}
+
 export const listTradingAccounts = () => request<TradingAccount[]>('/trading-accounts')
 
 export const createTradingAccount = (payload: TradingAccountInput) =>
@@ -60,8 +70,15 @@ export const updateTradingAccount = (id: number, payload: Partial<TradingAccount
 export const deleteTradingAccount = (id: number) =>
   request<void>(`/trading-accounts/${id}`, { method: 'DELETE' })
 
-export const listTradeRecords = (accountId: number) =>
-  request<TradeRecord[]>(`/trade-records?accountId=${encodeURIComponent(accountId)}`)
+export const listTradeRecords = (accountId: number, query: TradeRecordQuery = {}) => {
+  const searchParams = new URLSearchParams({ accountId: String(accountId) })
+
+  for (const [key, value] of Object.entries(query)) {
+    if (value) searchParams.set(key, value)
+  }
+
+  return request<TradeRecord[]>(`/trade-records?${searchParams}`)
+}
 
 export const createTradeRecord = (payload: CreateTradeRecordInput) =>
   request<TradeRecord>('/trade-records', {

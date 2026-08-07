@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import { useQuery } from '@tanstack/vue-query'
 import { ElMessage } from 'element-plus'
-import { CalendarDays, CircleDollarSign, Filter, ListChecks, Plus, RefreshCw, TrendingDown, TrendingUp, Trophy, WalletCards } from '@lucide/vue'
+import { CalendarDays, CircleDollarSign, ListChecks, Plus, RefreshCw, TrendingDown, TrendingUp, Trophy, WalletCards } from '@lucide/vue'
 
 import {
   listTradeRecords,
   listTradingAccounts,
   type MarketRegion,
   type TradeRecord,
+  type TradeRecordReq,
 } from '@/api/trading'
 import AccountConfigDialog from './components/AccountConfigDialog.vue'
 import BatchTradeRecordDialog from './components/BatchTradeRecordDialog.vue'
@@ -36,12 +37,28 @@ const accountDialogVisible = ref(false)
 const recordDialogVisible = ref(false)
 const batchRecordDialogVisible = ref(false)
 const editingRecord = ref<TradeRecord>()
+const debouncedKeyword = ref('')
+const sort = reactive({
+  by: 'openTime' as NonNullable<TradeRecordReq['sortBy']>,
+  order: 'desc' as NonNullable<TradeRecordReq['sortOrder']>,
+})
 const filters = reactive({
   keyword: '',
   marketRegion: '' as MarketRegion | '',
   pnl: '' as PnlFilter,
   openDateRange: [] as string[],
 })
+let keywordDebounceTimer: ReturnType<typeof setTimeout> | undefined
+
+const tradeRecordReq = computed<TradeRecordReq>(() => ({
+  keyword: debouncedKeyword.value || undefined,
+  marketRegion: filters.marketRegion || undefined,
+  pnl: filters.pnl || undefined,
+  openDateStart: filters.openDateRange[0],
+  openDateEnd: filters.openDateRange[1],
+  sortBy: sort.by,
+  sortOrder: sort.order,
+}))
 
 const accountsQuery = useQuery({
   queryKey: ['trading-accounts'],
@@ -49,9 +66,23 @@ const accountsQuery = useQuery({
 })
 
 const tradeRecordsQuery = useQuery({
-  queryKey: computed(() => ['trade-records', selectedAccountId.value]),
-  queryFn: () => listTradeRecords(selectedAccountId.value!),
+  queryKey: computed(() => ['trade-records', selectedAccountId.value, tradeRecordReq.value]),
+  queryFn: () => listTradeRecords(selectedAccountId.value!, tradeRecordReq.value),
   enabled: computed(() => selectedAccountId.value !== undefined),
+})
+
+watch(
+  () => filters.keyword,
+  (keyword) => {
+    if (keywordDebounceTimer) clearTimeout(keywordDebounceTimer)
+    keywordDebounceTimer = setTimeout(() => {
+      debouncedKeyword.value = keyword.trim()
+    }, 300)
+  },
+)
+
+onBeforeUnmount(() => {
+  if (keywordDebounceTimer) clearTimeout(keywordDebounceTimer)
 })
 
 watch(
@@ -67,38 +98,7 @@ const selectedAccount = computed(() =>
   accountsQuery.data.value?.find((account) => account.id === selectedAccountId.value),
 )
 
-const includesIgnoreCase = (value: string, keyword: string) =>
-  value.toLocaleLowerCase().includes(keyword.trim().toLocaleLowerCase())
-
-const matchesPnl = (record: TradeRecord, filter: PnlFilter) => {
-  if (filter === '') return true
-  if (record.realizedPnl === null) return filter === 'UNSETTLED'
-
-  const pnl = Number(record.realizedPnl)
-  if (filter === 'PROFIT') return pnl > 0
-  if (filter === 'LOSS') return pnl < 0
-  return pnl === 0
-}
-
-const filteredTradeRecords = computed(() => {
-  const [startDate, endDate] = filters.openDateRange
-
-  return (tradeRecordsQuery.data.value ?? []).filter((record) => {
-    if (
-      filters.keyword
-      && !includesIgnoreCase(record.underlyingName, filters.keyword)
-      && !includesIgnoreCase(record.underlyingCode, filters.keyword)
-    ) return false
-    if (filters.marketRegion && record.marketRegion !== filters.marketRegion) return false
-    if (!matchesPnl(record, filters.pnl)) return false
-
-    const openTime = dayjs(record.openTime)
-    if (startDate && openTime.isBefore(startDate, 'day')) return false
-    if (endDate && openTime.isAfter(endDate, 'day')) return false
-
-    return true
-  })
-})
+const tradeRecords = computed(() => tradeRecordsQuery.data.value ?? [])
 
 const formatDateTime = (value: string | null) =>
   value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
@@ -119,13 +119,13 @@ const formatNumber = (value: number, options?: Intl.NumberFormatOptions) =>
   new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2, ...options }).format(value)
 
 const summary = computed(() => {
-  const settledRecords = filteredTradeRecords.value.filter((record) => record.realizedPnl !== null)
+  const settledRecords = tradeRecords.value.filter((record) => record.realizedPnl !== null)
   const profitableRecords = settledRecords.filter((record) => Number(record.realizedPnl) > 0)
   const losingRecords = settledRecords.filter((record) => Number(record.realizedPnl) < 0)
   const totalPnl = settledRecords.reduce((total, record) => total + Number(record.realizedPnl), 0)
 
   return {
-    total: filteredTradeRecords.value.length,
+    total: tradeRecords.value.length,
     profitable: profitableRecords.length,
     losing: losingRecords.length,
     winRate: settledRecords.length === 0 ? null : (profitableRecords.length / settledRecords.length) * 100,
@@ -138,6 +138,19 @@ const resetFilters = () => {
   filters.marketRegion = ''
   filters.pnl = ''
   filters.openDateRange = []
+  if (keywordDebounceTimer) clearTimeout(keywordDebounceTimer)
+  debouncedKeyword.value = ''
+}
+
+const handleSortChange = ({ prop, order }: { prop: string | null, order: 'ascending' | 'descending' | null }) => {
+  if ((prop === 'openTime' || prop === 'closeTime') && order) {
+    sort.by = prop
+    sort.order = order === 'ascending' ? 'asc' : 'desc'
+    return
+  }
+
+  sort.by = 'openTime'
+  sort.order = 'desc'
 }
 
 const openRecordDialog = () => {
@@ -240,15 +253,15 @@ const handleAccountDeleted = (accountId: number) => {
         </div>
         <el-alert v-if="tradeRecordsQuery.isError.value" class="mb-4" type="error" :title="tradeRecordsQuery.error.value?.message ?? '交易记录加载失败。'" :closable="false" show-icon />
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <el-table v-loading="tradeRecordsQuery.isFetching.value" :data="filteredTradeRecords" class="w-full" empty-text="当前条件下暂无交易记录">
+          <el-table v-loading="tradeRecordsQuery.isFetching.value" :data="tradeRecords" class="w-full" empty-text="当前条件下暂无交易记录" :default-sort="{ prop: 'openTime', order: 'descending' }" @sort-change="handleSortChange">
             <el-table-column prop="id" label="ID" width="64" fixed="left" />
             <el-table-column label="标的名称" min-width="80"><template #default="{ row }"><div class="flex flex-col gap-0.5 font-semibold text-slate-700"><span>{{ row.underlyingName }}</span><small class="text-[11px] font-normal text-slate-400">{{ formatMarketRegion(row.marketRegion) }}</small></div></template></el-table-column>
             <el-table-column prop="underlyingCode" label="代码" width="110" />
             <el-table-column label="方向" width="92"><template #default="{ row }"><span class="inline-flex min-w-14 justify-center rounded-md px-1.5 py-1 text-xs font-bold" :class="row.direction === 'LONG' ? 'bg-rose-50 text-rose-500' : 'bg-teal-50 text-teal-600'">{{ row.direction === 'LONG' ? '↑ 做多' : '↓ 做空' }}</span></template></el-table-column>
             <el-table-column prop="quantity" label="手数" width="84" align="right" />
-            <el-table-column label="开仓时间" width="158"><template #default="{ row }">{{ formatDateTime(row.openTime) }}</template></el-table-column>
+            <el-table-column prop="openTime" label="开仓时间" width="158" sortable="custom"><template #default="{ row }">{{ formatDateTime(row.openTime) }}</template></el-table-column>
             <el-table-column prop="openPrice" label="开仓价" width="100" align="right" />
-            <el-table-column label="平仓时间" width="158"><template #default="{ row }">{{ formatDateTime(row.closeTime) }}</template></el-table-column>
+            <el-table-column prop="closeTime" label="平仓时间" width="158" sortable="custom"><template #default="{ row }">{{ formatDateTime(row.closeTime) }}</template></el-table-column>
             <el-table-column label="平仓价" width="100" align="right"><template #default="{ row }">{{ row.closePrice ?? '—' }}</template></el-table-column>
             <el-table-column label="盈亏" width="112" align="right"><template #default="{ row }"><span class="font-bold" :class="pnlClass(row.realizedPnl)">{{ row.realizedPnl === null ? '未平仓' : `${Number(row.realizedPnl) > 0 ? '+' : ''}${row.realizedPnl}` }}</span></template></el-table-column>
             <el-table-column prop="fee" label="手续费" width="95" align="right" />
