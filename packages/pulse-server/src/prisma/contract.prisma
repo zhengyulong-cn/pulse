@@ -5,6 +5,15 @@ enum TradeDirection {
   SHORT
 }
 
+enum MarketRegion {
+  A_SHARE
+  HONG_KONG
+  MAINLAND_FUTURES
+  INTERNATIONAL_FUTURES
+  FOREX
+  CRYPTO
+}
+
 model TradingAccount {
   id           Int           @id @default(autoincrement())
   name         String
@@ -18,6 +27,7 @@ model TradeRecord {
   accountId      Int
   underlyingName String
   underlyingCode String
+  marketRegion   MarketRegion
   direction      TradeDirection
   quantity       Decimal
   openTime       DateTime

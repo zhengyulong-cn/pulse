@@ -17,6 +17,35 @@
     "namespaces": {
       "public": {
         "enum": {
+          "MarketRegion": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "A_SHARE",
+                "value": "A_SHARE"
+              },
+              {
+                "name": "HONG_KONG",
+                "value": "HONG_KONG"
+              },
+              {
+                "name": "MAINLAND_FUTURES",
+                "value": "MAINLAND_FUTURES"
+              },
+              {
+                "name": "INTERNATIONAL_FUTURES",
+                "value": "INTERNATIONAL_FUTURES"
+              },
+              {
+                "name": "FOREX",
+                "value": "FOREX"
+              },
+              {
+                "name": "CRYPTO",
+                "value": "CRYPTO"
+              }
+            ]
+          },
           "TradeDirection": {
             "codecId": "pg/text@1",
             "members": [
@@ -87,6 +116,19 @@
                 "type": {
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
+                }
+              },
+              "marketRegion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "MarketRegion",
+                  "namespaceId": "public",
+                  "plane": "domain"
                 }
               },
               "openPrice": {
@@ -171,6 +213,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "marketRegion": {
+                  "column": "marketRegion"
                 },
                 "openPrice": {
                   "column": "openPrice"
@@ -274,6 +319,16 @@
             "tradeRecord": {
               "checks": [
                 {
+                  "column": "marketRegion",
+                  "name": "tradeRecord_marketRegion_check",
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "MarketRegion",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                {
                   "column": "direction",
                   "name": "tradeRecord_direction_check",
                   "valueSet": {
@@ -329,6 +384,17 @@
                   },
                   "nativeType": "int4",
                   "nullable": false
+                },
+                "marketRegion": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "MarketRegion",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 },
                 "openPrice": {
                   "codecId": "pg/numeric@1",
@@ -448,6 +514,17 @@
             }
           },
           "valueSet": {
+            "MarketRegion": {
+              "kind": "valueSet",
+              "values": [
+                "A_SHARE",
+                "HONG_KONG",
+                "MAINLAND_FUTURES",
+                "INTERNATIONAL_FUTURES",
+                "FOREX",
+                "CRYPTO"
+              ]
+            },
             "TradeDirection": {
               "kind": "valueSet",
               "values": [
@@ -461,7 +538,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "6715453c65fca093a7b6fe92175e61dcc214a3fc140df5f44edd5291c135849a"
+    "storageHash": "04731ab37087cf82788e5b4cc447bf5e5cdf75d9952cc886125bd31b70c1b00a"
   },
   "capabilities": {
     "postgres": {

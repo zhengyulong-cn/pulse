@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
+import dayjs from 'dayjs'
 import type { FieldInputTypes } from '../../prisma/contract.js'
 
 type TradeRecordParams = {
@@ -15,6 +16,7 @@ type CreateTradeRecordBody = {
   accountId: number
   underlyingName: string
   underlyingCode: string
+  marketRegion: 'A_SHARE' | 'HONG_KONG' | 'MAINLAND_FUTURES' | 'INTERNATIONAL_FUTURES' | 'FOREX' | 'CRYPTO'
   direction: 'LONG' | 'SHORT'
   quantity: DecimalInput
   openTime: string
@@ -32,14 +34,21 @@ type TradeRecordUpdateInput = { -readonly [Key in keyof TradeRecordInput]?: Trad
 
 const decimalSchema = { anyOf: [{ type: 'number' }, { type: 'string', minLength: 1 }] } as const
 
+const parseDateTime = (value: string) => dayjs(value).toDate()
+
 const tradeRecordSchema = {
   type: 'object',
-  required: ['id', 'accountId', 'underlyingName', 'underlyingCode', 'direction', 'quantity', 'openTime', 'openPrice', 'fee'],
+  required: ['id', 'accountId', 'underlyingName', 'underlyingCode', 'marketRegion', 'direction', 'quantity', 'openTime', 'openPrice', 'fee'],
   properties: {
     id: { type: 'integer' },
     accountId: { type: 'integer' },
     underlyingName: { type: 'string' },
     underlyingCode: { type: 'string' },
+    marketRegion: {
+      type: 'string',
+      enum: ['A_SHARE', 'HONG_KONG', 'MAINLAND_FUTURES', 'INTERNATIONAL_FUTURES', 'FOREX', 'CRYPTO'],
+      description: 'A_SHARE=A股, HONG_KONG=港股, MAINLAND_FUTURES=大陆期货, INTERNATIONAL_FUTURES=国际期货, FOREX=外汇, CRYPTO=加密货币',
+    },
     direction: { type: 'string', enum: ['LONG', 'SHORT'] },
     quantity: decimalSchema,
     openTime: { type: 'string', format: 'date-time' },
@@ -56,6 +65,10 @@ const tradeRecordBodyProperties = {
   accountId: { type: 'integer', minimum: 1 },
   underlyingName: { type: 'string', minLength: 1 },
   underlyingCode: { type: 'string', minLength: 1 },
+  marketRegion: {
+    type: 'string',
+    enum: ['A_SHARE', 'HONG_KONG', 'MAINLAND_FUTURES', 'INTERNATIONAL_FUTURES', 'FOREX', 'CRYPTO'],
+  },
   direction: { type: 'string', enum: ['LONG', 'SHORT'] },
   quantity: decimalSchema,
   openTime: { type: 'string', format: 'date-time' },
@@ -79,12 +92,13 @@ const normalizeTradeRecordForCreate = (tradeRecord: CreateTradeRecordBody) => ({
   accountId: tradeRecord.accountId,
   underlyingName: tradeRecord.underlyingName,
   underlyingCode: tradeRecord.underlyingCode,
+  marketRegion: tradeRecord.marketRegion,
   direction: tradeRecord.direction,
   quantity: String(tradeRecord.quantity),
-  openTime: new Date(tradeRecord.openTime),
+  openTime: parseDateTime(tradeRecord.openTime),
   openPrice: String(tradeRecord.openPrice),
   fee: String(tradeRecord.fee),
-  ...(tradeRecord.closeTime === undefined ? {} : { closeTime: tradeRecord.closeTime === null ? null : new Date(tradeRecord.closeTime) }),
+  ...(tradeRecord.closeTime === undefined ? {} : { closeTime: tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime) }),
   ...(tradeRecord.closePrice === undefined ? {} : { closePrice: tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice) }),
   ...(tradeRecord.realizedPnl === undefined ? {} : { realizedPnl: tradeRecord.realizedPnl === null ? null : String(tradeRecord.realizedPnl) }),
   ...(tradeRecord.extraJson === undefined ? {} : { extraJson: tradeRecord.extraJson as TradeRecordInput['extraJson'] }),
@@ -96,11 +110,12 @@ const normalizeTradeRecordForUpdate = (tradeRecord: UpdateTradeRecordBody): Trad
   if (tradeRecord.accountId !== undefined) normalized.accountId = tradeRecord.accountId
   if (tradeRecord.underlyingName !== undefined) normalized.underlyingName = tradeRecord.underlyingName
   if (tradeRecord.underlyingCode !== undefined) normalized.underlyingCode = tradeRecord.underlyingCode
+  if (tradeRecord.marketRegion !== undefined) normalized.marketRegion = tradeRecord.marketRegion
   if (tradeRecord.direction !== undefined) normalized.direction = tradeRecord.direction
   if (tradeRecord.quantity !== undefined) normalized.quantity = String(tradeRecord.quantity)
-  if (tradeRecord.openTime !== undefined) normalized.openTime = new Date(tradeRecord.openTime)
+  if (tradeRecord.openTime !== undefined) normalized.openTime = parseDateTime(tradeRecord.openTime)
   if (tradeRecord.openPrice !== undefined) normalized.openPrice = String(tradeRecord.openPrice)
-  if (tradeRecord.closeTime !== undefined) normalized.closeTime = tradeRecord.closeTime === null ? null : new Date(tradeRecord.closeTime)
+  if (tradeRecord.closeTime !== undefined) normalized.closeTime = tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime)
   if (tradeRecord.closePrice !== undefined) normalized.closePrice = tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice)
   if (tradeRecord.realizedPnl !== undefined) normalized.realizedPnl = tradeRecord.realizedPnl === null ? null : String(tradeRecord.realizedPnl)
   if (tradeRecord.fee !== undefined) normalized.fee = String(tradeRecord.fee)
@@ -161,7 +176,7 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
         summary: 'Create a trade record',
         body: {
           type: 'object',
-          required: ['accountId', 'underlyingName', 'underlyingCode', 'direction', 'quantity', 'openTime', 'openPrice', 'fee'],
+          required: ['accountId', 'underlyingName', 'underlyingCode', 'marketRegion', 'direction', 'quantity', 'openTime', 'openPrice', 'fee'],
           properties: tradeRecordBodyProperties,
         },
         response: { 201: tradeRecordSchema },
