@@ -12,6 +12,7 @@ import {
   type TradeRecord,
 } from '@/api/trading'
 import AccountConfigDialog from './components/AccountConfigDialog.vue'
+import BatchTradeRecordDialog from './components/BatchTradeRecordDialog.vue'
 import TradeRecordFormDialog from './components/TradeRecordFormDialog.vue'
 
 type PnlFilter = 'PROFIT' | 'LOSS' | 'BREAKEVEN' | 'UNSETTLED' | ''
@@ -33,6 +34,7 @@ const marketRegions = Object.entries(marketRegionLabels).map(([value, label]) =>
 const selectedAccountId = ref<number>()
 const accountDialogVisible = ref(false)
 const recordDialogVisible = ref(false)
+const batchRecordDialogVisible = ref(false)
 const editingRecord = ref<TradeRecord>()
 const filters = reactive({
   keyword: '',
@@ -148,6 +150,15 @@ const openRecordDialog = () => {
   recordDialogVisible.value = true
 }
 
+const openBatchRecordDialog = () => {
+  if (selectedAccountId.value === undefined) {
+    ElMessage.warning('请先选择交易账户。')
+    return
+  }
+
+  batchRecordDialogVisible.value = true
+}
+
 const refreshAccounts = async () => {
   await accountsQuery.refetch()
 }
@@ -195,6 +206,7 @@ const handleAccountDeleted = (accountId: number) => {
           <el-button class="!h-9 !rounded-lg !border-slate-200 !font-semibold !text-slate-600" @click="accountDialogVisible = true"><WalletCards :size="16" />账户配置</el-button>
           <el-button class="!h-9 !rounded-lg !border-slate-200 !font-semibold !text-slate-600" :loading="accountsQuery.isFetching.value" @click="accountsQuery.refetch()"><RefreshCw :size="16" />刷新</el-button>
           <el-button type="primary" class="!h-9 !rounded-lg !font-semibold" :disabled="selectedAccountId === undefined" @click="openRecordDialog"><Plus :size="17" />新增记录</el-button>
+          <el-button type="primary" plain class="!h-9 !rounded-lg !font-semibold" :disabled="selectedAccountId === undefined" @click="openBatchRecordDialog"><Plus :size="17" />批量新增记录</el-button>
         </div>
       </header>
 
@@ -261,6 +273,11 @@ const handleAccountDeleted = (accountId: number) => {
       :account="selectedAccount"
       :record="editingRecord"
       :market-regions="marketRegions"
+      @saved="refreshTradeRecords"
+    />
+    <BatchTradeRecordDialog
+      v-model="batchRecordDialogVisible"
+      :account="selectedAccount"
       @saved="refreshTradeRecords"
     />
   </section>

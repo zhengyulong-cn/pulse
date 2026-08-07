@@ -37,6 +37,9 @@ export type TradeRecord = {
 }
 
 export type CreateTradeRecordInput = Omit<TradeRecord, 'id'>
+export type BatchTradeRecordInput = Omit<CreateTradeRecordInput, 'accountId' | 'fee'> & {
+  fee?: string | number
+}
 
 export const listTradingAccounts = () => request<TradingAccount[]>('/trading-accounts')
 
@@ -65,6 +68,13 @@ export const createTradeRecord = (payload: CreateTradeRecordInput) =>
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+  })
+
+export const createTradeRecordsBatch = (accountId: number, records: BatchTradeRecordInput[]) =>
+  request<TradeRecord[]>('/trade-records/batch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accountId, records }),
   })
 
 export const updateTradeRecord = (id: number, payload: Partial<CreateTradeRecordInput>) =>
