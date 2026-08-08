@@ -1,0 +1,7 @@
+fastapi
+tqsdk
+pandas
+redis
+sqlmodel
+uvicorn
+redis

@@ -1,4 +1,5 @@
 {
+  "python.defaultInterpreterPath": "${workspaceFolder}/packages/pulse-data-center/.venv/Scripts/python.exe",
   // Vue 单文件组件
   "[vue]": {
     "editor.tabSize": 2,

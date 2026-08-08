@@ -17,3 +17,10 @@ coverage/
 .DS_Store
 *.log
 *.tsbuildinfo
+
+# python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
