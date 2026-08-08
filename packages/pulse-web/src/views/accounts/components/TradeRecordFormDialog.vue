@@ -6,7 +6,6 @@ import { Landmark } from '@lucide/vue'
 
 import {
   createTradeRecord,
-  type MarketRegion,
   type TradeRecord,
   type TradingAccount,
   updateTradeRecord,
@@ -16,7 +15,6 @@ const props = defineProps<{
   modelValue: boolean
   account?: TradingAccount
   record?: TradeRecord
-  marketRegions: Array<{ value: MarketRegion, label: string }>
 }>()
 
 const emit = defineEmits<{
@@ -32,7 +30,6 @@ const saving = ref(false)
 const form = reactive({
   underlyingName: '',
   underlyingCode: '',
-  marketRegion: 'A_SHARE' as MarketRegion,
   direction: 'LONG' as 'LONG' | 'SHORT',
   quantity: '',
   openTime: dayjs().toDate(),
@@ -52,7 +49,6 @@ const resetForm = () => {
   const record = props.record
   form.underlyingName = record?.underlyingName ?? ''
   form.underlyingCode = record?.underlyingCode ?? ''
-  form.marketRegion = record?.marketRegion ?? 'A_SHARE'
   form.direction = record?.direction ?? 'LONG'
   form.quantity = record?.quantity ?? ''
   form.openTime = record ? dayjs(record.openTime).toDate() : dayjs().toDate()
@@ -87,7 +83,6 @@ const save = async () => {
     accountId: props.account.id,
     underlyingName: form.underlyingName.trim(),
     underlyingCode: form.underlyingCode.trim(),
-    marketRegion: form.marketRegion,
     direction: form.direction,
     quantity: form.quantity,
     openTime: formatApiDateTime(form.openTime),
@@ -129,7 +124,6 @@ watch(visible, (isVisible) => {
       <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-4">
         <el-form-item label="标的名称" required><el-input v-model="form.underlyingName" placeholder="例如：沪深300" /></el-form-item>
         <el-form-item label="标的代码" required><el-input v-model="form.underlyingCode" placeholder="例如：000300" /></el-form-item>
-        <el-form-item label="交易市场区域" required><el-select v-model="form.marketRegion"><el-option v-for="region in marketRegions" :key="region.value" :label="region.label" :value="region.value" /></el-select></el-form-item>
         <el-form-item label="开仓方向" required><el-radio-group v-model="form.direction"><el-radio-button value="LONG">做多</el-radio-button><el-radio-button value="SHORT">做空</el-radio-button></el-radio-group></el-form-item>
         <el-form-item label="手数" required><el-input v-model="form.quantity" inputmode="decimal" placeholder="例如：1" /></el-form-item>
         <el-form-item label="开仓时间" required><el-date-picker v-model="form.openTime" type="datetime" class="!w-full" /></el-form-item>

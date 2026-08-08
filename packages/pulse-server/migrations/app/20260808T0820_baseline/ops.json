@@ -1,0 +1,424 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.tradeRecord",
+    "label": "Create table \"tradeRecord\"",
+    "summary": "Creates table \"tradeRecord\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "tradeRecord"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"tradeRecord\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradeRecord\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"tradeRecord\"",
+        "sql": "CREATE TABLE \"public\".\"tradeRecord\" (\n  \"accountId\" int4 NOT NULL,\n  \"closePrice\" numeric,\n  \"closeTime\" timestamptz,\n  \"direction\" text NOT NULL,\n  \"extraJson\" json,\n  \"fee\" numeric NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"marketRegion\" text NOT NULL,\n  \"openPrice\" numeric NOT NULL,\n  \"openTime\" timestamptz NOT NULL,\n  \"quantity\" numeric NOT NULL,\n  \"realizedPnl\" numeric,\n  \"underlyingCode\" text NOT NULL,\n  \"underlyingName\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"tradeRecord\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradeRecord\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.tradingAccount",
+    "label": "Create table \"tradingAccount\"",
+    "summary": "Creates table \"tradingAccount\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "tradingAccount"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"tradingAccount\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradingAccount\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"tradingAccount\"",
+        "sql": "CREATE TABLE \"public\".\"tradingAccount\" (\n  \"account\" text NOT NULL,\n  \"currency\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"name\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"tradingAccount\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradingAccount\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.tradingExchange",
+    "label": "Create table \"tradingExchange\"",
+    "summary": "Creates table \"tradingExchange\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "tradingExchange"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"tradingExchange\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradingExchange\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"tradingExchange\"",
+        "sql": "CREATE TABLE \"public\".\"tradingExchange\" (\n  \"city\" text NOT NULL,\n  \"countryCode\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"currency\" text NOT NULL,\n  \"englishName\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"isActive\" bool DEFAULT true NOT NULL,\n  \"mic\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"timezone\" text NOT NULL,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"tradingExchange\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradingExchange\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.tradingAccount.tradingAccount_account_key",
+    "label": "Add unique constraint on \"tradingAccount\" (account)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "tradingAccount_account_key",
+        "table": "tradingAccount"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"tradingAccount_account_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradingAccount_account_key",
+          "public",
+          "\"public\".\"tradingAccount\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"tradingAccount_account_key\"",
+        "sql": "ALTER TABLE \"public\".\"tradingAccount\" ADD CONSTRAINT \"tradingAccount_account_key\" UNIQUE (\"account\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"tradingAccount_account_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradingAccount_account_key",
+          "public",
+          "\"public\".\"tradingAccount\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.tradingExchange.tradingExchange_mic_key",
+    "label": "Add unique constraint on \"tradingExchange\" (mic)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "tradingExchange_mic_key",
+        "table": "tradingExchange"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"tradingExchange_mic_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradingExchange_mic_key",
+          "public",
+          "\"public\".\"tradingExchange\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"tradingExchange_mic_key\"",
+        "sql": "ALTER TABLE \"public\".\"tradingExchange\" ADD CONSTRAINT \"tradingExchange_mic_key\" UNIQUE (\"mic\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"tradingExchange_mic_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradingExchange_mic_key",
+          "public",
+          "\"public\".\"tradingExchange\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.tradeRecord.tradeRecord_marketRegion_check",
+    "label": "Add check constraint \"tradeRecord_marketRegion_check\" on \"tradeRecord\".\"marketRegion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "tradeRecord_marketRegion_check",
+        "table": "tradeRecord"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"tradeRecord_marketRegion_check\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradeRecord_marketRegion_check",
+          "public",
+          "\"public\".\"tradeRecord\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"tradeRecord_marketRegion_check\"",
+        "sql": "ALTER TABLE \"public\".\"tradeRecord\" ADD CONSTRAINT \"tradeRecord_marketRegion_check\" CHECK (\"marketRegion\" IN ('A_SHARE', 'HONG_KONG', 'MAINLAND_FUTURES', 'INTERNATIONAL_FUTURES', 'FOREX', 'CRYPTO'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"tradeRecord_marketRegion_check\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradeRecord_marketRegion_check",
+          "public",
+          "\"public\".\"tradeRecord\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.tradeRecord.tradeRecord_direction_check",
+    "label": "Add check constraint \"tradeRecord_direction_check\" on \"tradeRecord\".\"direction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "tradeRecord_direction_check",
+        "table": "tradeRecord"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"tradeRecord_direction_check\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradeRecord_direction_check",
+          "public",
+          "\"public\".\"tradeRecord\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"tradeRecord_direction_check\"",
+        "sql": "ALTER TABLE \"public\".\"tradeRecord\" ADD CONSTRAINT \"tradeRecord_direction_check\" CHECK (\"direction\" IN ('LONG', 'SHORT'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"tradeRecord_direction_check\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradeRecord_direction_check",
+          "public",
+          "\"public\".\"tradeRecord\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.tradeRecord.tradeRecord_accountId_idx_cbfb3085",
+    "label": "Create index \"tradeRecord_accountId_idx_cbfb3085\" on \"tradeRecord\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "tradeRecord_accountId_idx_cbfb3085",
+        "table": "tradeRecord"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"tradeRecord_accountId_idx_cbfb3085\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradeRecord_accountId_idx_cbfb3085\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"tradeRecord_accountId_idx_cbfb3085\"",
+        "sql": "CREATE INDEX \"tradeRecord_accountId_idx_cbfb3085\" ON \"public\".\"tradeRecord\" (\"accountId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"tradeRecord_accountId_idx_cbfb3085\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradeRecord_accountId_idx_cbfb3085\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.tradeRecord.tradeRecord_openTime_idx_459da85f",
+    "label": "Create index \"tradeRecord_openTime_idx_459da85f\" on \"tradeRecord\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "tradeRecord_openTime_idx_459da85f",
+        "table": "tradeRecord"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"tradeRecord_openTime_idx_459da85f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradeRecord_openTime_idx_459da85f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"tradeRecord_openTime_idx_459da85f\"",
+        "sql": "CREATE INDEX \"tradeRecord_openTime_idx_459da85f\" ON \"public\".\"tradeRecord\" (\"openTime\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"tradeRecord_openTime_idx_459da85f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradeRecord_openTime_idx_459da85f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.tradeRecord.tradeRecord_accountId_fkey",
+    "label": "Add foreign key \"tradeRecord_accountId_fkey\" on \"tradeRecord\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "tradeRecord_accountId_fkey",
+        "table": "tradeRecord"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"tradeRecord_accountId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradeRecord_accountId_fkey",
+          "public",
+          "\"public\".\"tradeRecord\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"tradeRecord_accountId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"tradeRecord\"\nADD CONSTRAINT \"tradeRecord_accountId_fkey\"\nFOREIGN KEY (\"accountId\")\nREFERENCES \"public\".\"tradingAccount\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"tradeRecord_accountId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tradeRecord_accountId_fkey",
+          "public",
+          "\"public\".\"tradeRecord\""
+        ]
+      }
+    ]
+  }
+]

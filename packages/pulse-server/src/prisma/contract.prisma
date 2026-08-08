@@ -5,15 +5,6 @@ enum TradeDirection {
   SHORT
 }
 
-enum MarketRegion {
-  A_SHARE
-  HONG_KONG
-  MAINLAND_FUTURES
-  INTERNATIONAL_FUTURES
-  FOREX
-  CRYPTO
-}
-
 model TradingAccount {
   id           Int           @id @default(autoincrement())
   name         String
@@ -22,12 +13,25 @@ model TradingAccount {
   tradeRecords TradeRecord[]
 }
 
+model TradingExchange {
+  id          Int      @id @default(autoincrement())
+  name        String
+  englishName String
+  mic         String   @unique
+  countryCode String
+  city        String
+  timezone    String
+  currency    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+}
+
 model TradeRecord {
   id             Int            @id @default(autoincrement())
   accountId      Int
   underlyingName String
   underlyingCode String
-  marketRegion   MarketRegion
   direction      TradeDirection
   quantity       Decimal
   openTime       DateTime

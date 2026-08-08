@@ -7,7 +7,6 @@ export const importPrompt = `你将从交易软件截图中提取交易记录，
 
 名称：underlyingName
 合约代码：underlyingCode
-市场区域：marketRegion。固定值为MAINLAND_FUTURES
 方向：direction。LONG表示多头，SHORT表示空头。
 手数：quantity
 开仓时间：openTime。为+08时区。
@@ -21,7 +20,6 @@ export const importPrompt = `你将从交易软件截图中提取交易记录，
   {
     "underlyingName": "焦煤2609",
     "underlyingCode": "jm2609",
-    "marketRegion": "MAINLAND_FUTURES",
     "direction": "SHORT",
     "quantity": "12",
     "openTime": "2026-08-06T21:11:11.000+08:00",

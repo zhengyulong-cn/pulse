@@ -1,13 +1,5 @@
 import { request } from './client'
 
-export type MarketRegion =
-  | 'A_SHARE'
-  | 'HONG_KONG'
-  | 'MAINLAND_FUTURES'
-  | 'INTERNATIONAL_FUTURES'
-  | 'FOREX'
-  | 'CRYPTO'
-
 export type TradeDirection = 'LONG' | 'SHORT'
 
 export type TradingAccount = {
@@ -24,7 +16,6 @@ export type TradeRecord = {
   accountId: number
   underlyingName: string
   underlyingCode: string
-  marketRegion: MarketRegion
   direction: TradeDirection
   quantity: string
   openTime: string
@@ -43,7 +34,6 @@ export type BatchTradeRecordInput = Omit<CreateTradeRecordInput, 'accountId' | '
 
 export type TradeRecordReq = {
   keyword?: string
-  marketRegion?: MarketRegion
   pnl?: 'PROFIT' | 'LOSS' | 'BREAKEVEN' | 'UNSETTLED'
   openDateStart?: string
   openDateEnd?: string

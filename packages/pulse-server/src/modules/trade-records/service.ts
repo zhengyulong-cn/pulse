@@ -14,7 +14,6 @@ export type DecimalInput = number | string
 export type TradeRecordQuery = {
   accountId: number
   keyword?: string
-  marketRegion?: 'A_SHARE' | 'HONG_KONG' | 'MAINLAND_FUTURES' | 'INTERNATIONAL_FUTURES' | 'FOREX' | 'CRYPTO'
   pnl?: 'PROFIT' | 'LOSS' | 'BREAKEVEN' | 'UNSETTLED'
   openDateStart?: string
   openDateEnd?: string
@@ -26,7 +25,6 @@ export type CreateTradeRecordBody = {
   accountId: number
   underlyingName: string
   underlyingCode: string
-  marketRegion: 'A_SHARE' | 'HONG_KONG' | 'MAINLAND_FUTURES' | 'INTERNATIONAL_FUTURES' | 'FOREX' | 'CRYPTO'
   direction: 'LONG' | 'SHORT'
   quantity: DecimalInput
   openTime: string
@@ -58,7 +56,6 @@ const normalizeTradeRecordForCreate = (tradeRecord: CreateTradeRecordBody) => ({
   accountId: tradeRecord.accountId,
   underlyingName: tradeRecord.underlyingName,
   underlyingCode: tradeRecord.underlyingCode,
-  marketRegion: tradeRecord.marketRegion,
   direction: tradeRecord.direction,
   quantity: String(tradeRecord.quantity),
   openTime: parseDateTime(tradeRecord.openTime),
@@ -76,7 +73,6 @@ const normalizeTradeRecordForUpdate = (tradeRecord: UpdateTradeRecordBody): Trad
   if (tradeRecord.accountId !== undefined) normalized.accountId = tradeRecord.accountId
   if (tradeRecord.underlyingName !== undefined) normalized.underlyingName = tradeRecord.underlyingName
   if (tradeRecord.underlyingCode !== undefined) normalized.underlyingCode = tradeRecord.underlyingCode
-  if (tradeRecord.marketRegion !== undefined) normalized.marketRegion = tradeRecord.marketRegion
   if (tradeRecord.direction !== undefined) normalized.direction = tradeRecord.direction
   if (tradeRecord.quantity !== undefined) normalized.quantity = String(tradeRecord.quantity)
   if (tradeRecord.openTime !== undefined) normalized.openTime = parseDateTime(tradeRecord.openTime)
@@ -104,7 +100,6 @@ export const tradeRecordService = {
         tradeRecord.underlyingCode.like(`%${keyword}%`),
       ))
     }
-    if (query.marketRegion) tradeRecords = tradeRecords.where({ marketRegion: query.marketRegion })
     if (query.pnl === 'PROFIT') tradeRecords = tradeRecords.where((tradeRecord) => tradeRecord.realizedPnl.gt('0'))
     if (query.pnl === 'LOSS') tradeRecords = tradeRecords.where((tradeRecord) => tradeRecord.realizedPnl.lt('0'))
     if (query.pnl === 'BREAKEVEN') tradeRecords = tradeRecords.where((tradeRecord) => tradeRecord.realizedPnl.eq('0'))

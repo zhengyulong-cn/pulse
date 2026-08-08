@@ -15,17 +15,12 @@ const decimalSchema = { anyOf: [{ type: 'number' }, { type: 'string', minLength:
 
 const tradeRecordSchema = {
   type: 'object',
-  required: ['id', 'accountId', 'underlyingName', 'underlyingCode', 'marketRegion', 'direction', 'quantity', 'openTime', 'openPrice', 'fee'],
+  required: ['id', 'accountId', 'underlyingName', 'underlyingCode', 'direction', 'quantity', 'openTime', 'openPrice', 'fee'],
   properties: {
     id: { type: 'integer' },
     accountId: { type: 'integer' },
     underlyingName: { type: 'string' },
     underlyingCode: { type: 'string' },
-    marketRegion: {
-      type: 'string',
-      enum: ['A_SHARE', 'HONG_KONG', 'MAINLAND_FUTURES', 'INTERNATIONAL_FUTURES', 'FOREX', 'CRYPTO'],
-      description: 'A_SHARE=A股, HONG_KONG=港股, MAINLAND_FUTURES=大陆期货, INTERNATIONAL_FUTURES=国际期货, FOREX=外汇, CRYPTO=加密货币',
-    },
     direction: { type: 'string', enum: ['LONG', 'SHORT'] },
     quantity: decimalSchema,
     openTime: { type: 'string', format: 'date-time' },
@@ -42,10 +37,6 @@ const tradeRecordBodyProperties = {
   accountId: { type: 'integer', minimum: 1 },
   underlyingName: { type: 'string', minLength: 1 },
   underlyingCode: { type: 'string', minLength: 1 },
-  marketRegion: {
-    type: 'string',
-    enum: ['A_SHARE', 'HONG_KONG', 'MAINLAND_FUTURES', 'INTERNATIONAL_FUTURES', 'FOREX', 'CRYPTO'],
-  },
   direction: { type: 'string', enum: ['LONG', 'SHORT'] },
   quantity: decimalSchema,
   openTime: { type: 'string', format: 'date-time' },
@@ -60,7 +51,6 @@ const tradeRecordBodyProperties = {
 const batchTradeRecordProperties = {
   underlyingName: tradeRecordBodyProperties.underlyingName,
   underlyingCode: tradeRecordBodyProperties.underlyingCode,
-  marketRegion: tradeRecordBodyProperties.marketRegion,
   direction: tradeRecordBodyProperties.direction,
   quantity: tradeRecordBodyProperties.quantity,
   openTime: tradeRecordBodyProperties.openTime,
@@ -93,7 +83,6 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
           properties: {
             accountId: { type: 'integer', minimum: 1 },
             keyword: { type: 'string', minLength: 1 },
-            marketRegion: { type: 'string', enum: ['A_SHARE', 'HONG_KONG', 'MAINLAND_FUTURES', 'INTERNATIONAL_FUTURES', 'FOREX', 'CRYPTO'] },
             pnl: { type: 'string', enum: ['PROFIT', 'LOSS', 'BREAKEVEN', 'UNSETTLED'] },
             openDateStart: { type: 'string', format: 'date' },
             openDateEnd: { type: 'string', format: 'date' },
@@ -145,7 +134,7 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
               maxItems: 500,
               items: {
                 type: 'object',
-                required: ['underlyingName', 'underlyingCode', 'marketRegion', 'direction', 'quantity', 'openTime', 'openPrice'],
+                required: ['underlyingName', 'underlyingCode', 'direction', 'quantity', 'openTime', 'openPrice'],
                 properties: batchTradeRecordProperties,
               },
             },
@@ -171,7 +160,7 @@ export const tradeRecordRoutes: FastifyPluginAsync = async (app) => {
         summary: 'Create a trade record',
         body: {
           type: 'object',
-          required: ['accountId', 'underlyingName', 'underlyingCode', 'marketRegion', 'direction', 'quantity', 'openTime', 'openPrice', 'fee'],
+          required: ['accountId', 'underlyingName', 'underlyingCode', 'direction', 'quantity', 'openTime', 'openPrice', 'fee'],
           properties: tradeRecordBodyProperties,
         },
         response: { 201: tradeRecordSchema },

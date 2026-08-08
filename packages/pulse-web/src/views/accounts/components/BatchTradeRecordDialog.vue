@@ -33,7 +33,6 @@ const saving = ref(false)
 const requiredFields: Array<keyof BatchTradeRecordInput> = [
   'underlyingName',
   'underlyingCode',
-  'marketRegion',
   'direction',
   'quantity',
   'openTime',
@@ -111,10 +110,10 @@ watch(visible, (isVisible) => {
     <div class="grid gap-4 lg:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.2fr)]">
       <section class="min-w-0">
         <div class="mb-2 flex items-center justify-between gap-3"><h3 class="font-medium text-slate-800">粘贴 JSON</h3><el-button size="small" @click="copyImportPrompt"><Copy :size="14" />一键复制 prompt</el-button></div>
-        <el-input v-model="rawJson" type="textarea" :rows="23" resize="none" class="font-mono" placeholder='[\n  {\n    "underlyingName": "焦煤2609",\n    "underlyingCode": "jm2609",\n    "marketRegion": "MAINLAND_FUTURES",\n    "direction": "SHORT",\n    "quantity": "12",\n    "openTime": "2026-08-06T21:11:11.000+08:00",\n    "openPrice": "1258.5"\n  }\n]' />
+        <el-input v-model="rawJson" type="textarea" :rows="23" resize="none" class="font-mono" placeholder='[\n  {\n    "underlyingName": "焦煤2609",\n    "underlyingCode": "jm2609",\n    "direction": "SHORT",\n    "quantity": "12",\n    "openTime": "2026-08-06T21:11:11.000+08:00",\n    "openPrice": "1258.5"\n  }\n]' />
         <p v-if="parseError" class="mt-2 text-sm text-rose-600">{{ parseError }}</p>
         <p v-else-if="invalidRowNumbers.length" class="mt-2 text-sm text-rose-600">第 {{ invalidRowNumbers.join('、') }} 条缺少必填字段。</p>
-        <p v-else class="mt-2 text-xs leading-5 text-slate-400">必填：标的名称、代码、市场、方向、手数、开仓时间、开仓价格。手续费缺失时按 0 保存。</p>
+        <p v-else class="mt-2 text-xs leading-5 text-slate-400">必填：标的名称、代码、方向、手数、开仓时间、开仓价格。手续费缺失时按 0 保存。</p>
       </section>
 
       <section class="min-w-0">
@@ -124,7 +123,6 @@ watch(visible, (isVisible) => {
             <el-table-column type="index" label="#" width="54" />
             <el-table-column prop="underlyingName" label="标的名称" min-width="120" />
             <el-table-column prop="underlyingCode" label="代码" width="100" />
-            <el-table-column prop="marketRegion" label="市场" width="145" />
             <el-table-column label="方向" width="76"><template #default="{ row }">{{ row.direction === 'LONG' ? '做多' : row.direction === 'SHORT' ? '做空' : '—' }}</template></el-table-column>
             <el-table-column prop="quantity" label="手数" width="76" align="right" />
             <el-table-column label="开仓时间" width="166"><template #default="{ row }">{{ formatDateTime(row.openTime) }}</template></el-table-column>

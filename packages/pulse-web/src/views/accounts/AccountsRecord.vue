@@ -8,7 +8,6 @@ import { CalendarDays, CircleDollarSign, ListChecks, Plus, RefreshCw, TrendingDo
 import {
   listTradeRecords,
   listTradingAccounts,
-  type MarketRegion,
   type TradeRecord,
   type TradeRecordReq,
 } from '@/api/trading'
@@ -17,20 +16,6 @@ import BatchTradeRecordDialog from './components/BatchTradeRecordDialog.vue'
 import TradeRecordFormDialog from './components/TradeRecordFormDialog.vue'
 
 type PnlFilter = 'PROFIT' | 'LOSS' | 'BREAKEVEN' | 'UNSETTLED' | ''
-
-const marketRegionLabels: Record<MarketRegion, string> = {
-  A_SHARE: 'A股',
-  HONG_KONG: '港股',
-  MAINLAND_FUTURES: '大陆期货',
-  INTERNATIONAL_FUTURES: '国际期货',
-  FOREX: '外汇',
-  CRYPTO: '加密货币',
-}
-
-const marketRegions = Object.entries(marketRegionLabels).map(([value, label]) => ({
-  value: value as MarketRegion,
-  label,
-}))
 
 const selectedAccountId = ref<number>()
 const accountDialogVisible = ref(false)
@@ -44,7 +29,6 @@ const sort = reactive({
 })
 const filters = reactive({
   keyword: '',
-  marketRegion: '' as MarketRegion | '',
   pnl: '' as PnlFilter,
   openDateRange: [] as string[],
 })
@@ -52,7 +36,6 @@ let keywordDebounceTimer: ReturnType<typeof setTimeout> | undefined
 
 const tradeRecordReq = computed<TradeRecordReq>(() => ({
   keyword: debouncedKeyword.value || undefined,
-  marketRegion: filters.marketRegion || undefined,
   pnl: filters.pnl || undefined,
   openDateStart: filters.openDateRange[0],
   openDateEnd: filters.openDateRange[1],
@@ -105,8 +88,6 @@ const formatDateTime = (value: string | null) =>
 
 const formatJson = (value: Record<string, unknown> | null) => (value ? JSON.stringify(value) : '—')
 
-const formatMarketRegion = (value: MarketRegion) => marketRegionLabels[value]
-
 const pnlClass = (value: string | null) => {
   if (value === null) return 'text-slate-400'
   const pnl = Number(value)
@@ -135,7 +116,6 @@ const summary = computed(() => {
 
 const resetFilters = () => {
   filters.keyword = ''
-  filters.marketRegion = ''
   filters.pnl = ''
   filters.openDateRange = []
   if (keywordDebounceTimer) clearTimeout(keywordDebounceTimer)
@@ -242,9 +222,6 @@ const handleAccountDeleted = (accountId: number) => {
         </div>
         <div class="flex flex-row flex-wrap items-center gap-2 mb-5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <el-input v-model="filters.keyword" class="!w-52" clearable placeholder="搜索标的名称或代码" />
-          <el-select v-model="filters.marketRegion" class="!w-32" clearable placeholder="全部市场">
-            <el-option v-for="region in marketRegions" :key="region.value" :label="region.label" :value="region.value" />
-          </el-select>
           <el-select v-model="filters.pnl" class="!w-32" clearable placeholder="全部结果">
             <el-option label="盈利" value="PROFIT" /><el-option label="亏损" value="LOSS" /><el-option label="持平" value="BREAKEVEN" /><el-option label="未平仓" value="UNSETTLED" />
           </el-select>
@@ -255,7 +232,7 @@ const handleAccountDeleted = (accountId: number) => {
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <el-table v-loading="tradeRecordsQuery.isFetching.value" :data="tradeRecords" class="w-full" empty-text="当前条件下暂无交易记录" :default-sort="{ prop: 'openTime', order: 'descending' }" @sort-change="handleSortChange">
             <el-table-column prop="id" label="ID" width="64" fixed="left" />
-            <el-table-column label="标的名称" min-width="80"><template #default="{ row }"><div class="flex flex-col gap-0.5 font-semibold text-slate-700"><span>{{ row.underlyingName }}</span><small class="text-[11px] font-normal text-slate-400">{{ formatMarketRegion(row.marketRegion) }}</small></div></template></el-table-column>
+            <el-table-column prop="underlyingName" label="标的名称" min-width="120" />
             <el-table-column prop="underlyingCode" label="代码" width="110" />
             <el-table-column label="方向" width="92"><template #default="{ row }"><span class="inline-flex min-w-14 justify-center rounded-md px-1.5 py-1 text-xs font-bold" :class="row.direction === 'LONG' ? 'bg-rose-50 text-rose-500' : 'bg-teal-50 text-teal-600'">{{ row.direction === 'LONG' ? '↑ 做多' : '↓ 做空' }}</span></template></el-table-column>
             <el-table-column prop="quantity" label="手数" width="84" align="right" />
@@ -285,7 +262,6 @@ const handleAccountDeleted = (accountId: number) => {
       v-model="recordDialogVisible"
       :account="selectedAccount"
       :record="editingRecord"
-      :market-regions="marketRegions"
       @saved="refreshTradeRecords"
     />
     <BatchTradeRecordDialog

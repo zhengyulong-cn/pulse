@@ -30,7 +30,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'44eba808f40796b1125fccaf8ab16e72564e6f9944b4f2ba86a3fcb4e05773cc'>;
+  StorageHashBase<'c49396a99b32a72a6eaa24363828af5a5c7af8686c527a26182cfe4e045373be'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -51,6 +51,8 @@ export type FieldOutputTypes = {
       readonly accountId: CodecTypes['pg/int4@1']['output'];
       readonly underlyingName: CodecTypes['pg/text@1']['output'];
       readonly underlyingCode: CodecTypes['pg/text@1']['output'];
+      readonly marketRegion:
+        'A_SHARE' | 'HONG_KONG' | 'MAINLAND_FUTURES' | 'INTERNATIONAL_FUTURES' | 'FOREX' | 'CRYPTO';
       readonly direction: 'LONG' | 'SHORT';
       readonly quantity: CodecTypes['pg/numeric@1']['output'];
       readonly openTime: CodecTypes['pg/timestamptz@1']['output'];
@@ -89,6 +91,8 @@ export type FieldInputTypes = {
       readonly accountId: CodecTypes['pg/int4@1']['input'];
       readonly underlyingName: CodecTypes['pg/text@1']['input'];
       readonly underlyingCode: CodecTypes['pg/text@1']['input'];
+      readonly marketRegion:
+        'A_SHARE' | 'HONG_KONG' | 'MAINLAND_FUTURES' | 'INTERNATIONAL_FUTURES' | 'FOREX' | 'CRYPTO';
       readonly direction: 'LONG' | 'SHORT';
       readonly quantity: CodecTypes['pg/numeric@1']['input'];
       readonly openTime: CodecTypes['pg/timestamptz@1']['input'];
@@ -130,6 +134,8 @@ export type StorageColumnTypes = {
       readonly extraJson: CodecTypes['pg/json@1']['output'] | null;
       readonly fee: CodecTypes['pg/numeric@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly marketRegion:
+        'A_SHARE' | 'HONG_KONG' | 'MAINLAND_FUTURES' | 'INTERNATIONAL_FUTURES' | 'FOREX' | 'CRYPTO';
       readonly openPrice: CodecTypes['pg/numeric@1']['output'];
       readonly openTime: CodecTypes['pg/timestamptz@1']['output'];
       readonly quantity: CodecTypes['pg/numeric@1']['output'];
@@ -168,6 +174,8 @@ export type StorageColumnInputTypes = {
       readonly extraJson: CodecTypes['pg/json@1']['input'] | null;
       readonly fee: CodecTypes['pg/numeric@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly marketRegion:
+        'A_SHARE' | 'HONG_KONG' | 'MAINLAND_FUTURES' | 'INTERNATIONAL_FUTURES' | 'FOREX' | 'CRYPTO';
       readonly openPrice: CodecTypes['pg/numeric@1']['input'];
       readonly openTime: CodecTypes['pg/timestamptz@1']['input'];
       readonly quantity: CodecTypes['pg/numeric@1']['input'];
@@ -235,6 +243,11 @@ type ContractBase = Omit<
                   readonly nullable: false;
                 };
                 readonly underlyingCode: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly marketRegion: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
@@ -423,6 +436,17 @@ type ContractBase = Omit<
             };
           };
           readonly valueSet: {
+            readonly MarketRegion: {
+              readonly kind: 'valueSet';
+              readonly values: readonly [
+                'A_SHARE',
+                'HONG_KONG',
+                'MAINLAND_FUTURES',
+                'INTERNATIONAL_FUTURES',
+                'FOREX',
+                'CRYPTO',
+              ];
+            };
             readonly TradeDirection: {
               readonly kind: 'valueSet';
               readonly values: readonly ['LONG', 'SHORT'];
@@ -470,6 +494,10 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly underlyingCode: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly marketRegion: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
@@ -531,6 +559,7 @@ type ContractBase = Omit<
                 readonly accountId: { readonly column: 'accountId' };
                 readonly underlyingName: { readonly column: 'underlyingName' };
                 readonly underlyingCode: { readonly column: 'underlyingCode' };
+                readonly marketRegion: { readonly column: 'marketRegion' };
                 readonly direction: { readonly column: 'direction' };
                 readonly quantity: { readonly column: 'quantity' };
                 readonly openTime: { readonly column: 'openTime' };
@@ -659,6 +688,17 @@ type ContractBase = Omit<
             readonly members: readonly [
               { readonly name: 'LONG'; readonly value: 'LONG' },
               { readonly name: 'SHORT'; readonly value: 'SHORT' },
+            ];
+          };
+          readonly MarketRegion: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'A_SHARE'; readonly value: 'A_SHARE' },
+              { readonly name: 'HONG_KONG'; readonly value: 'HONG_KONG' },
+              { readonly name: 'MAINLAND_FUTURES'; readonly value: 'MAINLAND_FUTURES' },
+              { readonly name: 'INTERNATIONAL_FUTURES'; readonly value: 'INTERNATIONAL_FUTURES' },
+              { readonly name: 'FOREX'; readonly value: 'FOREX' },
+              { readonly name: 'CRYPTO'; readonly value: 'CRYPTO' },
             ];
           };
         };
