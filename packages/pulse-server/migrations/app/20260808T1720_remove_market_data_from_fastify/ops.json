@@ -1,0 +1,39 @@
+[
+  {
+    "id": "dropTable.tradingExchange",
+    "label": "Drop table \"tradingExchange\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "tradingExchange"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"tradingExchange\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradingExchange\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop table \"tradingExchange\"",
+        "sql": "DROP TABLE \"public\".\"tradingExchange\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"tradingExchange\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tradingExchange\""
+        ]
+      }
+    ]
+  }
+]

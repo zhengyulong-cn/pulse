@@ -12,6 +12,8 @@
     "contract:emit": "prisma-next contract emit",
     "db:init": "prisma-next db init",
     "db:sign": "prisma-next db sign",
+    "db:migrate": "prisma-next migrate",
+    "db:migrate:show": "prisma-next migrate --show",
     "db:setup": "pnpm run db:init && pnpm run db:sign"
   },
   "dependencies": {

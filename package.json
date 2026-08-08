@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev:web": "pnpm --filter @pulse/web run dev",
-    "dev:fastify": "pnpm --filter @pulse/server run dev",
+    "dev:server": "pnpm --filter @pulse/server run dev",
+    "dev:data-center": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Set-Location -LiteralPath 'packages/pulse-data-center'; & '.\\.venv\\Scripts\\python.exe' -m fastapi dev main.py\"",
     "contract:emit": "pnpm --filter @pulse/server run contract:emit",
     "db:setup": "pnpm --filter @pulse/server run db:setup"
   }

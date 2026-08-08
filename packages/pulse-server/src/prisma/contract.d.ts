@@ -30,7 +30,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'44eba808f40796b1125fccaf8ab16e72564e6f9944b4f2ba86a3fcb4e05773cc'>;
+  StorageHashBase<'6715453c65fca093a7b6fe92175e61dcc214a3fc140df5f44edd5291c135849a'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -67,19 +67,6 @@ export type FieldOutputTypes = {
       readonly account: CodecTypes['pg/text@1']['output'];
       readonly currency: CodecTypes['pg/text@1']['output'];
     };
-    readonly TradingExchange: {
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly name: CodecTypes['pg/text@1']['output'];
-      readonly englishName: CodecTypes['pg/text@1']['output'];
-      readonly mic: CodecTypes['pg/text@1']['output'];
-      readonly countryCode: CodecTypes['pg/text@1']['output'];
-      readonly city: CodecTypes['pg/text@1']['output'];
-      readonly timezone: CodecTypes['pg/text@1']['output'];
-      readonly currency: CodecTypes['pg/text@1']['output'];
-      readonly isActive: CodecTypes['pg/bool@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
-    };
   };
 };
 export type FieldInputTypes = {
@@ -104,19 +91,6 @@ export type FieldInputTypes = {
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly account: CodecTypes['pg/text@1']['input'];
       readonly currency: CodecTypes['pg/text@1']['input'];
-    };
-    readonly TradingExchange: {
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly name: CodecTypes['pg/text@1']['input'];
-      readonly englishName: CodecTypes['pg/text@1']['input'];
-      readonly mic: CodecTypes['pg/text@1']['input'];
-      readonly countryCode: CodecTypes['pg/text@1']['input'];
-      readonly city: CodecTypes['pg/text@1']['input'];
-      readonly timezone: CodecTypes['pg/text@1']['input'];
-      readonly currency: CodecTypes['pg/text@1']['input'];
-      readonly isActive: CodecTypes['pg/bool@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
   };
 };
@@ -143,19 +117,6 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
     };
-    readonly tradingExchange: {
-      readonly city: CodecTypes['pg/text@1']['output'];
-      readonly countryCode: CodecTypes['pg/text@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly currency: CodecTypes['pg/text@1']['output'];
-      readonly englishName: CodecTypes['pg/text@1']['output'];
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly isActive: CodecTypes['pg/bool@1']['output'];
-      readonly mic: CodecTypes['pg/text@1']['output'];
-      readonly name: CodecTypes['pg/text@1']['output'];
-      readonly timezone: CodecTypes['pg/text@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
-    };
   };
 };
 export type StorageColumnInputTypes = {
@@ -180,19 +141,6 @@ export type StorageColumnInputTypes = {
       readonly currency: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
-    };
-    readonly tradingExchange: {
-      readonly city: CodecTypes['pg/text@1']['input'];
-      readonly countryCode: CodecTypes['pg/text@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly currency: CodecTypes['pg/text@1']['input'];
-      readonly englishName: CodecTypes['pg/text@1']['input'];
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly isActive: CodecTypes['pg/bool@1']['input'];
-      readonly mic: CodecTypes['pg/text@1']['input'];
-      readonly name: CodecTypes['pg/text@1']['input'];
-      readonly timezone: CodecTypes['pg/text@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
   };
 };
@@ -348,79 +296,6 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
-            readonly tradingExchange: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: 'autoincrement()';
-                  };
-                };
-                readonly name: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly englishName: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly mic: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly countryCode: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly city: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly timezone: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly currency: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly isActive: {
-                  readonly nativeType: 'bool';
-                  readonly codecId: 'pg/bool@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
-                  };
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['mic'] }];
-              indexes: readonly [];
-              foreignKeys: readonly [];
-            };
           };
           readonly valueSet: {
             readonly TradeDirection: {
@@ -441,10 +316,6 @@ type ContractBase = Omit<
     readonly tradingAccount: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'TradingAccount';
-    };
-    readonly tradingExchange: {
-      readonly namespace: 'public' & NamespaceId;
-      readonly model: 'TradingExchange';
     };
     readonly tradeRecord: {
       readonly namespace: 'public' & NamespaceId;
@@ -583,72 +454,6 @@ type ContractBase = Omit<
                 readonly name: { readonly column: 'name' };
                 readonly account: { readonly column: 'account' };
                 readonly currency: { readonly column: 'currency' };
-              };
-            };
-          };
-          readonly TradingExchange: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly name: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly englishName: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly mic: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly countryCode: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly city: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly timezone: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly currency: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly isActive: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-            };
-            readonly relations: Record<string, never>;
-            readonly storage: {
-              readonly table: 'tradingExchange';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly name: { readonly column: 'name' };
-                readonly englishName: { readonly column: 'englishName' };
-                readonly mic: { readonly column: 'mic' };
-                readonly countryCode: { readonly column: 'countryCode' };
-                readonly city: { readonly column: 'city' };
-                readonly timezone: { readonly column: 'timezone' };
-                readonly currency: { readonly column: 'currency' };
-                readonly isActive: { readonly column: 'isActive' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
               };
             };
           };

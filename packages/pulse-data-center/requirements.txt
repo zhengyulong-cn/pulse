@@ -5,3 +5,5 @@ redis
 sqlmodel
 uvicorn
 redis
+python-dotenv
+psycopg[binary]
