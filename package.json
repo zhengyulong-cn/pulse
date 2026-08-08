@@ -8,7 +8,9 @@
     "pnpm": ">=11.0.0"
   },
   "scripts": {
-    "dev:web": "pnpm --filter pulse-web run dev",
-    "dev:fastify": "pnpm --filter pulse-server run dev"
+    "dev:web": "pnpm --filter @pulse/web run dev",
+    "dev:fastify": "pnpm --filter @pulse/server run dev",
+    "contract:emit": "pnpm --filter @pulse/server run contract:emit",
+    "db:setup": "pnpm --filter @pulse/server run db:setup"
   }
 }

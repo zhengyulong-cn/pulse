@@ -1,0 +1,44 @@
+// use prisma-next
+
+enum TradeDirection {
+  LONG
+  SHORT
+}
+
+enum MarketRegion {
+  A_SHARE
+  HONG_KONG
+  MAINLAND_FUTURES
+  INTERNATIONAL_FUTURES
+  FOREX
+  CRYPTO
+}
+
+model TradingAccount {
+  id           Int           @id @default(autoincrement())
+  name         String
+  account      String        @unique
+  currency     String
+  tradeRecords TradeRecord[]
+}
+
+model TradeRecord {
+  id             Int            @id @default(autoincrement())
+  accountId      Int
+  underlyingName String
+  underlyingCode String
+  marketRegion   MarketRegion
+  direction      TradeDirection
+  quantity       Decimal
+  openTime       DateTime
+  openPrice      Decimal
+  closeTime      DateTime?
+  closePrice     Decimal?
+  realizedPnl    Decimal?
+  fee            Decimal
+  extraJson      Json?
+  account        TradingAccount @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+  @@index([openTime])
+}
