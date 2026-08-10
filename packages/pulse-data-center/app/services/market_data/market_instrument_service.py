@@ -51,6 +51,17 @@ def get_instrument(session: Session, instrument_id: int) -> MarketInstrument:
     return instrument
 
 
+def get_instruments(session: Session, instrument_ids: list[int]) -> list[MarketInstrument]:
+    instruments_by_id = {
+        instrument.id: instrument
+        for instrument in session.exec(
+            select(MarketInstrument).where(MarketInstrument.id.in_(instrument_ids))
+        )
+        if instrument.id is not None
+    }
+    return [instruments_by_id[instrument_id] for instrument_id in instrument_ids if instrument_id in instruments_by_id]
+
+
 def search_instruments(session: Session, query: str, limit: int) -> list[MarketInstrumentSearchRead]:
     keyword = query.strip()
     if not keyword:

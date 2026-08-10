@@ -45,14 +45,22 @@ def search_market_instruments(
 
 @router.get(
     "",
-    response_model=MarketInstrumentRead,
-    summary="查询金融标的详情",
+    response_model=list[MarketInstrumentRead],
+    summary="批量查询金融标的",
 )
-def get_market_instrument(
-    instrument_id: int = Query(gt=0, alias="instrumentId"),
-    session: Session = Depends(get_session)
-):
-    return _execute(lambda: market_instrument_service.get_instrument(session, instrument_id))
+def get_market_instruments(
+    instrument_ids: str = Query(min_length=1, alias="instrumentIds"),
+    session: Session = Depends(get_session),
+) -> list[MarketInstrumentRead]:
+    try:
+        parsed_instrument_ids = [int(instrument_id) for instrument_id in instrument_ids.split(",")]
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="instrumentIds must be comma-separated integers") from exc
+
+    if any(instrument_id <= 0 for instrument_id in parsed_instrument_ids):
+        raise HTTPException(status_code=422, detail="instrumentIds must contain positive integers")
+
+    return market_instrument_service.get_instruments(session, parsed_instrument_ids)
 
 
 @router.post(

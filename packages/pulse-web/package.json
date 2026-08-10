@@ -15,6 +15,7 @@
     "format": "oxfmt src/"
   },
   "dependencies": {
+    "@imengyu/vue3-context-menu": "^1.5.6",
     "@lucide/vue": "^1.28.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/vue-query": "^5.101.4",

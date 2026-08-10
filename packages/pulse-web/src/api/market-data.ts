@@ -96,8 +96,8 @@ export const listActiveFutureInstruments = () =>
 export const searchMarketInstruments = (query: string, limit = 20) =>
   dataCenterRequest<MarketInstrumentSearchResult[]>(`/api/v1/market-instruments/search?${new URLSearchParams({ query, limit: String(limit) })}`)
 
-export const getMarketInstrument = (instrumentId: number) =>
-  dataCenterRequest<MarketInstrument>(`/api/v1/market-instruments?instrumentId=${instrumentId}`)
+export const getMarketInstruments = (instrumentIds: number[]) =>
+  dataCenterRequest<MarketInstrument[]>(`/api/v1/market-instruments?${new URLSearchParams({ instrumentIds: instrumentIds.join(',') })}`)
 
 export const listLatestKlines = (instrumentIds: number[]) =>
   dataCenterRequest<LatestKline[]>(`/market_data/kline/latest?instrument_ids=${instrumentIds.join(',')}`)

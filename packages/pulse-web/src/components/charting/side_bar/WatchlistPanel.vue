@@ -4,7 +4,8 @@ import { Plus, Search, GripVertical } from '@lucide/vue'
 import { ElMessageBox } from 'element-plus'
 import { computed, ref, watch } from 'vue'
 
-import { getMarketInstrument, searchMarketInstruments, type MarketInstrumentSearchResult } from '@/api/market-data'
+import { getMarketInstruments, searchMarketInstruments, type MarketInstrumentSearchResult } from '@/api/market-data'
+import WatchlistItemContextMenu from './WatchlistItemContextMenu.vue'
 import {
   createWatchlist,
   createWatchlistItem,
@@ -29,6 +30,7 @@ const searchResults = ref<MarketInstrumentSearchResult[]>([])
 const isSearching = ref(false)
 const draggedItemId = ref<number>()
 const dragOverItemId = ref<number>()
+const itemContextMenu = ref<InstanceType<typeof WatchlistItemContextMenu>>()
 
 const watchlistsQuery = useQuery({ queryKey: ['watchlists'], queryFn: listWatchlists })
 const watchlists = computed(() => watchlistsQuery.data.value ?? [])
@@ -38,7 +40,7 @@ const activeInstrumentIds = computed(() => activeWatchlist.value?.items.map((ite
 const instrumentsQuery = useQuery({
   queryKey: computed(() => ['watchlist-instruments', activeInstrumentIds.value]),
   enabled: computed(() => activeInstrumentIds.value.length > 0),
-  queryFn: async () => Promise.all(activeInstrumentIds.value.map(getMarketInstrument)),
+  queryFn: () => getMarketInstruments(activeInstrumentIds.value),
 })
 const instrumentsById = computed(() => new Map((instrumentsQuery.data.value ?? []).map((instrument) => [instrument.id, instrument])))
 
@@ -70,6 +72,18 @@ const clearItemDrag = () => {
   dragOverItemId.value = undefined
 }
 
+const persistItemOrder = async (watchlist: Watchlist, items: WatchlistItem[]) => {
+  const reorderedItems = items.map((item, index) => ({ ...item, sortOrder: index }))
+  queryClient.setQueryData<Watchlist[]>(['watchlists'], (current) => current?.map((entry) =>
+    entry.id === watchlist.id ? { ...entry, items: reorderedItems } : entry,
+  ))
+  try {
+    await Promise.all(reorderedItems.map((item) => updateWatchlistItem(watchlist.id, item.id, { sortOrder: item.sortOrder })))
+  } finally {
+    await refreshWatchlists()
+  }
+}
+
 const dropItem = async (targetItem: WatchlistItem) => {
   const sourceId = draggedItemId.value
   const watchlist = activeWatchlist.value
@@ -83,16 +97,7 @@ const dropItem = async (targetItem: WatchlistItem) => {
 
   const [movedItem] = items.splice(sourceIndex, 1)
   items.splice(targetIndex, 0, movedItem)
-  const reorderedItems = items.map((item, index) => ({ ...item, sortOrder: index }))
-
-  queryClient.setQueryData<Watchlist[]>(['watchlists'], (current) => current?.map((entry) =>
-    entry.id === watchlist.id ? { ...entry, items: reorderedItems } : entry,
-  ))
-  try {
-    await Promise.all(reorderedItems.map((item) => updateWatchlistItem(watchlist.id, item.id, { sortOrder: item.sortOrder })))
-  } finally {
-    await refreshWatchlists()
-  }
+  await persistItemOrder(watchlist, items)
 }
 
 const createList = async () => {
@@ -156,11 +161,30 @@ const saveInstrument = async () => {
   } else {
     await createItemMutation.mutateAsync({ watchlistId: activeWatchlist.value.id, instrumentId: selectedInstrument.value.id })
   }
-  isInstrumentDialogVisible.value = false
 }
 
 const removeItem = async (item: WatchlistItem) => {
   if (activeWatchlist.value) await deleteItemMutation.mutateAsync({ watchlistId: activeWatchlist.value.id, itemId: item.id })
+}
+
+const pinItem = async (item: WatchlistItem) => {
+  const watchlist = activeWatchlist.value
+  if (!watchlist || watchlist.items[0]?.id === item.id) return
+
+  const items = watchlist.items.filter((currentItem) => currentItem.id !== item.id)
+  items.unshift(item)
+  await persistItemOrder(watchlist, items)
+}
+
+const moveItemToWatchlist = async (item: WatchlistItem, targetWatchlist: Watchlist) => {
+  const sourceWatchlist = activeWatchlist.value
+  if (!sourceWatchlist || sourceWatchlist.id === targetWatchlist.id) return
+  if (targetWatchlist.items.some((targetItem) => targetItem.instrumentId === item.instrumentId)) return
+
+  const sortOrder = Math.max(-1, ...targetWatchlist.items.map((targetItem) => targetItem.sortOrder)) + 1
+  await createWatchlistItem(targetWatchlist.id, { instrumentId: item.instrumentId, sortOrder })
+  await deleteWatchlistItem(sourceWatchlist.id, item.id)
+  await refreshWatchlists()
 }
 
 const selectInstrument = (item: WatchlistItem) => {
@@ -174,8 +198,10 @@ const selectInstrument = (item: WatchlistItem) => {
     <header class="flex h-10 items-center justify-between px-3">
       <h2 class="text-sm font-semibold tracking-tight">自选列表</h2>
       <div class="flex items-center gap-1 text-slate-400">
-        <button type="button" class="panel-icon-button" title="添加标的" aria-label="添加标的" @click="openSearch"><Search :size="15" /></button>
-        <button type="button" class="panel-icon-button" title="新建自选列表" aria-label="新建自选列表" @click="createList"><Plus :size="16" /></button>
+        <button type="button" class="flex flex-row items-center gap-x-1 p-1 hover:bg-[#f1f5f9] hover:text-[#334155] hover:cursor-pointer" title="添加标的" aria-label="添加标的" @click="openSearch">
+          <Plus :size="12" />
+          <span class="text-sm">添加标的到自选</span>
+        </button>
       </div>
     </header>
 
@@ -185,8 +211,16 @@ const selectInstrument = (item: WatchlistItem) => {
     </div>
 
     <template v-if="activeWatchlist">
+      <WatchlistItemContextMenu
+        ref="itemContextMenu"
+        :active-watchlist="activeWatchlist"
+        :watchlists="watchlists"
+        @pin="pinItem"
+        @move="moveItemToWatchlist"
+        @remove="removeItem"
+      />
       <div v-if="activeWatchlist.items.length" class="min-h-0 flex-1 overflow-y-auto">
-        <div v-for="item in activeWatchlist.items" :key="item.id" role="button" tabindex="0" class="group relative flex cursor-pointer items-center border-b border-slate-100 px-3 py-2.5 text-left transition-colors hover:bg-blue-50/50 focus:outline-none focus-visible:bg-blue-50" :class="{ 'border-t-2 border-t-blue-400': dragOverItemId === item.id && draggedItemId !== item.id, 'opacity-50': draggedItemId === item.id }" @click="selectInstrument(item)" @keydown.enter="selectInstrument(item)" @dragover.prevent="dragOverItemId = item.id" @drop.prevent="dropItem(item)">
+        <div v-for="item in activeWatchlist.items" :key="item.id" role="button" tabindex="0" class="group relative flex cursor-pointer items-center border-b border-slate-100 px-3 py-2.5 text-left transition-colors hover:bg-blue-50/50 focus:outline-none focus-visible:bg-blue-50" :class="{ 'border-t-2 border-t-blue-400': dragOverItemId === item.id && draggedItemId !== item.id, 'opacity-50': draggedItemId === item.id }" @click="selectInstrument(item)" @contextmenu="itemContextMenu?.open($event, item)" @keydown.enter="selectInstrument(item)" @dragover.prevent="dragOverItemId = item.id" @drop.prevent="dropItem(item)">
           <span class="mr-1 flex cursor-grab touch-none items-center text-slate-300 hover:text-slate-500 active:cursor-grabbing" draggable="true" title="拖动排序" aria-label="拖动排序" @click.stop @dragstart.stop="startItemDrag(item, $event)" @dragend="clearItemDrag"><GripVertical :size="16" /></span>
           <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold leading-4">{{ instrumentsById.get(item.instrumentId)?.name ?? '加载中…' }}</p><p class="mt-1 truncate font-mono text-[11px] leading-3 text-slate-400">{{ instrumentsById.get(item.instrumentId)?.symbol ?? item.instrumentId }}</p></div>
           <div class="mr-1 text-right"><p class="font-mono text-sm leading-4 text-slate-400">—</p><p class="mt-1 text-[10px] leading-3 text-slate-300">暂无行情</p></div>
@@ -197,32 +231,17 @@ const selectInstrument = (item: WatchlistItem) => {
     <div v-else class="flex flex-1 flex-col items-center justify-center gap-3 text-center"><p class="text-sm text-slate-400">创建一个列表开始关注市场</p><button type="button" class="rounded-md bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600" @click="createList">新建自选列表</button></div>
 
     <el-dialog v-model="isInstrumentDialogVisible" :title="editingItem ? '替换自选标的' : '添加自选标的'" width="420px" append-to-body>
-      <el-input v-model="searchKeyword" placeholder="搜索名称或代码" clearable @keyup.enter="searchInstruments"><template #append><el-button :loading="isSearching" @click="searchInstruments">搜索</el-button></template></el-input>
+      <el-input v-model="searchKeyword" placeholder="搜索名称或代码" clearable @input="searchInstruments"></el-input>
       <div class="mt-3 max-h-64 overflow-y-auto rounded-md border border-slate-200">
         <button v-for="instrument in searchResults" :key="instrument.id" type="button" class="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-slate-50" :class="{ 'bg-blue-50': selectedInstrument?.id === instrument.id }" @click="selectedInstrument = instrument"><span><b class="text-sm text-slate-800">{{ instrument.name }}</b><small class="ml-2 font-mono text-slate-500">{{ instrument.symbol }}</small></span><small class="text-slate-400">{{ instrument.exchange_name }}</small></button>
         <p v-if="searchKeyword && !searchResults.length && !isSearching" class="px-3 py-5 text-center text-sm text-slate-400">未找到匹配标的</p>
       </div>
-      <template #footer><el-button @click="isInstrumentDialogVisible = false">取消</el-button><el-button type="primary" :disabled="!selectedInstrument" :loading="createItemMutation.isPending.value || updateItemMutation.isPending.value" @click="saveInstrument">保存</el-button></template>
+      <template #footer><el-button @click="isInstrumentDialogVisible = false">关闭</el-button><el-button type="primary" :disabled="!selectedInstrument" :loading="createItemMutation.isPending.value || updateItemMutation.isPending.value" @click="saveInstrument">{{ editingItem ? '保存' : '添加' }}</el-button></template>
     </el-dialog>
   </div>
 </template>
 
 <style scoped>
-.panel-icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  transition: color 150ms ease, background-color 150ms ease;
-}
-
-.panel-icon-button:hover {
-  color: #334155;
-  background: #f1f5f9;
-}
-
 .scrollbar-none {
   scrollbar-width: none;
 }
