@@ -1,7 +1,8 @@
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '/api'
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '/api/server'
+const dataCenterApiBaseUrl = import.meta.env.VITE_DATA_CENTER_API_BASE_URL ?? '/api/market-data'
 
-export const request = async <Response>(path: string, init?: RequestInit): Promise<Response> => {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+const requestFrom = async <Response>(baseUrl: string, path: string, init?: RequestInit): Promise<Response> => {
+  const response = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
@@ -20,3 +21,9 @@ export const request = async <Response>(path: string, init?: RequestInit): Promi
 
   return response.json() as Promise<Response>
 }
+
+export const request = async <Response>(path: string, init?: RequestInit): Promise<Response> =>
+  requestFrom<Response>(apiBaseUrl, path, init)
+
+export const dataCenterRequest = async <Response>(path: string, init?: RequestInit): Promise<Response> =>
+  requestFrom<Response>(dataCenterApiBaseUrl, path, init)

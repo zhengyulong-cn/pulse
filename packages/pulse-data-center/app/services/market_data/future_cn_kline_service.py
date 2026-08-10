@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Literal
 
 from sqlalchemy.dialects.postgresql import insert
@@ -24,6 +25,19 @@ class FutureCnKlineSyncResult:
     interval: KlineInterval
     received_count: int
     persisted_count: int
+
+
+@dataclass(frozen=True)
+class FutureCnKlineLatest:
+    instrument_id: int
+    interval: KlineInterval
+    date_time: datetime
+    open: object
+    close: object
+    high: object
+    low: object
+    volume: object
+    hold: object
 
 
 def sync_future_cn_kline(
@@ -79,6 +93,36 @@ def sync_future_cn_kline(
         received_count=len(klines),
         persisted_count=len(rows),
     )
+
+
+def list_latest_future_cn_klines(session: Session, instrument_ids: list[int]) -> list[FutureCnKlineLatest]:
+    unique_instrument_ids = list(dict.fromkeys(instrument_ids))
+    if not unique_instrument_ids:
+        return []
+
+    latest_klines: list[FutureCnKlineLatest] = []
+    for interval, (_, kline_model) in KLINE_INTERVAL_CONFIG.items():
+        statement = (
+            select(kline_model)
+            .where(kline_model.instrument_id.in_(unique_instrument_ids))
+            .distinct(kline_model.instrument_id)
+            .order_by(kline_model.instrument_id, kline_model.date_time.desc())
+        )
+        for kline in session.exec(statement):
+            latest_klines.append(
+                FutureCnKlineLatest(
+                    instrument_id=kline.instrument_id,
+                    interval=interval,
+                    date_time=kline.date_time,
+                    open=kline.open,
+                    close=kline.close,
+                    high=kline.high,
+                    low=kline.low,
+                    volume=kline.volume,
+                    hold=kline.hold,
+                )
+            )
+    return latest_klines
 
 
 def _get_instrument(session: Session, provider_symbol: str) -> MarketInstrument:

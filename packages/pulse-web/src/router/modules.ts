@@ -27,6 +27,14 @@ export const RouterModules: RouteRecordRaw[] = [
     },
     children: [
       {
+        path: "/market-data-manager",
+        component: () => import("@/views/managers/market_data_manager/MarketDataManager.vue"),
+        meta: {
+          icon: "",
+          title: "行情数据管理",
+        },
+      },
+      {
         path: "/pine_scripts_manager",
         component: () => import("@/views/managers/pine_scripts_manager/PineScriptsManager.vue"),
         meta: {
