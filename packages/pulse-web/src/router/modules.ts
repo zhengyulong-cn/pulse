@@ -4,8 +4,8 @@ import { ChartNoAxesCombined, Database, Wallet } from "@lucide/vue"
 
 export const RouterModules: RouteRecordRaw[] = [
   {
-    path: "/live",
-    component: () => import("@/views/live/Live.vue"),
+    path: "/chart-space",
+    component: () => import("@/views/chart_space/ChartSpace.vue"),
     meta: {
       icon: markRaw(ChartNoAxesCombined),
       title: "市场行情",
