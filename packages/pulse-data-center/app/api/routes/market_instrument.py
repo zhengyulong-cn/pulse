@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlmodel import Session
 
 from app.db import get_session
@@ -7,6 +7,7 @@ from app.schemas.market_instrument import (
     MarketInstrumentCreate,
     MarketInstrumentExchangeNodeRead,
     MarketInstrumentRead,
+    MarketInstrumentSearchRead,
     MarketInstrumentUpdate,
 )
 from app.services.market_data import market_instrument_service
@@ -23,6 +24,15 @@ def list_market_instruments(
     session: Session = Depends(get_session),
 ):
     return market_instrument_service.list_instruments(session, exchange_id, instrument_type, is_active)
+
+
+@router.get("/search", response_model=list[MarketInstrumentSearchRead])
+def search_market_instruments(
+    query: str = Query(min_length=1, max_length=100),
+    limit: int = Query(default=20, ge=1, le=100),
+    session: Session = Depends(get_session),
+) -> list[MarketInstrumentSearchRead]:
+    return market_instrument_service.search_instruments(session, query, limit)
 
 
 @router.get("/{instrument_id}", response_model=MarketInstrumentRead)

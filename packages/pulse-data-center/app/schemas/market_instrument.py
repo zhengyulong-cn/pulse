@@ -61,6 +61,17 @@ class MarketInstrumentRead(BaseModel):
     updated_at: datetime
 
 
+class MarketInstrumentSearchRead(BaseModel):
+    id: int
+    symbol: str
+    name: str
+    english_name: str | None
+    instrument_type: MarketInstrumentType
+    exchange_mic: str
+    exchange_name: str
+    is_active: bool
+
+
 class MarketInstrumentProductNodeRead(BaseModel):
     id: str
     exchange_id: int

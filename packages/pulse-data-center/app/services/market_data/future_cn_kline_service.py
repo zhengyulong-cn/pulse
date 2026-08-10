@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 
 from sqlalchemy import func
@@ -39,6 +39,17 @@ class FutureCnKlineLatest:
     low: object
     volume: object
     hold: object
+
+
+@dataclass(frozen=True)
+class FutureCnKlineBar:
+    time: int
+    open: float
+    close: float
+    high: float
+    low: float
+    volume: float
+    hold: float
 
 
 def sync_future_cn_kline(
@@ -124,6 +135,46 @@ def list_latest_future_cn_klines(session: Session, instrument_ids: list[int]) ->
                 )
             )
     return latest_klines
+
+
+def list_future_cn_kline_bars(
+    session: Session,
+    instrument_id: int,
+    interval: KlineInterval,
+    from_timestamp: int,
+    to_timestamp: int,
+    limit: int,
+    count_back: int | None = None,
+) -> list[FutureCnKlineBar]:
+    if to_timestamp < from_timestamp:
+        raise ValueError("to must be greater than or equal to from")
+
+    _, kline_model = KLINE_INTERVAL_CONFIG[interval]
+    from_date_time = datetime.fromtimestamp(from_timestamp, timezone.utc).replace(tzinfo=None)
+    to_date_time = datetime.fromtimestamp(to_timestamp, timezone.utc).replace(tzinfo=None)
+    statement = select(kline_model).where(
+        kline_model.instrument_id == instrument_id,
+        kline_model.date_time <= to_date_time,
+    )
+    if count_back is None:
+        statement = statement.where(kline_model.date_time >= from_date_time).limit(limit)
+    else:
+        statement = statement.limit(count_back)
+    statement = statement.order_by(kline_model.date_time.desc())
+    klines = list(session.exec(statement))
+    klines.reverse()
+    return [
+        FutureCnKlineBar(
+            time=int(kline.date_time.replace(tzinfo=timezone.utc).timestamp() * 1000),
+            open=float(kline.open),
+            close=float(kline.close),
+            high=float(kline.high),
+            low=float(kline.low),
+            volume=float(kline.volume),
+            hold=float(kline.hold),
+        )
+        for kline in klines
+    ]
 
 
 def _get_instrument(session: Session, provider_symbol: str) -> tuple[str, MarketInstrument]:

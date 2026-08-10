@@ -4,6 +4,6 @@ import TradingViewChart from '@/components/charting/TradingViewChart.vue'
 
 <template>
   <section class="h-[calc(100vh-2.5rem)] bg-slate-100">
-    <TradingViewChart symbol="DCE.jm2609" interval="1" />
+    <TradingViewChart symbol="jm2701" interval="1" />
   </section>
 </template>

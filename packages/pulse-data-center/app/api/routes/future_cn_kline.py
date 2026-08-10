@@ -5,6 +5,7 @@ from app.db import get_session
 from app.schemas.future_cn_kline import (
     FutureCnKlineBatchSyncJobRead,
     FutureCnKlineBatchSyncRequest,
+    FutureCnKlineBarRead,
     FutureCnKlineLatestRead,
     FutureCnKlineSyncRead,
     FutureCnKlineSyncRequest,
@@ -16,11 +17,50 @@ from app.services.market_data.future_cn_kline_batch_sync_job_service import (
 )
 from app.services.market_data.errors import MarketDataNotFoundError
 from app.services.market_data.future_cn_kline_service import (
+    KlineInterval,
+    list_future_cn_kline_bars,
     list_latest_future_cn_klines,
     sync_future_cn_kline,
 )
 
 router = APIRouter(prefix="/market_data/kline", tags=["Market Data"])
+
+
+@router.get("/bars", response_model=list[FutureCnKlineBarRead])
+def list_future_cn_kline_bars_route(
+    instrument_id: int = Query(gt=0),
+    interval: KlineInterval = Query(),
+    from_timestamp: int = Query(alias="from", ge=0),
+    to_timestamp: int = Query(alias="to", ge=0),
+    limit: int = Query(default=5000, ge=1, le=5000),
+    count_back: int | None = Query(default=None, alias="count_back", ge=1, le=5000),
+    session: Session = Depends(get_session),
+) -> list[FutureCnKlineBarRead]:
+    try:
+        klines = list_future_cn_kline_bars(
+            session,
+            instrument_id,
+            interval,
+            from_timestamp,
+            to_timestamp,
+            limit,
+            count_back,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return [
+        FutureCnKlineBarRead(
+            time=kline.time,
+            open=kline.open,
+            close=kline.close,
+            high=kline.high,
+            low=kline.low,
+            volume=kline.volume,
+            hold=kline.hold,
+        )
+        for kline in klines
+    ]
 
 
 @router.post("/sync/batch", response_model=FutureCnKlineBatchSyncJobRead, status_code=202)

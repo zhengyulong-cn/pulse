@@ -45,6 +45,16 @@ class FutureCnKlineBatchSyncJobRead(BaseModel):
     finished_at: datetime | None
 
 
+class FutureCnKlineBarRead(BaseModel):
+    time: int
+    open: float
+    close: float
+    high: float
+    low: float
+    volume: float
+    hold: float
+
+
 class FutureCnKlineLatestRead(BaseModel):
     instrument_id: int
     interval: Literal["1m", "5m"]

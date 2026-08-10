@@ -2,6 +2,7 @@ from datetime import datetime
 import re
 from typing import Any
 
+from sqlalchemy import or_
 from sqlmodel import Session, select
 
 from app.models import MarketExchange, MarketInstrument, MarketInstrumentType
@@ -10,6 +11,7 @@ from app.schemas.market_instrument import (
     MarketInstrumentExchangeNodeRead,
     MarketInstrumentProductNodeRead,
     MarketInstrumentRead,
+    MarketInstrumentSearchRead,
     MarketInstrumentUpdate,
 )
 from app.services.market_data.errors import MarketDataConflictError, MarketDataNotFoundError
@@ -47,6 +49,44 @@ def get_instrument(session: Session, instrument_id: int) -> MarketInstrument:
     if instrument is None:
         raise MarketDataNotFoundError("Market instrument not found")
     return instrument
+
+
+def search_instruments(session: Session, query: str, limit: int) -> list[MarketInstrumentSearchRead]:
+    keyword = query.strip()
+    if not keyword:
+        return []
+
+    statement = (
+        select(MarketInstrument, MarketExchange)
+        .join(MarketExchange, MarketExchange.id == MarketInstrument.exchange_id)
+        .where(
+            or_(
+                MarketInstrument.symbol.icontains(keyword, autoescape=True),
+                MarketInstrument.name.icontains(keyword, autoescape=True),
+                MarketInstrument.english_name.icontains(keyword, autoescape=True),
+            )
+        )
+        .order_by(
+            MarketInstrument.is_active.desc(),
+            MarketExchange.mic,
+            MarketInstrument.symbol,
+        )
+        .limit(limit)
+    )
+    return [
+        MarketInstrumentSearchRead(
+            id=instrument.id,
+            symbol=instrument.symbol,
+            name=instrument.name,
+            english_name=instrument.english_name,
+            instrument_type=instrument.instrument_type,
+            exchange_mic=exchange.mic,
+            exchange_name=exchange.name,
+            is_active=instrument.is_active,
+        )
+        for instrument, exchange in session.exec(statement)
+        if instrument.id is not None
+    ]
 
 
 def create_instrument(session: Session, payload: MarketInstrumentCreate) -> MarketInstrument:
