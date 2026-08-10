@@ -3,9 +3,16 @@ from sqlmodel import Session
 
 from app.db import get_session
 from app.schemas.future_cn_kline import (
+    FutureCnKlineBatchSyncJobRead,
+    FutureCnKlineBatchSyncRequest,
     FutureCnKlineLatestRead,
     FutureCnKlineSyncRead,
     FutureCnKlineSyncRequest,
+)
+from app.services.market_data.future_cn_kline_batch_sync_job_service import (
+    FutureCnKlineBatchSyncAlreadyRunningError,
+    FutureCnKlineBatchSyncJobNotFoundError,
+    future_cn_kline_batch_sync_job_manager,
 )
 from app.services.market_data.errors import MarketDataNotFoundError
 from app.services.market_data.future_cn_kline_service import (
@@ -14,6 +21,24 @@ from app.services.market_data.future_cn_kline_service import (
 )
 
 router = APIRouter(prefix="/market_data/kline", tags=["Market Data"])
+
+
+@router.post("/sync/batch", response_model=FutureCnKlineBatchSyncJobRead, status_code=202)
+def start_future_cn_kline_batch_sync(payload: FutureCnKlineBatchSyncRequest) -> FutureCnKlineBatchSyncJobRead:
+    try:
+        return future_cn_kline_batch_sync_job_manager.start(payload.symbols, payload.interval)
+    except FutureCnKlineBatchSyncAlreadyRunningError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get("/sync/batch/{job_id}", response_model=FutureCnKlineBatchSyncJobRead)
+def get_future_cn_kline_batch_sync_job(job_id: str) -> FutureCnKlineBatchSyncJobRead:
+    try:
+        return future_cn_kline_batch_sync_job_manager.get(job_id)
+    except FutureCnKlineBatchSyncJobNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.post("/sync", response_model=FutureCnKlineSyncRead)
