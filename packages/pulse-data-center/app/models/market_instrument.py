@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Any
 
 from sqlalchemy import Column, Enum as SqlEnum, Index, JSON, Numeric, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
 from app.models.constants import MARKET_DATA_SCHEMA
@@ -40,6 +41,7 @@ class MarketInstrument(SQLModel, table=True):
     expired_at: datetime | None = None
     price_tick: Decimal | None = Field(default=None, sa_column=Column(Numeric))
     volume_multiple: Decimal | None = Field(default=None, sa_column=Column(Numeric))
+    trading_time: dict[str, list[list[str]]] | None = Field(default=None, sa_column=Column(JSONB))
     is_active: bool = Field(default=True)
     extra_data: dict[str, Any] | None = Field(default=None, sa_column=Column("metadata", JSON))
     created_at: datetime = Field(default_factory=datetime.utcnow)

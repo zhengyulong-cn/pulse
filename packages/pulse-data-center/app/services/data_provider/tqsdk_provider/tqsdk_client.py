@@ -39,5 +39,18 @@ class TqSdkClientManager:
                 raise RuntimeError("初始化TqApi客户端失败")
             yield self._api
 
+    @contextmanager
+    def temporary_session(self):
+        api: TqApi | None = None
+        try:
+            api = TqApi(
+                web_gui=False,
+                auth=TqAuth(settings.tqsdk_username, settings.tqsdk_password),
+            )
+            yield api
+        finally:
+            if api is not None:
+                api.close()
+
 
 tqsdk_client_manager = TqSdkClientManager()

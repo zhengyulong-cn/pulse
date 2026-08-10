@@ -18,6 +18,7 @@ class MarketInstrumentCreate(BaseModel):
     expired_at: datetime | None = None
     price_tick: Decimal | None = Field(default=None, gt=0)
     volume_multiple: Decimal | None = Field(default=None, gt=0)
+    trading_time: dict[str, list[list[str]]] | None = None
     is_active: bool = True
     extra_data: dict[str, Any] | None = None
 
@@ -33,6 +34,7 @@ class MarketInstrumentUpdate(BaseModel):
     expired_at: datetime | None = None
     price_tick: Decimal | None = Field(default=None, gt=0)
     volume_multiple: Decimal | None = Field(default=None, gt=0)
+    trading_time: dict[str, list[list[str]]] | None = None
     is_active: bool | None = None
     extra_data: dict[str, Any] | None = None
 
@@ -51,6 +53,7 @@ class MarketInstrumentRead(BaseModel):
     expired_at: datetime | None
     price_tick: Decimal | None
     volume_multiple: Decimal | None
+    trading_time: dict[str, list[list[str]]] | None
     is_active: bool
     extra_data: dict[str, Any] | None
     created_at: datetime

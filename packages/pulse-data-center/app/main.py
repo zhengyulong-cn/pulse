@@ -13,6 +13,7 @@ from app.middlewares import install_exception_middleware, install_request_middle
 from app.services.data_provider.tqsdk_provider import tqsdk_client_manager
 from app.api.routes.market_exchange import router as market_exchange_router
 from app.api.routes.market_instrument import router as market_instrument_router
+from app.api.routes.market_instrument_sync import router as market_instrument_sync_router
 
 configure_logging()
 logger = get_logger(__name__)
@@ -62,6 +63,7 @@ def create_application() -> FastAPI:
     application.add_exception_handler(RequestValidationError, handle_validation_exception)
     application.include_router(market_exchange_router)
     application.include_router(market_instrument_router)
+    application.include_router(market_instrument_sync_router)
 
     @application.get("/health/database", tags=["Health"])
     def database_health() -> dict[str, str]:

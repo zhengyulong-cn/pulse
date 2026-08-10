@@ -7,3 +7,5 @@ uvicorn
 redis
 python-dotenv
 psycopg[binary]
+httpx
+pytest
