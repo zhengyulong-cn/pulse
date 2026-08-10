@@ -80,6 +80,18 @@ export type KlineSyncResult = {
   persisted_count: number
 }
 
+export type KlineBatchSyncJob = {
+  id: string
+  status: 'running' | 'succeeded' | 'failed'
+  stage: 'syncing' | 'completed' | 'failed'
+  interval: KlineInterval
+  total: number
+  processed: number
+  success_count: number
+  failed_count: number
+  error: string | null
+}
+
 export type FutureCnKlineBar = {
   time: number
   open: number
@@ -125,3 +137,13 @@ export const syncKline = (symbol: string, interval: KlineInterval) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ symbol, interval }),
   })
+
+export const syncKlinesBatch = (symbols: string[], interval: KlineInterval) =>
+  dataCenterRequest<KlineBatchSyncJob>('/market_data/kline/sync/batch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ symbols, interval }),
+  })
+
+export const getKlineBatchSyncJob = (jobId: string) =>
+  dataCenterRequest<KlineBatchSyncJob>(`/market_data/kline/sync/batch/${jobId}`)
