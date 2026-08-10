@@ -11,6 +11,14 @@
     "tradingAccount": {
       "model": "TradingAccount",
       "namespace": "public"
+    },
+    "watchlist": {
+      "model": "Watchlist",
+      "namespace": "public"
+    },
+    "watchlistItem": {
+      "model": "WatchlistItem",
+      "namespace": "public"
     }
   },
   "domain": {
@@ -261,6 +269,130 @@
               "namespaceId": "public",
               "table": "tradingAccount"
             }
+          },
+          "Watchlist": {
+            "fields": {
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sortOrder": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "items": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "watchlistId"
+                  ]
+                },
+                "to": {
+                  "model": "WatchlistItem",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "sortOrder": {
+                  "column": "sortOrder"
+                }
+              },
+              "namespaceId": "public",
+              "table": "watchlist"
+            }
+          },
+          "WatchlistItem": {
+            "fields": {
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "instrumentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "sortOrder": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "watchlistId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "watchlist": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "watchlistId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Watchlist",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "id": {
+                  "column": "id"
+                },
+                "instrumentId": {
+                  "column": "instrumentId"
+                },
+                "sortOrder": {
+                  "column": "sortOrder"
+                },
+                "watchlistId": {
+                  "column": "watchlistId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "watchlistItem"
+            }
           }
         }
       }
@@ -445,6 +577,132 @@
                   ]
                 }
               ]
+            },
+            "watchlist": {
+              "columns": {
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sortOrder": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "sortOrder"
+                  ],
+                  "name": "watchlist_sortOrder_idx_ebf2eac2",
+                  "prefix": "watchlist_sortOrder_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "watchlistItem": {
+              "columns": {
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "instrumentId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "sortOrder": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "watchlistId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "watchlistId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "watchlistItem"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "watchlist"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "watchlistId"
+                  ],
+                  "name": "watchlistItem_watchlistId_idx_bfe7654a",
+                  "prefix": "watchlistItem_watchlistId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "watchlistId",
+                    "sortOrder"
+                  ],
+                  "name": "watchlistItem_watchlistId_sortOrder_idx_04bb0458",
+                  "prefix": "watchlistItem_watchlistId_sortOrder_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "watchlistId",
+                    "instrumentId"
+                  ]
+                }
+              ]
             }
           },
           "valueSet": {
@@ -461,7 +719,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "6715453c65fca093a7b6fe92175e61dcc214a3fc140df5f44edd5291c135849a"
+    "storageHash": "c76b6f6869c30fce0cd60d4b2022b943ebd5a2209dbe9393b63359fe0515930b"
   },
   "capabilities": {
     "postgres": {

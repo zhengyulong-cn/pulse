@@ -32,3 +32,23 @@ model TradeRecord {
   @@index([accountId])
   @@index([openTime])
 }
+
+model Watchlist {
+  id        Int             @id @default(autoincrement())
+  name      String
+  sortOrder Int             @default(0)
+  items     WatchlistItem[]
+
+  @@index([sortOrder])
+}
+
+model WatchlistItem {
+  id          Int       @id @default(autoincrement())
+  watchlistId Int
+  instrumentId Int
+  sortOrder   Int       @default(0)
+  watchlist   Watchlist @relation(fields: [watchlistId], references: [id])
+
+  @@unique([watchlistId, instrumentId])
+  @@index([watchlistId, sortOrder])
+}

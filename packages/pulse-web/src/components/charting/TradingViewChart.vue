@@ -43,6 +43,7 @@ const props = withDefaults(defineProps<{
 const chartContainer = ref<HTMLElement>()
 const chartWidget = shallowRef<ChartWidget>()
 const loadError = ref<string>()
+const selectedSymbol = ref("jm2701")
 let renderVersion = 0
 
 const chartingLibraryPath = `${import.meta.env.BASE_URL}charting_library/`
@@ -192,8 +193,8 @@ const renderChart = async () => {
       container: chartContainer.value,
       library_path: chartingLibraryPath,
       datafeed,
-      symbol: props.symbol,
-      interval: props.interval,
+      symbol: selectedSymbol.value,
+      interval: "5",
       locale: 'zh',
       timezone: 'Asia/Shanghai',
       autosize: true,
@@ -206,7 +207,11 @@ const renderChart = async () => {
 
 onMounted(() => void renderChart())
 
-watch(() => [props.symbol, props.interval], () => void renderChart())
+watch(() => [selectedSymbol.value], () => void renderChart())
+
+const selectWatchlistSymbol = (symbol: string) => {
+  selectedSymbol.value = symbol
+}
 
 onBeforeUnmount(() => {
   renderVersion += 1
@@ -220,6 +225,6 @@ onBeforeUnmount(() => {
     <div v-if="loadError" class="absolute inset-0 flex items-center justify-center bg-white text-sm text-red-600">
       {{ loadError }}
     </div>
-    <ChartSideBar />
+    <ChartSideBar @select-symbol="selectWatchlistSymbol" />
   </div>
 </template>

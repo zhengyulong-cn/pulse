@@ -7,6 +7,7 @@ import WatchlistPanel from './WatchlistPanel.vue'
 type ToolId = 'watchlist'
 
 const activeTool = ref<ToolId | null>(null)
+const emit = defineEmits<{ selectSymbol: [symbol: string] }>()
 
 const tools = [
   { id: 'watchlist' as const, title: '自选列表', icon: List },
@@ -21,7 +22,7 @@ const toggleTool = (toolId: ToolId) => {
   <aside class="flex" aria-label="图表工具栏">
     <section v-if="activeTool" class="w-[280px] border-r border-slate-200 bg-white shadow-md">
       <div class="h-[calc(100%-2.5rem)]">
-        <WatchlistPanel v-if="activeTool === 'watchlist'" />
+        <WatchlistPanel v-if="activeTool === 'watchlist'" @select-symbol="emit('selectSymbol', $event)" />
       </div>
     </section>
     <nav class="flex w-11 flex-col items-center border-r border-slate-200 bg-white/95 py-2 shadow-sm backdrop-blur" aria-label="图表工具">
