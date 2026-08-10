@@ -26,7 +26,11 @@ from app.services.market_data.future_cn_kline_service import (
 router = APIRouter(prefix="/market_data/kline", tags=["Market Data"])
 
 
-@router.get("/bars", response_model=list[FutureCnKlineBarRead])
+@router.get(
+    "/bars",
+    response_model=list[FutureCnKlineBarRead],
+    summary="查询期货 K 线历史数据",
+)
 def list_future_cn_kline_bars_route(
     instrument_id: int = Query(gt=0),
     interval: KlineInterval = Query(),
@@ -63,7 +67,12 @@ def list_future_cn_kline_bars_route(
     ]
 
 
-@router.post("/sync/batch", response_model=FutureCnKlineBatchSyncJobRead, status_code=202)
+@router.post(
+    "/sync/batch",
+    response_model=FutureCnKlineBatchSyncJobRead,
+    status_code=202,
+    summary="启动期货 K 线批量同步",
+)
 def start_future_cn_kline_batch_sync(payload: FutureCnKlineBatchSyncRequest) -> FutureCnKlineBatchSyncJobRead:
     try:
         return future_cn_kline_batch_sync_job_manager.start(payload.symbols, payload.interval)
@@ -73,7 +82,11 @@ def start_future_cn_kline_batch_sync(payload: FutureCnKlineBatchSyncRequest) -> 
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
-@router.get("/sync/batch/{job_id}", response_model=FutureCnKlineBatchSyncJobRead)
+@router.get(
+    "/sync/batch/{job_id}",
+    response_model=FutureCnKlineBatchSyncJobRead,
+    summary="查询期货 K 线批量同步任务",
+)
 def get_future_cn_kline_batch_sync_job(job_id: str) -> FutureCnKlineBatchSyncJobRead:
     try:
         return future_cn_kline_batch_sync_job_manager.get(job_id)
@@ -81,7 +94,11 @@ def get_future_cn_kline_batch_sync_job(job_id: str) -> FutureCnKlineBatchSyncJob
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/sync", response_model=FutureCnKlineSyncRead)
+@router.post(
+    "/sync",
+    response_model=FutureCnKlineSyncRead,
+    summary="同步单个期货合约 K 线",
+)
 def sync_future_cn_kline_route(
     payload: FutureCnKlineSyncRequest,
     session: Session = Depends(get_session),
@@ -102,7 +119,11 @@ def sync_future_cn_kline_route(
     )
 
 
-@router.get("/latest", response_model=list[FutureCnKlineLatestRead])
+@router.get(
+    "/latest",
+    response_model=list[FutureCnKlineLatestRead],
+    summary="查询期货最新 K 线",
+)
 def list_latest_future_cn_klines_route(
     instrument_ids: str = Query(min_length=1),
     session: Session = Depends(get_session),
