@@ -15,3 +15,14 @@ class FutureInstrumentData:
     price_tick: Decimal | None
     volume_multiple: Decimal | None
     trading_time: dict[str, list[list[str]]] | None
+
+
+@dataclass(frozen=True)
+class KlineData:
+    date_time: datetime
+    open: Decimal
+    close: Decimal
+    high: Decimal
+    low: Decimal
+    volume: Decimal
+    hold: Decimal

@@ -3,7 +3,7 @@ from decimal import Decimal, InvalidOperation
 from math import isnan
 from typing import Any, Callable
 
-from app.services.data_provider.provider_models import FutureInstrumentData
+from app.services.data_provider.provider_models import FutureInstrumentData, KlineData
 from app.services.data_provider.tqsdk_provider.tqsdk_client import tqsdk_client_manager
 
 DOMESTIC_FUTURE_EXCHANGE_CODES = ("SHFE", "DCE", "CZCE", "CFFEX", "INE", "GFEX")
@@ -44,6 +44,27 @@ class TqSdkMarketDataProvider:
 
         return futures
 
+    def get_kline_data(
+        self,
+        symbol: str,
+        interval_seconds: int,
+        data_length: int,
+    ) -> list[KlineData]:
+        if interval_seconds <= 0:
+            raise ValueError("Kline interval must be greater than zero")
+        if data_length <= 0:
+            raise ValueError("Kline data length must be greater than zero")
+
+        with tqsdk_client_manager.session() as api:
+            kline_serial = api.get_kline_serial(symbol, interval_seconds, data_length)
+            kline_frame = kline_serial.copy(deep=True)
+
+        return [
+            kline
+            for _, row in kline_frame.iterrows()
+            if (kline := self._to_kline_data(row)) is not None
+        ]
+
     def _split_provider_symbol(self, provider_symbol: str) -> tuple[str, str]:
         if "." not in provider_symbol:
             return "", provider_symbol
@@ -68,6 +89,25 @@ class TqSdkMarketDataProvider:
                 self._get_value(quote, "trading_time_day"),
                 self._get_value(quote, "trading_time_night"),
             ),
+        )
+
+    def _to_kline_data(self, row: Any) -> KlineData | None:
+        date_time = self._to_kline_datetime(self._get_value(row, "datetime"))
+        open_price = self._to_positive_decimal(self._get_value(row, "open"))
+        close_price = self._to_positive_decimal(self._get_value(row, "close"))
+        high_price = self._to_positive_decimal(self._get_value(row, "high"))
+        low_price = self._to_positive_decimal(self._get_value(row, "low"))
+        if None in (date_time, open_price, close_price, high_price, low_price):
+            return None
+
+        return KlineData(
+            date_time=date_time,
+            open=open_price,
+            close=close_price,
+            high=high_price,
+            low=low_price,
+            volume=self._to_non_negative_decimal(self._get_value(row, "volume")),
+            hold=self._to_non_negative_decimal(self._get_value(row, "close_oi")),
         )
 
     @staticmethod
@@ -96,6 +136,18 @@ class TqSdkMarketDataProvider:
         return datetime.fromtimestamp(timestamp, timezone.utc).replace(tzinfo=None)
 
     @staticmethod
+    def _to_kline_datetime(value: Any) -> datetime | None:
+        if value is None:
+            return None
+        try:
+            timestamp_nanoseconds = int(value)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if timestamp_nanoseconds <= 0:
+            return None
+        return datetime.fromtimestamp(timestamp_nanoseconds / 1_000_000_000, timezone.utc).replace(tzinfo=None)
+
+    @staticmethod
     def _to_decimal(value: Any) -> Decimal | None:
         if value is None:
             return None
@@ -104,6 +156,20 @@ class TqSdkMarketDataProvider:
         except (InvalidOperation, ValueError):
             return None
         return result if result.is_finite() and result > 0 else None
+
+    @staticmethod
+    def _to_positive_decimal(value: Any) -> Decimal | None:
+        return TqSdkMarketDataProvider._to_decimal(value)
+
+    @staticmethod
+    def _to_non_negative_decimal(value: Any) -> Decimal:
+        if value is None:
+            return Decimal("0")
+        try:
+            result = Decimal(str(value))
+        except (InvalidOperation, ValueError):
+            return Decimal("0")
+        return result if result.is_finite() and result >= 0 else Decimal("0")
 
     @staticmethod
     def _to_trading_time(day: Any, night: Any) -> dict[str, list[list[str]]] | None:

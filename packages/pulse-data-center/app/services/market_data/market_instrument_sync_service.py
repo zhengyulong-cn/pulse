@@ -7,15 +7,7 @@ from sqlmodel import Session, select
 
 from app.models import MarketExchange, MarketInstrument, MarketInstrumentType
 from app.services.data_provider.provider_models import FutureInstrumentData
-
-TQSDK_EXCHANGE_TO_MIC = {
-    "SHFE": "XSGE",
-    "DCE": "XDCE",
-    "CZCE": "XZCE",
-    "CFFEX": "CCFX",
-    "INE": "XINE",
-    "GFEX": "XGFE",
-}
+from app.services.market_data.tqsdk_exchange_mapping import TQSDK_EXCHANGE_TO_MIC
 
 
 @dataclass(frozen=True)

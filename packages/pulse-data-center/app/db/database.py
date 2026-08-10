@@ -32,7 +32,7 @@ def check_database_connection() -> None:
 
 
 def initialize_market_data_schema() -> None:
-    from app.models import market_exchange, market_instrument
+    from app.models import future_cn_kline, market_exchange, market_instrument
 
     with engine.begin() as connection:
         connection.execute(text("CREATE SCHEMA IF NOT EXISTS market_data"))

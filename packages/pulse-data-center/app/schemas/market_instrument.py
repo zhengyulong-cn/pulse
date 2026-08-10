@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models import MarketInstrumentType
+from app.schemas.market_exchange import MarketExchangeRead
 
 
 class MarketInstrumentCreate(BaseModel):
@@ -58,3 +59,20 @@ class MarketInstrumentRead(BaseModel):
     extra_data: dict[str, Any] | None
     created_at: datetime
     updated_at: datetime
+
+
+class MarketInstrumentProductNodeRead(BaseModel):
+    id: str
+    exchange_id: int
+    product_code: str
+    name: str
+    instrument_type: MarketInstrumentType
+    is_active: bool
+    instrument_count: int
+    children: list[MarketInstrumentRead]
+
+
+class MarketInstrumentExchangeNodeRead(MarketExchangeRead):
+    product_count: int
+    instrument_count: int
+    children: list[MarketInstrumentProductNodeRead]

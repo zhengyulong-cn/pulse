@@ -1,6 +1,6 @@
 from typing import Callable, Protocol
 
-from app.services.data_provider.provider_models import FutureInstrumentData
+from app.services.data_provider.provider_models import FutureInstrumentData, KlineData
 from app.services.data_provider.tqsdk_provider import TqSdkMarketDataProvider
 
 
@@ -9,6 +9,13 @@ class MarketDataProvider(Protocol):
         self,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> list[FutureInstrumentData]: ...
+
+    def get_kline_data(
+        self,
+        symbol: str,
+        interval_seconds: int,
+        data_length: int,
+    ) -> list[KlineData]: ...
 
 
 class DataProviderRegistry:

@@ -3,14 +3,19 @@ from sqlmodel import Session
 
 from app.db import get_session
 from app.models import MarketInstrumentType
-from app.schemas.market_instrument import MarketInstrumentCreate, MarketInstrumentRead, MarketInstrumentUpdate
+from app.schemas.market_instrument import (
+    MarketInstrumentCreate,
+    MarketInstrumentExchangeNodeRead,
+    MarketInstrumentRead,
+    MarketInstrumentUpdate,
+)
 from app.services.market_data import market_instrument_service
 from app.services.market_data.errors import MarketDataConflictError, MarketDataNotFoundError
 
 router = APIRouter(prefix="/api/v1/market-instruments", tags=["Market Instruments"])
 
 
-@router.get("", response_model=list[MarketInstrumentRead])
+@router.get("", response_model=list[MarketInstrumentExchangeNodeRead])
 def list_market_instruments(
     exchange_id: int | None = None,
     instrument_type: MarketInstrumentType | None = None,

@@ -1,0 +1,104 @@
+from dataclasses import dataclass
+from typing import Literal
+
+from sqlalchemy.dialects.postgresql import insert
+from sqlmodel import Session, select
+
+from app.models import FutureCnKline1m, FutureCnKline5m, MarketExchange, MarketInstrument, MarketInstrumentType
+from app.services.data_provider import get_data_provider
+from app.services.market_data.errors import MarketDataNotFoundError
+from app.services.market_data.tqsdk_exchange_mapping import TQSDK_EXCHANGE_TO_MIC
+
+KLINE_DATA_LENGTH = 5000
+KlineInterval = Literal["1m", "5m"]
+KLINE_INTERVAL_CONFIG = {
+    "1m": (60, FutureCnKline1m),
+    "5m": (300, FutureCnKline5m),
+}
+
+
+@dataclass(frozen=True)
+class FutureCnKlineSyncResult:
+    instrument_id: int
+    symbol: str
+    interval: KlineInterval
+    received_count: int
+    persisted_count: int
+
+
+def sync_future_cn_kline(
+    session: Session,
+    provider_symbol: str,
+    interval: KlineInterval,
+) -> FutureCnKlineSyncResult:
+    normalized_provider_symbol = provider_symbol.strip().upper()
+    instrument = _get_instrument(session, normalized_provider_symbol)
+    interval_seconds, kline_model = KLINE_INTERVAL_CONFIG[interval]
+    klines = get_data_provider("tqsdk").get_kline_data(
+        normalized_provider_symbol,
+        interval_seconds,
+        KLINE_DATA_LENGTH,
+    )
+    rows = [
+        {
+            "instrument_id": instrument.id,
+            "date_time": kline.date_time,
+            "open": kline.open,
+            "close": kline.close,
+            "high": kline.high,
+            "low": kline.low,
+            "volume": kline.volume,
+            "hold": kline.hold,
+        }
+        for kline in klines
+    ]
+
+    if rows:
+        statement = insert(kline_model).values(rows)
+        session.exec(
+            statement.on_conflict_do_update(
+                index_elements=["instrument_id", "date_time"],
+                set_={
+                    "open": statement.excluded.open,
+                    "close": statement.excluded.close,
+                    "high": statement.excluded.high,
+                    "low": statement.excluded.low,
+                    "volume": statement.excluded.volume,
+                    "hold": statement.excluded.hold,
+                },
+            )
+        )
+        session.commit()
+
+    if instrument.id is None:
+        raise RuntimeError("Persisted market instrument is missing an ID")
+    return FutureCnKlineSyncResult(
+        instrument_id=instrument.id,
+        symbol=normalized_provider_symbol,
+        interval=interval,
+        received_count=len(klines),
+        persisted_count=len(rows),
+    )
+
+
+def _get_instrument(session: Session, provider_symbol: str) -> MarketInstrument:
+    exchange_code, separator, symbol = provider_symbol.partition(".")
+    if not separator or not symbol:
+        raise ValueError("Symbol must use the TqSdk format EXCHANGE.SYMBOL")
+    mic = TQSDK_EXCHANGE_TO_MIC.get(exchange_code)
+    if mic is None:
+        raise ValueError(f"Unsupported domestic futures exchange: {exchange_code}")
+
+    exchange = session.exec(select(MarketExchange).where(MarketExchange.mic == mic)).first()
+    if exchange is None:
+        raise MarketDataNotFoundError(f"Market exchange not found for MIC: {mic}")
+    instrument = session.exec(
+        select(MarketInstrument).where(
+            MarketInstrument.exchange_id == exchange.id,
+            MarketInstrument.symbol == symbol,
+            MarketInstrument.instrument_type == MarketInstrumentType.FUTURE,
+        )
+    ).first()
+    if instrument is None:
+        raise MarketDataNotFoundError(f"Market instrument not found: {provider_symbol}")
+    return instrument
