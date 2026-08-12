@@ -13,6 +13,14 @@ export const usePineIndicators = () => {
   const renderers = new Map<number, PinePlotRenderer>()
   let chart: PineChartApi | undefined
   let bars: PineChartBar[] = []
+  let replayEndTime: number | undefined
+
+  const renderBars = () => {
+    const visibleBars = replayEndTime === undefined
+      ? bars
+      : bars.filter((bar) => bar.time <= replayEndTime!)
+    renderers.forEach((renderer) => renderer.setBars(visibleBars))
+  }
 
   const activate = (script: PineScript) => {
     if (renderers.has(script.id)) return
@@ -21,7 +29,7 @@ export const usePineIndicators = () => {
     renderers.set(script.id, renderer)
     activeScripts.value = [...activeScripts.value, script]
     if (chart) renderer.setChart(chart)
-    if (bars.length > 0) renderer.setBars(bars)
+    if (bars.length > 0) renderBars()
   }
 
   const deactivate = (scriptId: number) => {
@@ -44,13 +52,21 @@ export const usePineIndicators = () => {
     const barsByTime = new Map(bars.map((bar) => [bar.time, bar]))
     nextBars.forEach((bar) => barsByTime.set(bar.time, bar))
     bars = [...barsByTime.values()].sort((first, second) => first.time - second.time)
-    renderers.forEach((renderer) => renderer.setBars(bars))
+    renderBars()
   }
+
+  const setReplayEndTime = (time: number | undefined) => {
+    replayEndTime = time
+    renderBars()
+  }
+
+  const getBars = () => bars
 
   const resetChart = () => {
     renderers.forEach((renderer) => renderer.dispose())
     chart = undefined
     bars = []
+    replayEndTime = undefined
   }
 
   const dispose = () => {
@@ -62,9 +78,11 @@ export const usePineIndicators = () => {
   return {
     activeScriptIds,
     dispose,
+    getBars,
     resetChart,
     setBars,
     setChart,
+    setReplayEndTime,
     toggle,
   }
 }

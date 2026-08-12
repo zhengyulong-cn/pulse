@@ -70,9 +70,7 @@ export class PinePlotRenderer {
   }
 
   setBars(nextBars: PineChartBar[]) {
-    const barsByTime = new Map(this.bars.map((bar) => [bar.time, bar]))
-    nextBars.forEach((bar) => barsByTime.set(bar.time, bar))
-    this.bars = [...barsByTime.values()].sort((first, second) => first.time - second.time)
+    this.bars = [...nextBars].sort((first, second) => first.time - second.time)
     void this.render()
   }
 
