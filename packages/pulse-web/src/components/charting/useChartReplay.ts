@@ -6,6 +6,13 @@ type ReplayPhase = 'inactive' | 'selecting' | 'paused' | 'playing'
 
 const toMilliseconds = (time: number) => time < 10_000_000_000 ? time * 1_000 : time
 
+const findBarIndexAtOrBefore = (bars: PineChartBar[], time: number) => {
+  for (let index = bars.length - 1; index >= 0; index -= 1) {
+    if (bars[index]!.time <= time) return index
+  }
+  return -1
+}
+
 export const useChartReplay = (
   getBars: () => PineChartBar[],
   setPineReplayEndTime: (time: number | undefined) => void,
@@ -80,9 +87,7 @@ export const useChartReplay = (
 
   const setCrosshairTime = (time: number | undefined) => {
     crosshairTime = time === undefined ? undefined : toMilliseconds(time)
-    const index = crosshairTime === undefined
-      ? -1
-      : getBars().findLastIndex((bar) => bar.time <= crosshairTime)
+    const index = crosshairTime === undefined ? -1 : findBarIndexAtOrBefore(getBars(), crosshairTime)
     candidateTime.value = index < 0 ? undefined : getBars()[index]?.time
   }
 
@@ -90,7 +95,7 @@ export const useChartReplay = (
     if (!isSelecting.value || crosshairTime === undefined) return
 
     const bars = getBars()
-    const index = bars.findLastIndex((bar) => bar.time <= crosshairTime!)
+    const index = findBarIndexAtOrBefore(bars, crosshairTime)
     if (index < 0 || index >= bars.length - 1) return
 
     phase.value = 'paused'

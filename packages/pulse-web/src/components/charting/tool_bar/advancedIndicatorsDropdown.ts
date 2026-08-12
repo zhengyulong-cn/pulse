@@ -1,14 +1,13 @@
 import { listPineScripts, type PineScript } from '@/api/pine-scripts'
 
 export type AdvancedIndicatorsDropdownApi = {
-  remove: () => void
-}
-
-type ChartDropdownApi = AdvancedIndicatorsDropdownApi & {
   applyOptions: (options: {
     items: Array<{ onSelect: () => void, title: string }>
   }) => void
+  remove: () => void
 }
+
+type ChartDropdownApi = AdvancedIndicatorsDropdownApi
 
 type ChartWidgetWithDropdown = {
   createDropdown: (options: {

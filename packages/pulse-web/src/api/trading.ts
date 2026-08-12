@@ -20,8 +20,10 @@ export type TradeRecord = {
   quantity: string
   openTime: string
   openPrice: string
+  openReason: string | null
   closeTime: string | null
   closePrice: string | null
+  closeReason: string | null
   realizedPnl: string | null
   fee: string
   extraJson: Record<string, unknown> | null
@@ -60,7 +62,7 @@ export const updateTradingAccount = (id: number, payload: Partial<TradingAccount
 export const deleteTradingAccount = (id: number) =>
   request<void>(`/trading-accounts/${id}`, { method: 'DELETE' })
 
-export const listTradeRecords = (accountId: number, query: TradeRecordQuery = {}) => {
+export const listTradeRecords = (accountId: number, query: TradeRecordReq = {}) => {
   const searchParams = new URLSearchParams({ accountId: String(accountId) })
 
   for (const [key, value] of Object.entries(query)) {

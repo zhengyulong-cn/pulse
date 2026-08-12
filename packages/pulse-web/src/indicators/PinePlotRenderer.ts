@@ -16,7 +16,7 @@ type ChartPoint = {
 
 export type PineChartApi = {
   createMultipointShape: (points: ChartPoint[], options: Record<string, unknown>) => Promise<string>
-  createShape: (point: ChartPoint, options: Record<string, unknown>) => Promise<string>
+  createShape: (point: ChartPoint | Pick<ChartPoint, 'time'>, options: Record<string, unknown>) => Promise<string>
   removeEntity: (entityId: string) => void
 }
 

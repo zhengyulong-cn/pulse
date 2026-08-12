@@ -27,8 +27,10 @@ model TradeRecord {
   quantity       Decimal
   openTime       DateTime
   openPrice      Decimal
+  openReason     String?
   closeTime      DateTime?
   closePrice     Decimal?
+  closeReason    String?
   realizedPnl    Decimal?
   fee            Decimal
   extraJson      Json?
