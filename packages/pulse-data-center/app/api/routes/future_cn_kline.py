@@ -18,6 +18,7 @@ from app.services.market_data.future_cn_kline_batch_sync_job_service import (
 from app.services.market_data.errors import MarketDataNotFoundError
 from app.services.market_data.future_cn_kline_service import (
     KlineInterval,
+    KlineQueryInterval,
     list_future_cn_kline_bars,
     list_latest_future_cn_klines,
     sync_future_cn_kline,
@@ -33,7 +34,7 @@ router = APIRouter(prefix="/market_data/kline", tags=["Market Data"])
 )
 def list_future_cn_kline_bars_route(
     instrument_id: int = Query(gt=0),
-    interval: KlineInterval = Query(),
+    interval: KlineQueryInterval = Query(),
     from_timestamp: int = Query(alias="from", ge=0),
     to_timestamp: int = Query(alias="to", ge=0),
     limit: int = Query(default=5000, ge=1, le=5000),

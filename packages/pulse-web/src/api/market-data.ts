@@ -59,6 +59,7 @@ export type MarketInstrumentExchangeNode = {
 }
 
 export type KlineInterval = '1m' | '5m'
+export type KlineQueryInterval = KlineInterval | '15m' | '30m' | '1h'
 
 export type LatestKline = {
   instrument_id: number
@@ -116,7 +117,7 @@ export const listLatestKlines = (instrumentIds: number[]) =>
 
 export const listFutureCnKlineBars = (
   instrumentId: number,
-  interval: KlineInterval,
+  interval: KlineQueryInterval,
   fromTimestamp: number,
   toTimestamp: number,
   countBack?: number,

@@ -43,18 +43,11 @@ declare global {
   }
 }
 
-const props = withDefaults(defineProps<{
-  symbol?: string
-  interval?: '1' | '5'
-}>(), {
-  symbol: 'jm701',
-  interval: '5',
-})
-
 const chartContainer = ref<HTMLElement>()
 const chartWidget = shallowRef<ChartWidget>()
 const loadError = ref<string>()
 const selectedSymbol = ref("jm2701")
+const selectedInterval = ref("5")
 const {
   activeScriptIds: activePineScriptIds,
   dispose: disposePineIndicators,
@@ -197,14 +190,14 @@ const resolveChartSymbol = (
     minmov: 1,
     pricescale: 100,
     has_intraday: true,
-    supported_resolutions: ['1', '5'],
+    supported_resolutions: ['1', '5', '15', '30', '60'],
   }), 0)
 }
 
 const datafeed = {
   onReady: (callback: (configuration: Record<string, unknown>) => void) => {
     window.setTimeout(() => callback({
-      supported_resolutions: ['1', '5'],
+      supported_resolutions: ['1', '5', '15', '30', '60'],
       supports_search: true,
       supports_group_request: false,
     }), 0)
@@ -268,7 +261,14 @@ const datafeed = {
     onError: (reason: string) => void,
   ) => {
     const instrumentId = searchResultsBySymbol.get(symbolInfo.ticker ?? '')?.id
-    const interval = resolution === '1' ? '1m' : resolution === '5' ? '5m' : undefined
+    const intervalByResolution: Record<string, '1m' | '5m' | '15m' | '30m' | '1h'> = {
+      '1': '1m',
+      '5': '5m',
+      '15': '15m',
+      '30': '30m',
+      '60': '1h',
+    }
+    const interval = intervalByResolution[resolution]
     if (!instrumentId || !interval) {
       onHistory([], { noData: true })
       return
@@ -354,7 +354,7 @@ const renderChart = async () => {
       library_path: chartingLibraryPath,
       datafeed,
       symbol: selectedSymbol.value,
-      interval: "5",
+      interval: selectedInterval.value,
       locale: 'zh',
       timezone: 'Asia/Shanghai',
       autosize: true,

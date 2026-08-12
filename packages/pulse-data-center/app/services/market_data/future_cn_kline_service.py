@@ -13,9 +13,15 @@ from app.services.market_data.tqsdk_exchange_mapping import TQSDK_EXCHANGE_TO_MI
 
 KLINE_DATA_LENGTH = 5000
 KlineInterval = Literal["1m", "5m"]
+KlineQueryInterval = Literal["1m", "5m", "15m", "30m", "1h"]
 KLINE_INTERVAL_CONFIG = {
     "1m": (60, FutureCnKline1m),
     "5m": (300, FutureCnKline5m),
+}
+KLINE_AGGREGATION_CONFIG = {
+    "15m": 15 * 60,
+    "30m": 30 * 60,
+    "1h": 60 * 60,
 }
 
 
@@ -140,7 +146,7 @@ def list_latest_future_cn_klines(session: Session, instrument_ids: list[int]) ->
 def list_future_cn_kline_bars(
     session: Session,
     instrument_id: int,
-    interval: KlineInterval,
+    interval: KlineQueryInterval,
     from_timestamp: int,
     to_timestamp: int,
     limit: int,
@@ -149,20 +155,34 @@ def list_future_cn_kline_bars(
     if to_timestamp < from_timestamp:
         raise ValueError("to must be greater than or equal to from")
 
-    _, kline_model = KLINE_INTERVAL_CONFIG[interval]
+    is_aggregated_interval = interval in KLINE_AGGREGATION_CONFIG
+    source_interval = "5m" if is_aggregated_interval else interval
+    _, kline_model = KLINE_INTERVAL_CONFIG[source_interval]
+    aggregation_seconds = KLINE_AGGREGATION_CONFIG.get(interval)
+    source_limit = (
+        (count_back if count_back is not None else limit) * (aggregation_seconds // 300)
+        if aggregation_seconds
+        else count_back
+    )
     from_date_time = datetime.fromtimestamp(from_timestamp, timezone.utc).replace(tzinfo=None)
     to_date_time = datetime.fromtimestamp(to_timestamp, timezone.utc).replace(tzinfo=None)
     statement = select(kline_model).where(
         kline_model.instrument_id == instrument_id,
         kline_model.date_time <= to_date_time,
     )
-    if count_back is None:
+    if source_limit is None:
         statement = statement.where(kline_model.date_time >= from_date_time).limit(limit)
     else:
-        statement = statement.limit(count_back)
+        statement = statement.limit(source_limit)
     statement = statement.order_by(kline_model.date_time.desc())
     klines = list(session.exec(statement))
     klines.reverse()
+    if aggregation_seconds:
+        klines = _aggregate_5m_klines(klines, aggregation_seconds)
+        if count_back is not None:
+            klines = klines[-count_back:]
+        elif len(klines) > limit:
+            klines = klines[:limit]
     return [
         FutureCnKlineBar(
             time=int(kline.date_time.replace(tzinfo=timezone.utc).timestamp() * 1000),
@@ -175,6 +195,40 @@ def list_future_cn_kline_bars(
         )
         for kline in klines
     ]
+
+
+def _aggregate_5m_klines(klines: list[FutureCnKline5m], aggregation_seconds: int) -> list[FutureCnKline5m]:
+    aggregated_klines: list[FutureCnKline5m] = []
+    current_bucket_start: datetime | None = None
+    current_aggregate: FutureCnKline5m | None = None
+
+    for kline in klines:
+        bucket_timestamp = int(kline.date_time.replace(tzinfo=timezone.utc).timestamp())
+        bucket_start = datetime.fromtimestamp(bucket_timestamp - bucket_timestamp % aggregation_seconds, timezone.utc).replace(tzinfo=None)
+        if bucket_start != current_bucket_start:
+            current_bucket_start = bucket_start
+            current_aggregate = FutureCnKline5m(
+                instrument_id=kline.instrument_id,
+                date_time=bucket_start,
+                open=kline.open,
+                close=kline.close,
+                high=kline.high,
+                low=kline.low,
+                volume=kline.volume,
+                hold=kline.hold,
+            )
+            aggregated_klines.append(current_aggregate)
+            continue
+
+        if current_aggregate is None:
+            continue
+        current_aggregate.close = kline.close
+        current_aggregate.high = max(current_aggregate.high, kline.high)
+        current_aggregate.low = min(current_aggregate.low, kline.low)
+        current_aggregate.volume += kline.volume
+        current_aggregate.hold = kline.hold
+
+    return aggregated_klines
 
 
 def _get_instrument(session: Session, provider_symbol: str) -> tuple[str, MarketInstrument]:
