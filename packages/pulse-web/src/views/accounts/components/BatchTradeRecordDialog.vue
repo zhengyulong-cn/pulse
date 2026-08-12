@@ -131,6 +131,8 @@ watch(visible, (isVisible) => {
             <el-table-column label="平仓价" width="90" align="right"><template #default="{ row }">{{ row.closePrice ?? '—' }}</template></el-table-column>
             <el-table-column label="盈亏" width="90" align="right"><template #default="{ row }">{{ row.realizedPnl ?? '—' }}</template></el-table-column>
             <el-table-column label="手续费" width="90" align="right"><template #default="{ row }">{{ row.fee ?? '0' }}</template></el-table-column>
+            <el-table-column prop="openReason" label="开仓缘由" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="closeReason" label="平仓缘由" min-width="140" show-overflow-tooltip />
           </el-table>
         </div>
       </section>

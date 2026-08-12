@@ -11,7 +11,7 @@ export const importPrompt = `你将从交易软件截图中提取交易记录，
 手数：quantity
 开仓时间：openTime。为+08时区。
 开仓价格：openPrice
-平仓时间：openTime。为+08时区。
+平仓时间：closeTime。为+08时区。
 平仓价格：closePrice
 
 输出示例：

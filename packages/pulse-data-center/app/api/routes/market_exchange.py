@@ -9,22 +9,39 @@ from app.services.market_data.errors import MarketDataConflictError, MarketDataN
 router = APIRouter(prefix="/api/v1/market-exchanges", tags=["Market Exchanges"])
 
 
-@router.get("", response_model=list[MarketExchangeRead])
+@router.get(
+    "",
+    response_model=list[MarketExchangeRead],
+    summary="查询交易所列表",
+)
 def list_market_exchanges(session: Session = Depends(get_session)):
     return market_exchange_service.list_exchanges(session)
 
 
-@router.get("/{exchange_id}", response_model=MarketExchangeRead)
+@router.get(
+    "/{exchange_id}",
+    response_model=MarketExchangeRead,
+    summary="查询交易所详情",
+)
 def get_market_exchange(exchange_id: int, session: Session = Depends(get_session)):
     return _execute(lambda: market_exchange_service.get_exchange(session, exchange_id))
 
 
-@router.post("", response_model=MarketExchangeRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=MarketExchangeRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="创建交易所",
+)
 def create_market_exchange(payload: MarketExchangeCreate, session: Session = Depends(get_session)):
     return _execute(lambda: market_exchange_service.create_exchange(session, payload))
 
 
-@router.patch("/{exchange_id}", response_model=MarketExchangeRead)
+@router.patch(
+    "/{exchange_id}",
+    response_model=MarketExchangeRead,
+    summary="更新交易所",
+)
 def update_market_exchange(
     exchange_id: int,
     payload: MarketExchangeUpdate,
@@ -33,7 +50,11 @@ def update_market_exchange(
     return _execute(lambda: market_exchange_service.update_exchange(session, exchange_id, payload))
 
 
-@router.delete("/{exchange_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{exchange_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="删除交易所",
+)
 def delete_market_exchange(exchange_id: int, session: Session = Depends(get_session)) -> Response:
     _execute(lambda: market_exchange_service.delete_exchange(session, exchange_id))
     return Response(status_code=status.HTTP_204_NO_CONTENT)

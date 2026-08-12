@@ -15,6 +15,7 @@
     "format": "oxfmt src/"
   },
   "dependencies": {
+    "@imengyu/vue3-context-menu": "^1.5.6",
     "@lucide/vue": "^1.28.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/vue-query": "^5.101.4",
@@ -22,6 +23,7 @@
     "@vueuse/core": "^14.4.0",
     "dayjs": "^1.11.21",
     "element-plus": "^2.14.3",
+    "pinets": "^0.9.30",
     "tailwindcss": "^4.3.3",
     "vue": "^3.5.40",
     "vue-router": "^5.2.0"

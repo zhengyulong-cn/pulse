@@ -1,0 +1,122 @@
+[
+  {
+    "id": "table.pineScript",
+    "label": "Create table \"pineScript\"",
+    "summary": "Creates table \"pineScript\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "pineScript"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"pineScript\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pineScript\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"pineScript\"",
+        "sql": "CREATE TABLE \"public\".\"pineScript\" (\n  \"content\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"pineScript\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pineScript\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.pineScript.pineScript_type_check",
+    "label": "Add check constraint \"pineScript_type_check\" on \"pineScript\".\"type\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "pineScript_type_check",
+        "table": "pineScript"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"pineScript_type_check\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "pineScript_type_check",
+          "public",
+          "\"public\".\"pineScript\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"pineScript_type_check\"",
+        "sql": "ALTER TABLE \"public\".\"pineScript\" ADD CONSTRAINT \"pineScript_type_check\" CHECK (\"type\" IN ('INDICATOR', 'STRATEGY'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"pineScript_type_check\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "pineScript_type_check",
+          "public",
+          "\"public\".\"pineScript\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.pineScript.pineScript_type_idx_b6b604ea",
+    "label": "Create index \"pineScript_type_idx_b6b604ea\" on \"pineScript\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "pineScript_type_idx_b6b604ea",
+        "table": "pineScript"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"pineScript_type_idx_b6b604ea\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pineScript_type_idx_b6b604ea\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"pineScript_type_idx_b6b604ea\"",
+        "sql": "CREATE INDEX \"pineScript_type_idx_b6b604ea\" ON \"public\".\"pineScript\" (\"type\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"pineScript_type_idx_b6b604ea\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pineScript_type_idx_b6b604ea\""
+        ]
+      }
+    ]
+  }
+]

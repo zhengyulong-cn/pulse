@@ -29,8 +29,10 @@ export type CreateTradeRecordBody = {
   quantity: DecimalInput
   openTime: string
   openPrice: DecimalInput
+  openReason?: string | null
   closeTime?: string | null
   closePrice?: DecimalInput | null
+  closeReason?: string | null
   realizedPnl?: DecimalInput | null
   fee: DecimalInput
   extraJson?: Record<string, unknown> | null
@@ -60,9 +62,11 @@ const normalizeTradeRecordForCreate = (tradeRecord: CreateTradeRecordBody) => ({
   quantity: String(tradeRecord.quantity),
   openTime: parseDateTime(tradeRecord.openTime),
   openPrice: String(tradeRecord.openPrice),
+  ...(tradeRecord.openReason === undefined ? {} : { openReason: tradeRecord.openReason }),
   fee: String(tradeRecord.fee),
   ...(tradeRecord.closeTime === undefined ? {} : { closeTime: tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime) }),
   ...(tradeRecord.closePrice === undefined ? {} : { closePrice: tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice) }),
+  ...(tradeRecord.closeReason === undefined ? {} : { closeReason: tradeRecord.closeReason }),
   ...(tradeRecord.realizedPnl === undefined ? {} : { realizedPnl: tradeRecord.realizedPnl === null ? null : String(tradeRecord.realizedPnl) }),
   ...(tradeRecord.extraJson === undefined ? {} : { extraJson: tradeRecord.extraJson as TradeRecordInput['extraJson'] }),
 })
@@ -77,8 +81,10 @@ const normalizeTradeRecordForUpdate = (tradeRecord: UpdateTradeRecordBody): Trad
   if (tradeRecord.quantity !== undefined) normalized.quantity = String(tradeRecord.quantity)
   if (tradeRecord.openTime !== undefined) normalized.openTime = parseDateTime(tradeRecord.openTime)
   if (tradeRecord.openPrice !== undefined) normalized.openPrice = String(tradeRecord.openPrice)
+  if (tradeRecord.openReason !== undefined) normalized.openReason = tradeRecord.openReason
   if (tradeRecord.closeTime !== undefined) normalized.closeTime = tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime)
   if (tradeRecord.closePrice !== undefined) normalized.closePrice = tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice)
+  if (tradeRecord.closeReason !== undefined) normalized.closeReason = tradeRecord.closeReason
   if (tradeRecord.realizedPnl !== undefined) normalized.realizedPnl = tradeRecord.realizedPnl === null ? null : String(tradeRecord.realizedPnl)
   if (tradeRecord.fee !== undefined) normalized.fee = String(tradeRecord.fee)
   if (tradeRecord.extraJson !== undefined) normalized.extraJson = tradeRecord.extraJson as TradeRecordInput['extraJson']

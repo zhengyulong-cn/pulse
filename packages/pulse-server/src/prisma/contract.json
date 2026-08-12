@@ -4,6 +4,10 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "pineScript": {
+      "model": "PineScript",
+      "namespace": "public"
+    },
     "tradeRecord": {
       "model": "TradeRecord",
       "namespace": "public"
@@ -11,12 +15,33 @@
     "tradingAccount": {
       "model": "TradingAccount",
       "namespace": "public"
+    },
+    "watchlist": {
+      "model": "Watchlist",
+      "namespace": "public"
+    },
+    "watchlistItem": {
+      "model": "WatchlistItem",
+      "namespace": "public"
     }
   },
   "domain": {
     "namespaces": {
       "public": {
         "enum": {
+          "PineScriptType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "INDICATOR",
+                "value": "INDICATOR"
+              },
+              {
+                "name": "STRATEGY",
+                "value": "STRATEGY"
+              }
+            ]
+          },
           "TradeDirection": {
             "codecId": "pg/text@1",
             "members": [
@@ -32,6 +57,83 @@
           }
         },
         "models": {
+          "PineScript": {
+            "fields": {
+              "content": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "description": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "type": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "PineScriptType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "content": {
+                  "column": "content"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "description": {
+                  "column": "description"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "type": {
+                  "column": "type"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "pineScript"
+            }
+          },
           "TradeRecord": {
             "fields": {
               "accountId": {
@@ -45,6 +147,13 @@
                 "nullable": true,
                 "type": {
                   "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "closeReason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -93,6 +202,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "openReason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -157,6 +273,9 @@
                 "closePrice": {
                   "column": "closePrice"
                 },
+                "closeReason": {
+                  "column": "closeReason"
+                },
                 "closeTime": {
                   "column": "closeTime"
                 },
@@ -174,6 +293,9 @@
                 },
                 "openPrice": {
                   "column": "openPrice"
+                },
+                "openReason": {
+                  "column": "openReason"
                 },
                 "openTime": {
                   "column": "openTime"
@@ -261,6 +383,130 @@
               "namespaceId": "public",
               "table": "tradingAccount"
             }
+          },
+          "Watchlist": {
+            "fields": {
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sortOrder": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "items": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "watchlistId"
+                  ]
+                },
+                "to": {
+                  "model": "WatchlistItem",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "sortOrder": {
+                  "column": "sortOrder"
+                }
+              },
+              "namespaceId": "public",
+              "table": "watchlist"
+            }
+          },
+          "WatchlistItem": {
+            "fields": {
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "instrumentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "sortOrder": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "watchlistId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "watchlist": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "watchlistId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Watchlist",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "id": {
+                  "column": "id"
+                },
+                "instrumentId": {
+                  "column": "instrumentId"
+                },
+                "sortOrder": {
+                  "column": "sortOrder"
+                },
+                "watchlistId": {
+                  "column": "watchlistId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "watchlistItem"
+            }
           }
         }
       }
@@ -271,6 +517,87 @@
       "public": {
         "entries": {
           "table": {
+            "pineScript": {
+              "checks": [
+                {
+                  "column": "type",
+                  "name": "pineScript_type_check",
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "PineScriptType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                }
+              ],
+              "columns": {
+                "content": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "description": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "type": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "PineScriptType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "type"
+                  ],
+                  "name": "pineScript_type_idx_b6b604ea",
+                  "prefix": "pineScript_type_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "tradeRecord": {
               "checks": [
                 {
@@ -293,6 +620,11 @@
                 "closePrice": {
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
+                  "nullable": true
+                },
+                "closeReason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": true
                 },
                 "closeTime": {
@@ -334,6 +666,11 @@
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
                   "nullable": false
+                },
+                "openReason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "openTime": {
                   "codecId": "pg/timestamptz@1",
@@ -445,9 +782,142 @@
                   ]
                 }
               ]
+            },
+            "watchlist": {
+              "columns": {
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sortOrder": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "sortOrder"
+                  ],
+                  "name": "watchlist_sortOrder_idx_ebf2eac2",
+                  "prefix": "watchlist_sortOrder_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "watchlistItem": {
+              "columns": {
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "instrumentId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "sortOrder": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "watchlistId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "watchlistId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "watchlistItem"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "watchlist"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "watchlistId"
+                  ],
+                  "name": "watchlistItem_watchlistId_idx_bfe7654a",
+                  "prefix": "watchlistItem_watchlistId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "watchlistId",
+                    "sortOrder"
+                  ],
+                  "name": "watchlistItem_watchlistId_sortOrder_idx_04bb0458",
+                  "prefix": "watchlistItem_watchlistId_sortOrder_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "watchlistId",
+                    "instrumentId"
+                  ]
+                }
+              ]
             }
           },
           "valueSet": {
+            "PineScriptType": {
+              "kind": "valueSet",
+              "values": [
+                "INDICATOR",
+                "STRATEGY"
+              ]
+            },
             "TradeDirection": {
               "kind": "valueSet",
               "values": [
@@ -461,7 +931,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "6715453c65fca093a7b6fe92175e61dcc214a3fc140df5f44edd5291c135849a"
+    "storageHash": "85fb6d566d342d4699e8c3b430bac6dee45256e59325066c86e471117c8db8f2"
   },
   "capabilities": {
     "postgres": {

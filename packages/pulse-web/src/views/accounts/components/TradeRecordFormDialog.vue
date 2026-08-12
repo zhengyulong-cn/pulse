@@ -34,8 +34,10 @@ const form = reactive({
   quantity: '',
   openTime: dayjs().toDate(),
   openPrice: '',
+  openReason: '',
   closeTime: null as Date | null,
   closePrice: '',
+  closeReason: '',
   realizedPnl: '',
   fee: '',
   extraJson: '',
@@ -53,8 +55,10 @@ const resetForm = () => {
   form.quantity = record?.quantity ?? ''
   form.openTime = record ? dayjs(record.openTime).toDate() : dayjs().toDate()
   form.openPrice = record?.openPrice ?? ''
+  form.openReason = record?.openReason ?? ''
   form.closeTime = record?.closeTime ? dayjs(record.closeTime).toDate() : null
   form.closePrice = record?.closePrice ?? ''
+  form.closeReason = record?.closeReason ?? ''
   form.realizedPnl = record?.realizedPnl ?? ''
   form.fee = record?.fee ?? ''
   form.extraJson = record?.extraJson ? JSON.stringify(record.extraJson, null, 2) : ''
@@ -87,8 +91,10 @@ const save = async () => {
     quantity: form.quantity,
     openTime: formatApiDateTime(form.openTime),
     openPrice: form.openPrice,
+    openReason: form.openReason.trim() || null,
     closeTime: form.closeTime ? formatApiDateTime(form.closeTime) : null,
     closePrice: form.closePrice || null,
+    closeReason: form.closeReason.trim() || null,
     realizedPnl: form.realizedPnl || null,
     fee: form.fee,
     extraJson,
@@ -132,6 +138,8 @@ watch(visible, (isVisible) => {
         <el-form-item label="平仓时间"><el-date-picker v-model="form.closeTime" type="datetime" class="!w-full" clearable /></el-form-item>
         <el-form-item label="平仓价格"><el-input v-model="form.closePrice" inputmode="decimal" placeholder="未平仓可留空" /></el-form-item>
         <el-form-item label="真实盈亏"><el-input v-model="form.realizedPnl" inputmode="decimal" placeholder="未平仓可留空" /></el-form-item>
+        <el-form-item label="开仓缘由"><el-input v-model="form.openReason" placeholder="例如：突破关键压力位" /></el-form-item>
+        <el-form-item label="平仓缘由"><el-input v-model="form.closeReason" placeholder="例如：止盈离场" /></el-form-item>
         <el-form-item class="sm:col-span-2 lg:col-span-4" label="extra_json"><el-input v-model="form.extraJson" type="textarea" :rows="3" placeholder='例如：{ "strategy": "突破" }' /></el-form-item>
       </div>
       <div class="mt-2 flex justify-end gap-2"><el-button @click="visible = false">取消</el-button><el-button type="primary" native-type="submit" :loading="saving">{{ isEditing ? '保存修改' : '保存记录' }}</el-button></div>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlmodel import Session
 
 from app.db import get_session
@@ -7,6 +7,7 @@ from app.schemas.market_instrument import (
     MarketInstrumentCreate,
     MarketInstrumentExchangeNodeRead,
     MarketInstrumentRead,
+    MarketInstrumentSearchRead,
     MarketInstrumentUpdate,
 )
 from app.services.market_data import market_instrument_service
@@ -15,7 +16,11 @@ from app.services.market_data.errors import MarketDataConflictError, MarketDataN
 router = APIRouter(prefix="/api/v1/market-instruments", tags=["Market Instruments"])
 
 
-@router.get("", response_model=list[MarketInstrumentExchangeNodeRead])
+@router.get(
+    "/tree",
+    response_model=list[MarketInstrumentExchangeNodeRead],
+    summary="查询金融标的树",
+)
 def list_market_instruments(
     exchange_id: int | None = None,
     instrument_type: MarketInstrumentType | None = None,
@@ -25,17 +30,54 @@ def list_market_instruments(
     return market_instrument_service.list_instruments(session, exchange_id, instrument_type, is_active)
 
 
-@router.get("/{instrument_id}", response_model=MarketInstrumentRead)
-def get_market_instrument(instrument_id: int, session: Session = Depends(get_session)):
-    return _execute(lambda: market_instrument_service.get_instrument(session, instrument_id))
+@router.get(
+    "/search",
+    response_model=list[MarketInstrumentSearchRead],
+    summary="搜索金融标的",
+)
+def search_market_instruments(
+    query: str = Query(min_length=1, max_length=100),
+    limit: int = Query(default=20, ge=1, le=100),
+    session: Session = Depends(get_session),
+) -> list[MarketInstrumentSearchRead]:
+    return market_instrument_service.search_instruments(session, query, limit)
 
 
-@router.post("", response_model=MarketInstrumentRead, status_code=status.HTTP_201_CREATED)
+@router.get(
+    "",
+    response_model=list[MarketInstrumentRead],
+    summary="批量查询金融标的",
+)
+def get_market_instruments(
+    instrument_ids: str = Query(min_length=1, alias="instrumentIds"),
+    session: Session = Depends(get_session),
+) -> list[MarketInstrumentRead]:
+    try:
+        parsed_instrument_ids = [int(instrument_id) for instrument_id in instrument_ids.split(",")]
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="instrumentIds must be comma-separated integers") from exc
+
+    if any(instrument_id <= 0 for instrument_id in parsed_instrument_ids):
+        raise HTTPException(status_code=422, detail="instrumentIds must contain positive integers")
+
+    return market_instrument_service.get_instruments(session, parsed_instrument_ids)
+
+
+@router.post(
+    "",
+    response_model=MarketInstrumentRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="创建金融标的",
+)
 def create_market_instrument(payload: MarketInstrumentCreate, session: Session = Depends(get_session)):
     return _execute(lambda: market_instrument_service.create_instrument(session, payload))
 
 
-@router.patch("/{instrument_id}", response_model=MarketInstrumentRead)
+@router.patch(
+    "/{instrument_id}",
+    response_model=MarketInstrumentRead,
+    summary="更新金融标的",
+)
 def update_market_instrument(
     instrument_id: int,
     payload: MarketInstrumentUpdate,
@@ -44,7 +86,11 @@ def update_market_instrument(
     return _execute(lambda: market_instrument_service.update_instrument(session, instrument_id, payload))
 
 
-@router.delete("/{instrument_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{instrument_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="删除金融标的",
+)
 def delete_market_instrument(instrument_id: int, session: Session = Depends(get_session)) -> Response:
     _execute(lambda: market_instrument_service.delete_instrument(session, instrument_id))
     return Response(status_code=status.HTTP_204_NO_CONTENT)

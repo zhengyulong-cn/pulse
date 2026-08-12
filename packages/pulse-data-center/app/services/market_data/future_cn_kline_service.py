@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert
 from sqlmodel import Session, select
 
@@ -40,13 +41,24 @@ class FutureCnKlineLatest:
     hold: object
 
 
+@dataclass(frozen=True)
+class FutureCnKlineBar:
+    time: int
+    open: float
+    close: float
+    high: float
+    low: float
+    volume: float
+    hold: float
+
+
 def sync_future_cn_kline(
     session: Session,
     provider_symbol: str,
     interval: KlineInterval,
 ) -> FutureCnKlineSyncResult:
-    normalized_provider_symbol = provider_symbol.strip().upper()
-    instrument = _get_instrument(session, normalized_provider_symbol)
+    exchange_code, instrument = _get_instrument(session, provider_symbol)
+    normalized_provider_symbol = f"{exchange_code}.{instrument.symbol}"
     interval_seconds, kline_model = KLINE_INTERVAL_CONFIG[interval]
     klines = get_data_provider("tqsdk").get_kline_data(
         normalized_provider_symbol,
@@ -125,10 +137,51 @@ def list_latest_future_cn_klines(session: Session, instrument_ids: list[int]) ->
     return latest_klines
 
 
-def _get_instrument(session: Session, provider_symbol: str) -> MarketInstrument:
-    exchange_code, separator, symbol = provider_symbol.partition(".")
+def list_future_cn_kline_bars(
+    session: Session,
+    instrument_id: int,
+    interval: KlineInterval,
+    from_timestamp: int,
+    to_timestamp: int,
+    limit: int,
+    count_back: int | None = None,
+) -> list[FutureCnKlineBar]:
+    if to_timestamp < from_timestamp:
+        raise ValueError("to must be greater than or equal to from")
+
+    _, kline_model = KLINE_INTERVAL_CONFIG[interval]
+    from_date_time = datetime.fromtimestamp(from_timestamp, timezone.utc).replace(tzinfo=None)
+    to_date_time = datetime.fromtimestamp(to_timestamp, timezone.utc).replace(tzinfo=None)
+    statement = select(kline_model).where(
+        kline_model.instrument_id == instrument_id,
+        kline_model.date_time <= to_date_time,
+    )
+    if count_back is None:
+        statement = statement.where(kline_model.date_time >= from_date_time).limit(limit)
+    else:
+        statement = statement.limit(count_back)
+    statement = statement.order_by(kline_model.date_time.desc())
+    klines = list(session.exec(statement))
+    klines.reverse()
+    return [
+        FutureCnKlineBar(
+            time=int(kline.date_time.replace(tzinfo=timezone.utc).timestamp() * 1000),
+            open=float(kline.open),
+            close=float(kline.close),
+            high=float(kline.high),
+            low=float(kline.low),
+            volume=float(kline.volume),
+            hold=float(kline.hold),
+        )
+        for kline in klines
+    ]
+
+
+def _get_instrument(session: Session, provider_symbol: str) -> tuple[str, MarketInstrument]:
+    exchange_code, separator, symbol = provider_symbol.strip().partition(".")
     if not separator or not symbol:
         raise ValueError("Symbol must use the TqSdk format EXCHANGE.SYMBOL")
+    exchange_code = exchange_code.upper()
     mic = TQSDK_EXCHANGE_TO_MIC.get(exchange_code)
     if mic is None:
         raise ValueError(f"Unsupported domestic futures exchange: {exchange_code}")
@@ -139,10 +192,10 @@ def _get_instrument(session: Session, provider_symbol: str) -> MarketInstrument:
     instrument = session.exec(
         select(MarketInstrument).where(
             MarketInstrument.exchange_id == exchange.id,
-            MarketInstrument.symbol == symbol,
+            func.lower(MarketInstrument.symbol) == symbol.lower(),
             MarketInstrument.instrument_type == MarketInstrumentType.FUTURE,
         )
     ).first()
     if instrument is None:
-        raise MarketDataNotFoundError(f"Market instrument not found: {provider_symbol}")
-    return instrument
+        raise MarketDataNotFoundError(f"Market instrument not found: {exchange_code}.{symbol}")
+    return exchange_code, instrument

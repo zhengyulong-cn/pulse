@@ -1,0 +1,281 @@
+[
+  {
+    "id": "table.watchlist",
+    "label": "Create table \"watchlist\"",
+    "summary": "Creates table \"watchlist\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "watchlist"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"watchlist\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlist\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"watchlist\"",
+        "sql": "CREATE TABLE \"public\".\"watchlist\" (\n  \"id\" SERIAL NOT NULL,\n  \"name\" text NOT NULL,\n  \"sortOrder\" int4 DEFAULT 0 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"watchlist\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlist\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.watchlistItem",
+    "label": "Create table \"watchlistItem\"",
+    "summary": "Creates table \"watchlistItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "watchlistItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"watchlistItem\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlistItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"watchlistItem\"",
+        "sql": "CREATE TABLE \"public\".\"watchlistItem\" (\n  \"id\" SERIAL NOT NULL,\n  \"instrumentId\" int4 NOT NULL,\n  \"sortOrder\" int4 DEFAULT 0 NOT NULL,\n  \"watchlistId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"watchlistItem\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlistItem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.watchlistItem.watchlistItem_watchlistId_instrumentId_key",
+    "label": "Add unique constraint on \"watchlistItem\" (watchlistId, instrumentId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "watchlistItem_watchlistId_instrumentId_key",
+        "table": "watchlistItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"watchlistItem_watchlistId_instrumentId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "watchlistItem_watchlistId_instrumentId_key",
+          "public",
+          "\"public\".\"watchlistItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"watchlistItem_watchlistId_instrumentId_key\"",
+        "sql": "ALTER TABLE \"public\".\"watchlistItem\" ADD CONSTRAINT \"watchlistItem_watchlistId_instrumentId_key\" UNIQUE (\"watchlistId\", \"instrumentId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"watchlistItem_watchlistId_instrumentId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "watchlistItem_watchlistId_instrumentId_key",
+          "public",
+          "\"public\".\"watchlistItem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.watchlist.watchlist_sortOrder_idx_ebf2eac2",
+    "label": "Create index \"watchlist_sortOrder_idx_ebf2eac2\" on \"watchlist\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "watchlist_sortOrder_idx_ebf2eac2",
+        "table": "watchlist"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"watchlist_sortOrder_idx_ebf2eac2\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlist_sortOrder_idx_ebf2eac2\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"watchlist_sortOrder_idx_ebf2eac2\"",
+        "sql": "CREATE INDEX \"watchlist_sortOrder_idx_ebf2eac2\" ON \"public\".\"watchlist\" (\"sortOrder\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"watchlist_sortOrder_idx_ebf2eac2\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlist_sortOrder_idx_ebf2eac2\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.watchlistItem.watchlistItem_watchlistId_idx_bfe7654a",
+    "label": "Create index \"watchlistItem_watchlistId_idx_bfe7654a\" on \"watchlistItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "watchlistItem_watchlistId_idx_bfe7654a",
+        "table": "watchlistItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"watchlistItem_watchlistId_idx_bfe7654a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlistItem_watchlistId_idx_bfe7654a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"watchlistItem_watchlistId_idx_bfe7654a\"",
+        "sql": "CREATE INDEX \"watchlistItem_watchlistId_idx_bfe7654a\" ON \"public\".\"watchlistItem\" (\"watchlistId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"watchlistItem_watchlistId_idx_bfe7654a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlistItem_watchlistId_idx_bfe7654a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.watchlistItem.watchlistItem_watchlistId_sortOrder_idx_04bb0458",
+    "label": "Create index \"watchlistItem_watchlistId_sortOrder_idx_04bb0458\" on \"watchlistItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "watchlistItem_watchlistId_sortOrder_idx_04bb0458",
+        "table": "watchlistItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"watchlistItem_watchlistId_sortOrder_idx_04bb0458\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlistItem_watchlistId_sortOrder_idx_04bb0458\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"watchlistItem_watchlistId_sortOrder_idx_04bb0458\"",
+        "sql": "CREATE INDEX \"watchlistItem_watchlistId_sortOrder_idx_04bb0458\" ON \"public\".\"watchlistItem\" (\"watchlistId\", \"sortOrder\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"watchlistItem_watchlistId_sortOrder_idx_04bb0458\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"watchlistItem_watchlistId_sortOrder_idx_04bb0458\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.watchlistItem.watchlistItem_watchlistId_fkey",
+    "label": "Add foreign key \"watchlistItem_watchlistId_fkey\" on \"watchlistItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "watchlistItem_watchlistId_fkey",
+        "table": "watchlistItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"watchlistItem_watchlistId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "watchlistItem_watchlistId_fkey",
+          "public",
+          "\"public\".\"watchlistItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"watchlistItem_watchlistId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"watchlistItem\"\nADD CONSTRAINT \"watchlistItem_watchlistId_fkey\"\nFOREIGN KEY (\"watchlistId\")\nREFERENCES \"public\".\"watchlist\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"watchlistItem_watchlistId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "watchlistItem_watchlistId_fkey",
+          "public",
+          "\"public\".\"watchlistItem\""
+        ]
+      }
+    ]
+  }
+]
