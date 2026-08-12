@@ -1,6 +1,6 @@
 import { markRaw } from "vue"
 import { type RouteRecordRaw } from "vue-router"
-import { ChartNoAxesCombined, Database, Wallet } from "@lucide/vue"
+import { ChartNoAxesCombined, Database, Wallet, CodeXml } from "@lucide/vue"
 
 export const RouterModules: RouteRecordRaw[] = [
   {
@@ -20,6 +20,14 @@ export const RouterModules: RouteRecordRaw[] = [
     },
   },
   {
+    path: "/scripts_workspace",
+    component: () => import("@/views/scripts_workspace/ScriptsWorkspace.vue"),
+    meta: {
+      icon: markRaw(CodeXml),
+      title: "脚本工作台",
+    },
+  },
+  {
     path: "/managers",
     meta: {
       icon: markRaw(Database),
@@ -32,22 +40,6 @@ export const RouterModules: RouteRecordRaw[] = [
         meta: {
           icon: "",
           title: "行情数据管理",
-        },
-      },
-      {
-        path: "/pine_scripts_manager",
-        component: () => import("@/views/managers/pine_scripts_manager/PineScriptsManager.vue"),
-        meta: {
-          icon: "",
-          title: "Pine脚本管理",
-        },
-      },
-      {
-        path: "/pine-playground",
-        component: () => import("@/views/managers/pine_playground/PinePlayground.vue"),
-        meta: {
-          icon: "",
-          title: "PineTS Playground",
         },
       },
     ],

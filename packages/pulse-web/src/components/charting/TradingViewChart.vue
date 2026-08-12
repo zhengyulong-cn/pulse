@@ -6,20 +6,26 @@ import {
   searchMarketInstruments,
   type MarketInstrumentSearchResult,
 } from '@/api/market-data'
+import type { PineChartApi, PineChartBar } from '@/indicators/PinePlotRenderer'
 
 import ChartSideBar from './side_bar/ChartSideBar.vue'
+import {
+  createAdvancedIndicatorsDropdown,
+  type AdvancedIndicatorsDropdownApi,
+} from './tool_bar/advancedIndicatorsDropdown'
+import { usePineIndicators } from './usePineIndicators'
 
 type ChartWidget = {
+  activeChart: () => PineChartApi
+  createDropdown: (options: {
+    align: 'left' | 'right'
+    items: Array<{ onSelect: () => void, title: string }>
+    title: string
+    tooltip?: string
+  }) => Promise<AdvancedIndicatorsDropdownApi>
+  headerReady: () => Promise<void>
+  onChartReady: (callback: () => void) => void
   remove: () => void
-}
-
-type ChartBar = {
-  time: number
-  open: number
-  close: number
-  high: number
-  low: number
-  volume: number
 }
 
 type TradingViewGlobal = {
@@ -44,6 +50,15 @@ const chartContainer = ref<HTMLElement>()
 const chartWidget = shallowRef<ChartWidget>()
 const loadError = ref<string>()
 const selectedSymbol = ref("jm2701")
+const {
+  activeScriptIds: activePineScriptIds,
+  dispose: disposePineIndicators,
+  resetChart: resetPineIndicatorsChart,
+  setBars: setPineIndicatorBars,
+  setChart: setPineIndicatorChart,
+  toggle: togglePineScript,
+} = usePineIndicators()
+let advancedIndicatorsDropdown: AdvancedIndicatorsDropdownApi | undefined
 let renderVersion = 0
 
 const chartingLibraryPath = `${import.meta.env.BASE_URL}charting_library/`
@@ -134,7 +149,7 @@ const datafeed = {
     symbolInfo: { ticker?: string },
     resolution: string,
     periodParams: { from: number, to: number, countBack?: number },
-    onHistory: (bars: ChartBar[], metadata: { noData: boolean }) => void,
+    onHistory: (bars: PineChartBar[], metadata: { noData: boolean }) => void,
     onError: (reason: string) => void,
   ) => {
     const instrumentId = searchResultsBySymbol.get(symbolInfo.ticker ?? '')?.id
@@ -144,8 +159,15 @@ const datafeed = {
       return
     }
 
-    void listFutureCnKlineBars(instrumentId, interval, periodParams.from, periodParams.to, periodParams.countBack).then(
-      (bars) => onHistory(bars, { noData: bars.length === 0 }),
+    const pineRequiredBars = 1_000
+    const countBack = Math.max(periodParams.countBack ?? 0, pineRequiredBars)
+    void listFutureCnKlineBars(instrumentId, interval, periodParams.from, periodParams.to, countBack).then(
+      (bars) => {
+        onHistory(bars, { noData: bars.length === 0 })
+        window.requestAnimationFrame(() => {
+          setPineIndicatorBars(bars)
+        })
+      },
       (error) => onError(error instanceof Error ? error.message : 'K-line data request failed'),
     )
   },
@@ -176,6 +198,9 @@ const loadChartingLibrary = () => new Promise<TradingViewGlobal>((resolve, rejec
 })
 
 const destroyChart = () => {
+  resetPineIndicatorsChart()
+  advancedIndicatorsDropdown?.remove()
+  advancedIndicatorsDropdown = undefined
   chartWidget.value?.remove()
   chartWidget.value = undefined
 }
@@ -189,7 +214,7 @@ const renderChart = async () => {
     const TradingView = await loadChartingLibrary()
     if (version !== renderVersion || !chartContainer.value) return
 
-    chartWidget.value = new TradingView.widget({
+    const widget = new TradingView.widget({
       container: chartContainer.value,
       library_path: chartingLibraryPath,
       datafeed,
@@ -199,6 +224,26 @@ const renderChart = async () => {
       timezone: 'Asia/Shanghai',
       autosize: true,
       theme: 'light',
+    })
+    chartWidget.value = widget
+    void widget.headerReady().then(() => {
+      if (version !== renderVersion || chartWidget.value !== widget) return
+
+      void createAdvancedIndicatorsDropdown(
+        widget,
+        () => activePineScriptIds.value,
+        togglePineScript,
+      ).then((dropdown) => {
+        if (version !== renderVersion || chartWidget.value !== widget) {
+          dropdown.remove()
+          return
+        }
+        advancedIndicatorsDropdown = dropdown
+      })
+    })
+    widget.onChartReady(() => {
+      if (version !== renderVersion || chartWidget.value !== widget) return
+      setPineIndicatorChart(widget.activeChart())
     })
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Charting Library failed to load'
@@ -216,6 +261,7 @@ const selectWatchlistSymbol = (symbol: string) => {
 onBeforeUnmount(() => {
   renderVersion += 1
   destroyChart()
+  disposePineIndicators()
 })
 </script>
 

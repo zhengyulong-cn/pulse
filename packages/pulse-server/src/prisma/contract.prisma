@@ -5,6 +5,11 @@ enum TradeDirection {
   SHORT
 }
 
+enum PineScriptType {
+  INDICATOR
+  STRATEGY
+}
+
 model TradingAccount {
   id           Int           @id @default(autoincrement())
   name         String
@@ -51,4 +56,15 @@ model WatchlistItem {
 
   @@unique([watchlistId, instrumentId])
   @@index([watchlistId, sortOrder])
+}
+
+model PineScript {
+  id          Int            @id @default(autoincrement())
+  content     String
+  description String
+  type        PineScriptType
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now())
+
+  @@index([type])
 }
