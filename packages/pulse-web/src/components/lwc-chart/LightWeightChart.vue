@@ -12,6 +12,7 @@ import { useChartTooltip } from './tooltip/useChartTooltip'
 import { useKlineData } from './useKlineData'
 import { usePinePlotIndicators } from './usePinePlotIndicators'
 import { useRealtimeKline } from './useRealtimeKline'
+import { useChartWatermark } from './watermark/useChartWatermark'
 
 type CompleteBar = FutureCnKlineBar & { time: Time }
 
@@ -24,6 +25,7 @@ const DEFAULT_VISIBLE_BAR_COUNT = 200
 const realtimeBars = new Map<number, CompleteBar>()
 const barsByTime = new Map<number, CompleteBar>()
 const { tooltip, updateFromCrosshair } = useChartTooltip(() => candlestickSeries, barsByTime)
+const { attach: attachWatermark, dispose: disposeWatermark, update: updateWatermark } = useChartWatermark()
 
 const getChartBars = () => [...barsByTime.values()]
   .sort((first, second) => Number(first.time) - Number(second.time))
@@ -44,8 +46,11 @@ const renderKlines = (bars: FutureCnKlineBar[]) => {
   })
 }
 
-const { loadDefaultInstrument, selectKline, selectedInstrumentId, selectedInterval } = useKlineData(renderKlines)
+const { loadDefaultInstrument, selectKline, selectedInstrumentId, selectedInstrumentName, selectedInterval, selectedSymbol } = useKlineData(renderKlines)
 const { activeScriptIds, dispose: disposePineIndicators, toggle: togglePineIndicator } = usePinePlotIndicators(() => candlestickSeries)
+watch([selectedInstrumentName, selectedSymbol, selectedInterval], () => {
+  updateWatermark(selectedInstrumentName.value, selectedSymbol.value, selectedInterval.value)
+})
 watch([selectedInstrumentId, selectedInterval], () => {
   realtimeBars.clear()
   barsByTime.clear()
@@ -74,6 +79,7 @@ onMounted(() => {
   if (!chartContainer.value) return
   chart = createChart(chartContainer.value, chartOptions)
   candlestickSeries = chart.addSeries(CandlestickSeries, candlestickOptions)
+  attachWatermark(chart, selectedInstrumentName.value, selectedSymbol.value, selectedInterval.value)
   chart.subscribeCrosshairMove(updateFromCrosshair)
   resizeObserver = new ResizeObserver(resizeChart)
   resizeObserver.observe(chartContainer.value)
@@ -83,6 +89,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   disposePineIndicators()
+  disposeWatermark()
   resizeObserver?.disconnect()
   chart?.unsubscribeCrosshairMove(updateFromCrosshair)
   chart?.remove()
