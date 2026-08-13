@@ -6,11 +6,13 @@ import type { KlineQueryInterval } from '@/api/market-data'
 type RealtimeBar = {
   close: number
   high: number
+  hold: number
   instrument_id: number
   interval: KlineQueryInterval
   low: number
   open: number
   time: number
+  volume: number
 }
 
 const getWebSocketUrl = () => {
