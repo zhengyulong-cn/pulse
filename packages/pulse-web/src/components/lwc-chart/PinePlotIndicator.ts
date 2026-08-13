@@ -38,7 +38,7 @@ const toPlotPoints = (plot: PinePlot) => (plot.data ?? []).flatMap((item, index)
     const value = point.value
     const options = point.options
     if (time === undefined || typeof value !== 'number' || !Number.isFinite(value)) return []
-    return [{ time, value, index, options }]
+    return [{ time, value, index, ...options }]
   })
 })
 
