@@ -19,7 +19,7 @@ const getItems = (value: unknown) => {
   if (!isRecord(value) || !Array.isArray(value.data)) return []
   return value.data.flatMap((item) => (
     isRecord(item) && Array.isArray(item.value) ? item.value : [item]
-  ))
+  )).filter((item) => item !== null && item !== undefined)
 }
 
 export const getPlotItems = (plots: unknown, kind: PinePlotItemKind): PinePlotItem[] => {
