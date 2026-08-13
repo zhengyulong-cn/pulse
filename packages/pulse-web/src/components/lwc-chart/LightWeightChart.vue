@@ -4,7 +4,7 @@ import dayjs from 'dayjs'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import type { FutureCnKlineBar } from '@/api/market-data'
-import { chartOptions } from './config.ts'
+import { candlestickOptions, chartOptions } from './config.ts'
 import ChartSideBar from './side_bar/ChartSideBar.vue'
 import ChartTopBar from './top_bar/ChartTopBar.vue'
 import { useKlineData } from './useKlineData'
@@ -60,7 +60,7 @@ onMounted(() => {
   if (!chartContainer.value) return
 
   chart = createChart(chartContainer.value, chartOptions)
-  candlestickSeries = chart.addSeries(CandlestickSeries)
+  candlestickSeries = chart.addSeries(CandlestickSeries, candlestickOptions)
   resizeObserver = new ResizeObserver(resizeChart)
   resizeObserver.observe(chartContainer.value)
   resizeChart()

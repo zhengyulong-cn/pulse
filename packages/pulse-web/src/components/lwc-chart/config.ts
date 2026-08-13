@@ -39,3 +39,12 @@ export const chartOptions = {
     timeFormatter: formatShanghaiTime,
   },
 }
+
+export const candlestickOptions = {
+  borderUpColor: '#ef5350',
+  borderDownColor: '#26a69a',
+  upColor: '#ef5350',
+  downColor: '#26a69a',
+  wickUpColor: '#ef5350',
+  wickDownColor: '#26a69a',
+}
