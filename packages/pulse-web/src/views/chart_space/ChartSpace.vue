@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import TradingViewChart from '@/components/charting/TradingViewChart.vue'
+import LightWeightChart from '@/components/lwc-chart/LightWeightChart.vue'
 </script>
 
 <template>
   <section class="h-[calc(100vh-2.5rem)] bg-slate-100">
-    <TradingViewChart />
+    <LightWeightChart />
   </section>
 </template>
