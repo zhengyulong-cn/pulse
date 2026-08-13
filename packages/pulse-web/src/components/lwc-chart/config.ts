@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
-import { ColorType, type Time } from 'lightweight-charts'
+import { ColorType, CrosshairMode, type Time } from 'lightweight-charts'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -23,6 +23,7 @@ export const chartOptions = {
     vertLines: { color: '#e2e8f0' },
   },
   crosshair: {
+    mode: CrosshairMode.Normal,
     vertLine: { color: '#94a3b8', labelBackgroundColor: '#334155' },
     horzLine: { color: '#94a3b8', labelBackgroundColor: '#334155' },
   },

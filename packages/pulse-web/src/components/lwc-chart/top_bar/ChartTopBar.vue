@@ -66,7 +66,7 @@ const getScriptName = (script: PineScript) => (
           :class="activeScriptIds.includes(script.id) ? 'bg-blue-50 text-blue-600' : 'text-slate-700'"
           @click="emit('toggleIndicator', script)"
         >
-          <span class="mr-2 w-4">{{ activeScriptIds.includes(script.id) ? '✓' : '' }}</span>
+          <span class="w-4">{{ activeScriptIds.includes(script.id) ? '✓' : '' }}</span>
           {{ getScriptName(script) }}
         </button>
       </div>
