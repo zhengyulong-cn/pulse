@@ -11,6 +11,7 @@ import type {
 
 export type PineLabel = {
   backgroundColor?: string
+  position?: 'down' | 'up'
   text: string
   textColor?: string
   time: Time
@@ -39,15 +40,13 @@ class PineLabelRenderer implements IPrimitivePaneRenderer {
         const textWidth = context.measureText(label.text).width
         const width = textWidth + paddingX * 2
         const height = fontSize + paddingY * 2
-        const left = x - width / 2
-        const top = y - height / 2
 
         context.fillStyle = label.backgroundColor ?? '#2962ff'
         context.beginPath()
-        context.roundRect(left, top, width, height, 3 * verticalPixelRatio)
+        context.roundRect(x - width / 2, label.position === 'up' ? y : y - height, width, height, 3 * verticalPixelRatio)
         context.fill()
         context.fillStyle = label.textColor ?? '#ffffff'
-        context.fillText(label.text, x, y)
+        context.fillText(label.text, x, label.position === 'up' ? y + height / 2 : y - height / 2)
       }
       context.restore()
     })

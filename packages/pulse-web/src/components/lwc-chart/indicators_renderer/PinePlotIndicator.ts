@@ -41,6 +41,7 @@ type PineLineItem = {
 
 type PineLabelItem = {
   color?: string
+  style?: string
   text?: string
   textcolor?: string
   x?: number
@@ -151,7 +152,6 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
   }
 
   private drawLabels = (plots: unknown, candles: PineCandle[]) => {
-    console.log(plots)
     const labels = getPlotItems(plots, 'label').flatMap(({ value }) => {
       if (!value || typeof value !== 'object') return []
       const label = value as PineLabelItem
@@ -169,6 +169,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
       if (time === undefined || price === undefined) return []
       return [{
         backgroundColor: label.color,
+        position: /up/i.test(label.style ?? '') ? 'up' : /down/i.test(label.style ?? '') ? 'down' : undefined,
         text: label.text ?? '',
         textColor: label.textcolor,
         time,
