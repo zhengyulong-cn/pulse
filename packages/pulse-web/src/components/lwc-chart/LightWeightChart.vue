@@ -8,6 +8,7 @@ import { chartOptions } from './config.ts'
 import ChartSideBar from './side_bar/ChartSideBar.vue'
 import ChartTopBar from './top_bar/ChartTopBar.vue'
 import { useKlineData } from './useKlineData'
+import { usePinePlotIndicators } from './usePinePlotIndicators'
 
 const chartContainer = ref<HTMLElement>()
 let chart: IChartApi | undefined
@@ -30,6 +31,7 @@ const renderKlines = (bars: FutureCnKlineBar[]) => {
 }
 
 const { loadDefaultInstrument, selectKline, selectedInterval } = useKlineData(renderKlines)
+const { activeScriptIds, dispose: disposePineIndicators, toggle: togglePineIndicator } = usePinePlotIndicators(() => candlestickSeries)
 
 const resizeChart = () => {
   if (!chart || !chartContainer.value) return
@@ -49,6 +51,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  disposePineIndicators()
   resizeObserver?.disconnect()
   chart?.remove()
   chart = undefined
@@ -58,7 +61,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="relative flex size-full flex-col bg-white">
-    <ChartTopBar :selected-interval="selectedInterval" @select-interval="selectKline({ interval: $event })" />
+    <ChartTopBar
+      :active-script-ids="activeScriptIds"
+      :selected-interval="selectedInterval"
+      @select-interval="selectKline({ interval: $event })"
+      @toggle-indicator="togglePineIndicator"
+    />
     <div class="flex min-h-0 flex-1">
       <div ref="chartContainer" class="min-w-0 flex-1" />
       <ChartSideBar class="shrink-0" @select-symbol="selectKline({ instrument: $event })" />
