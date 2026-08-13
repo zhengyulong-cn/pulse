@@ -9,6 +9,7 @@ import {
   type SeriesType,
   type Time,
 } from 'lightweight-charts'
+import { PineBoxPrimitive, type PineBox } from './PineBoxPrimitive'
 import { PineLabelPrimitive, type PineLabel } from './PineLabelPrimitive'
 import { getPlotItems } from './PinePlotItems'
 import { PineLinePrimitive, type PineLine } from './PineLinePrimitive'
@@ -50,6 +51,19 @@ type PineLabelItem = {
   yloc?: string
 }
 
+type PineBoxItem = {
+  bgcolor?: string
+  border_color?: string
+  border_style?: string
+  border_width?: number
+  bottom?: number
+  extend?: string
+  left?: number
+  right?: number
+  top?: number
+  xloc?: string
+}
+
 type PineCandle = {
   high: number
   low: number
@@ -83,6 +97,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
   private plotSeries = new Map<string, ISeriesApi<'Line'> | ISeriesApi<'Histogram'>>()
   private linePrimitive = new PineLinePrimitive()
   private labelPrimitive = new PineLabelPrimitive()
+  private boxPrimitive = new PineBoxPrimitive()
   private renderVersion = 0
 
   constructor(private readonly source: string) {}
@@ -92,6 +107,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     this.baseSeries = series
     series.attachPrimitive(this.linePrimitive)
     series.attachPrimitive(this.labelPrimitive)
+    series.attachPrimitive(this.boxPrimitive)
     series.subscribeDataChanged(this.update)
     void this.update()
   }
@@ -101,6 +117,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     this.baseSeries?.unsubscribeDataChanged(this.update)
     this.baseSeries?.detachPrimitive(this.linePrimitive)
     this.baseSeries?.detachPrimitive(this.labelPrimitive)
+    this.baseSeries?.detachPrimitive(this.boxPrimitive)
     this.plotSeries.forEach((series) => this.chart?.removeSeries(series))
     this.plotSeries.clear()
     this.baseSeries = undefined
@@ -179,6 +196,28 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     this.labelPrimitive.setLabels(labels)
   }
 
+  private drawBoxes = (plots: unknown, candles: PineCandle[]) => {
+    const boxes = getPlotItems(plots, 'box').flatMap(({ value }) => {
+      if (!value || typeof value !== 'object') return []
+      const box = value as PineBoxItem
+      const leftTime = this.toLineTime(box.left, box.xloc, candles)
+      const rightTime = this.toLineTime(box.right, box.xloc, candles)
+      if (leftTime === undefined || rightTime === undefined || typeof box.top !== 'number' || typeof box.bottom !== 'number') return []
+      return [{
+        backgroundColor: box.bgcolor,
+        borderColor: box.border_color,
+        borderStyle: box.border_style,
+        borderWidth: box.border_width,
+        bottom: box.bottom,
+        extend: box.extend,
+        leftTime,
+        rightTime,
+        top: box.top,
+      } satisfies PineBox]
+    })
+    this.boxPrimitive.setBoxes(boxes)
+  }
+
   private toLineTime = (value: unknown, xloc: unknown, candles: PineCandle[]) => {
     if (typeof value !== 'number') return undefined
     if (xloc === 'bar_time') return toTimestamp(value)
@@ -211,5 +250,6 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     this.drawPlots(context.plots)
     this.drawLines(context.plots, candles)
     this.drawLabels(context.plots, candles)
+    this.drawBoxes(context.plots, candles)
   }
 }
