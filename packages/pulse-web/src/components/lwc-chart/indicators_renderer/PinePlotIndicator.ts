@@ -10,6 +10,7 @@ import {
   type Time,
 } from 'lightweight-charts'
 import { getPlotItems } from './pinePlotItems'
+import { PineLinePrimitive, type PineLine } from './PineLinePrimitive'
 
 type PinePlotPoint = {
   time?: number
@@ -21,6 +22,20 @@ type PinePlotPoint = {
 type PinePlot = {
   data?: unknown[]
   options?: { color?: string, style?: string }
+}
+
+type PineLineItem = {
+  color?: string
+  extend?: string
+  end?: { price?: number, timestamp?: number }
+  style?: string
+  start?: { price?: number, timestamp?: number }
+  width?: number
+  x1?: number
+  x2?: number
+  xloc?: string
+  y1?: number
+  y2?: number
 }
 
 const toTimestamp = (time: unknown): Time | undefined => {
@@ -48,6 +63,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
   private baseSeries: ISeriesApi<SeriesType> | undefined
   private chart: IChartApi | undefined
   private plotSeries = new Map<string, ISeriesApi<'Line'> | ISeriesApi<'Histogram'>>()
+  private linePrimitive = new PineLinePrimitive()
   private renderVersion = 0
 
   constructor(private readonly source: string) {}
@@ -55,6 +71,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
   attached({ chart, series }: SeriesAttachedParameter<Time, SeriesType>) {
     this.chart = chart
     this.baseSeries = series
+    series.attachPrimitive(this.linePrimitive)
     series.subscribeDataChanged(this.update)
     void this.update()
   }
@@ -62,6 +79,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
   detached() {
     this.renderVersion += 1
     this.baseSeries?.unsubscribeDataChanged(this.update)
+    this.baseSeries?.detachPrimitive(this.linePrimitive)
     this.plotSeries.forEach((series) => this.chart?.removeSeries(series))
     this.plotSeries.clear()
     this.baseSeries = undefined
@@ -90,6 +108,34 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     })
   }
 
+  private drawLines = (plots: unknown, candles: Array<{ openTime: Time }>) => {
+    const lines = getPlotItems(plots, 'line').flatMap(({ value }) => {
+      const line = value as PineLineItem
+      const startValue = line.start?.price ?? line.y1
+      const endValue = line.end?.price ?? line.y2
+      const startTime = toTimestamp(line.start?.timestamp) ?? this.toLineTime(line.x1, line.xloc, candles)
+      const endTime = toTimestamp(line.end?.timestamp) ?? this.toLineTime(line.x2, line.xloc, candles)
+      if (typeof startValue !== 'number' || typeof endValue !== 'number' || startTime === undefined || endTime === undefined) return []
+      return [{
+        color: line.color,
+        extend: line.extend,
+        endTime,
+        endValue,
+        startTime,
+        startValue,
+        style: line.style,
+        width: line.width,
+      } satisfies PineLine]
+    })
+    this.linePrimitive.setLines(lines)
+  }
+
+  private toLineTime = (value: unknown, xloc: unknown, candles: Array<{ openTime: Time }>) => {
+    if (typeof value !== 'number') return undefined
+    if (xloc === 'bar_time') return toTimestamp(value)
+    return candles[Math.trunc(value)]?.openTime
+  }
+
   private update = async () => {
     const baseSeries = this.baseSeries
     if (!baseSeries) return
@@ -114,5 +160,6 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     if (version !== this.renderVersion || !this.chart) return
 
     this.drawPlots(context.plots)
+    this.drawLines(context.plots, candles)
   }
 }

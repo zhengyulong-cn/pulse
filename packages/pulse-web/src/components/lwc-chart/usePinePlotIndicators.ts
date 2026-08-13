@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 import type { ISeriesApi } from 'lightweight-charts'
 
 import type { PineScript } from '@/api/pine-scripts'
-import { PinePlotIndicator } from './PinePlotIndicator'
+import { PinePlotIndicator } from './indicators_renderer/PinePlotIndicator'
 
 export const usePinePlotIndicators = (series: () => ISeriesApi<'Candlestick'> | undefined) => {
   const activeScripts = ref<PineScript[]>([])

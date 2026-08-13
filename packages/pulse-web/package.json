@@ -23,6 +23,7 @@
     "@vueuse/core": "^14.4.0",
     "dayjs": "^1.11.21",
     "element-plus": "^2.14.3",
+    "fancy-canvas": "^2.1.0",
     "lightweight-charts": "~5.0.0",
     "pinets": "^0.9.30",
     "tailwindcss": "^4.3.3",
