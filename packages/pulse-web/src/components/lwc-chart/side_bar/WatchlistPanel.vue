@@ -5,6 +5,7 @@ import { ElMessageBox } from 'element-plus'
 import { computed, ref, watch } from 'vue'
 
 import { getMarketInstruments, searchMarketInstruments, type MarketInstrumentSearchResult } from '@/api/market-data'
+import { useRealtimeQuotes } from '../useRealtimeQuotes'
 import WatchlistItemContextMenu from './WatchlistItemContextMenu.vue'
 import {
   createWatchlist,
@@ -36,6 +37,8 @@ const watchlistsQuery = useQuery({ queryKey: ['watchlists'], queryFn: listWatchl
 const watchlists = computed(() => watchlistsQuery.data.value ?? [])
 const activeWatchlist = computed(() => watchlists.value.find((watchlist) => watchlist.id === activeWatchlistId.value))
 const activeInstrumentIds = computed(() => activeWatchlist.value?.items.map((item) => item.instrumentId) ?? [])
+const watchlistInstrumentIds = computed(() => [...new Set(watchlists.value.flatMap((watchlist) => watchlist.items.map((item) => item.instrumentId)))])
+const { quotes } = useRealtimeQuotes(watchlistInstrumentIds)
 
 const instrumentsQuery = useQuery({
   queryKey: computed(() => ['watchlist-instruments', activeInstrumentIds.value]),
@@ -223,7 +226,14 @@ const selectInstrument = (item: WatchlistItem) => {
         <div v-for="item in activeWatchlist.items" :key="item.id" role="button" tabindex="0" class="group relative flex cursor-pointer items-center border-b border-slate-100 px-3 py-2.5 text-left transition-colors hover:bg-blue-50/50 focus:outline-none focus-visible:bg-blue-50" :class="{ 'border-t-2 border-t-blue-400': dragOverItemId === item.id && draggedItemId !== item.id, 'opacity-50': draggedItemId === item.id }" @click="selectInstrument(item)" @contextmenu="itemContextMenu?.open($event, item)" @keydown.enter="selectInstrument(item)" @dragover.prevent="dragOverItemId = item.id" @drop.prevent="dropItem(item)">
           <span class="mr-1 flex cursor-grab touch-none items-center text-slate-300 hover:text-slate-500 active:cursor-grabbing" draggable="true" title="拖动排序" aria-label="拖动排序" @click.stop @dragstart.stop="startItemDrag(item, $event)" @dragend="clearItemDrag"><GripVertical :size="16" /></span>
           <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold leading-4">{{ instrumentsById.get(item.instrumentId)?.name ?? '加载中…' }}</p><p class="mt-1 truncate font-mono text-[11px] leading-3 text-slate-400">{{ instrumentsById.get(item.instrumentId)?.symbol ?? item.instrumentId }}</p></div>
-          <div class="mr-1 text-right"><p class="font-mono text-sm leading-4 text-slate-400">—</p><p class="mt-1 text-[10px] leading-3 text-slate-300">暂无行情</p></div>
+          <div class="mr-1 text-right">
+            <p class="font-mono text-sm leading-4" :class="quotes.get(item.instrumentId) ? 'text-slate-700' : 'text-slate-400'">
+              {{ quotes.get(item.instrumentId)?.price ?? '—' }}
+            </p>
+            <p class="mt-1 text-[10px] leading-3" :class="quotes.get(item.instrumentId) ? 'text-emerald-600' : 'text-slate-300'">
+              {{ quotes.get(item.instrumentId) ? '实时行情' : '暂无行情' }}
+            </p>
+          </div>
         </div>
       </div>
       <div v-else class="flex flex-1 flex-col items-center justify-center gap-3 text-center"><p class="text-sm text-slate-400">还没有自选标的</p><button type="button" class="rounded-md bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600" @click="openInstrumentDialog()">添加标的</button></div>
