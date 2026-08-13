@@ -25,6 +25,11 @@ class Settings:
     postgres_port: str = os.getenv("POSTGRES_PORT", "5432")
     postgres_database: str = os.getenv("POSTGRES_DATABASE", "postgres")
 
+    redis_host: str = os.getenv("REDIS_HOST", "127.0.0.1")
+    redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
+    redis_database: int = int(os.getenv("REDIS_DATABASE", "0"))
+    redis_password: str | None = os.getenv("REDIS_PASSWORD")
+
     tqsdk_username: str = os.getenv("TQSDK_USERNAME", "Zhengyu")
     tqsdk_password: str = os.getenv("TQSDK_PASSWORD", "lzy523024")
 

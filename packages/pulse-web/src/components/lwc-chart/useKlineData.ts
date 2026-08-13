@@ -33,7 +33,7 @@ export const useKlineData = (onData: (bars: FutureCnKlineBar[]) => void) => {
       const instrumentId = selectedInstrumentId.value
       if (instrumentId === undefined) throw new Error('未选择合约')
       const now = dayjs().unix()
-      return listFutureCnKlineBars(instrumentId, selectedInterval.value, now - 365 * 24 * 60 * 60, now, 1_000)
+      return listFutureCnKlineBars(instrumentId, selectedInterval.value, now - 365 * 24 * 60 * 60, now, 800)
     },
   })
 
@@ -59,6 +59,7 @@ export const useKlineData = (onData: (bars: FutureCnKlineBar[]) => void) => {
     klineQuery,
     loadDefaultInstrument,
     selectKline,
+    selectedInstrumentId,
     selectedInterval: selectedInterval as Ref<KlineQueryInterval>,
   }
 }

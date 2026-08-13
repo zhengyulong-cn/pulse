@@ -24,6 +24,7 @@ export default defineConfig({
       '/api/market-data': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
+        ws: true,
         rewrite: (path) => path.replace(/^\/api\/market-data/, ''),
       },
       '/api/server': {
