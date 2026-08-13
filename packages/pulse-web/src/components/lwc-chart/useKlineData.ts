@@ -61,5 +61,6 @@ export const useKlineData = (onData: (bars: FutureCnKlineBar[]) => void) => {
     selectKline,
     selectedInstrumentId,
     selectedInterval: selectedInterval as Ref<KlineQueryInterval>,
+    selectedSymbol,
   }
 }
