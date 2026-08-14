@@ -10,7 +10,6 @@ export const useChartBars = (
   getSeries: () => ISeriesApi<'Candlestick'> | undefined,
   onBarsRendered: (bars: FutureCnKlineBar[]) => void,
 ) => {
-  const realtimeBars = new Map<number, CompleteBar>()
   const barsByTime = new Map<number, CompleteBar>()
 
   const getChartBars = () => [...barsByTime.values()]
@@ -23,7 +22,6 @@ export const useChartBars = (
       const time = dayjs(bar.time).unix()
       barsByTime.set(time, { ...bar, time: time as Time })
     })
-    realtimeBars.forEach((bar, time) => barsByTime.set(time, bar))
     const chartBars = getChartBars()
     getSeries()?.setData(chartBars)
     getChart()?.timeScale().setVisibleLogicalRange({
@@ -35,19 +33,15 @@ export const useChartBars = (
 
   const updateRealtime = (bar: Omit<CompleteBar, 'time'> & { time: number }) => {
     const completeBar = { ...bar, time: bar.time as Time }
-    realtimeBars.set(bar.time, completeBar)
     barsByTime.set(bar.time, completeBar)
     const series = getSeries()
     const lastBar = series?.data().at(-1)
     if (!lastBar || bar.time >= Number(lastBar.time)) {
       series?.update(completeBar as never)
-      return
     }
-    series?.setData(getChartBars() as never)
   }
 
   const clear = () => {
-    realtimeBars.clear()
     barsByTime.clear()
   }
 

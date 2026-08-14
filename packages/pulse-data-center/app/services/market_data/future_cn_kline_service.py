@@ -151,6 +151,7 @@ def list_future_cn_kline_bars(
     to_timestamp: int,
     limit: int,
     count_back: int | None = None,
+    realtime_bar: dict[str, object] | None = None,
 ) -> list[FutureCnKlineBar]:
     if to_timestamp < from_timestamp:
         raise ValueError("to must be greater than or equal to from")
@@ -183,7 +184,7 @@ def list_future_cn_kline_bars(
             klines = klines[-count_back:]
         elif len(klines) > limit:
             klines = klines[:limit]
-    return [
+    bars = [
         FutureCnKlineBar(
             time=int(kline.date_time.replace(tzinfo=timezone.utc).timestamp() * 1000),
             open=float(kline.open),
@@ -195,6 +196,65 @@ def list_future_cn_kline_bars(
         )
         for kline in klines
     ]
+    if realtime_bar is not None:
+        realtime_time = realtime_bar.get("time")
+        if isinstance(realtime_time, int) and from_timestamp * 1000 <= realtime_time <= to_timestamp * 1000:
+            try:
+                current_bar = FutureCnKlineBar(
+                    time=realtime_time,
+                    open=float(realtime_bar["open"]),
+                    close=float(realtime_bar["close"]),
+                    high=float(realtime_bar["high"]),
+                    low=float(realtime_bar["low"]),
+                    volume=float(realtime_bar["volume"]),
+                    hold=float(realtime_bar["hold"]),
+                )
+            except (KeyError, TypeError, ValueError):
+                current_bar = None
+            if current_bar is not None:
+                bars_by_time = {bar.time: bar for bar in bars}
+                bars_by_time[current_bar.time] = current_bar
+                bars = sorted(bars_by_time.values(), key=lambda bar: bar.time)
+                if count_back is not None:
+                    bars = bars[-count_back:]
+    return bars
+
+
+def upsert_realtime_kline_bar(instrument_id: int, interval: KlineInterval, bar: dict[str, object]) -> None:
+    upsert_realtime_kline_bars(instrument_id, interval, [bar])
+
+
+def upsert_realtime_kline_bars(instrument_id: int, interval: KlineInterval, bars: list[dict[str, object]]) -> None:
+    _, kline_model = KLINE_INTERVAL_CONFIG[interval]
+    rows: list[dict[str, object]] = []
+    for bar in bars:
+        timestamp = bar.get("time")
+        if not isinstance(timestamp, int):
+            continue
+        try:
+            rows.append({
+                "instrument_id": instrument_id,
+                "date_time": datetime.fromtimestamp(timestamp / 1000, timezone.utc).replace(tzinfo=None),
+                "open": float(bar["open"]),
+                "close": float(bar["close"]),
+                "high": float(bar["high"]),
+                "low": float(bar["low"]),
+                "volume": float(bar["volume"]),
+                "hold": float(bar["hold"]),
+            })
+        except (KeyError, TypeError, ValueError):
+            continue
+    if not rows:
+        return
+    statement = insert(kline_model).values(rows)
+    from app.db.database import engine
+
+    with Session(engine) as session:
+        session.exec(statement.on_conflict_do_update(
+            index_elements=["instrument_id", "date_time"],
+            set_={field: getattr(statement.excluded, field) for field in ("open", "close", "high", "low", "volume", "hold")},
+        ))
+        session.commit()
 
 
 def _aggregate_5m_klines(klines: list[FutureCnKline5m], aggregation_seconds: int) -> list[FutureCnKline5m]:
