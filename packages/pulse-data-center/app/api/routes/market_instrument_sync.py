@@ -7,14 +7,14 @@ from app.services.market_data.market_instrument_sync_job_service import (
     instrument_sync_job_manager,
 )
 
-router = APIRouter(prefix="/market_data/instrument", tags=["Market Data"])
+router = APIRouter(prefix="/api/v1/market-instrument", tags=["Market Instruments"])
 
 
 @router.post(
     "/sync",
     response_model=MarketInstrumentSyncJobRead,
     status_code=status.HTTP_202_ACCEPTED,
-    summary="启动期货合约同步",
+    summary="同步未下市期货合约",
 )
 def start_market_instrument_sync() -> MarketInstrumentSyncJobRead:
     try:
@@ -26,7 +26,7 @@ def start_market_instrument_sync() -> MarketInstrumentSyncJobRead:
 @router.get(
     "/sync/{job_id}",
     response_model=MarketInstrumentSyncJobRead,
-    summary="查询期货合约同步任务",
+    summary="查询同步未下市期货合约的同步任务",
 )
 def get_market_instrument_sync_job(job_id: str) -> MarketInstrumentSyncJobRead:
     try:

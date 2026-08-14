@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/v1/market-instruments", tags=["Market Instrument
 @router.get(
     "/tree",
     response_model=list[MarketInstrumentExchangeNodeRead],
-    summary="查询金融标的树",
+    summary="获取所有标的构成的数结构",
 )
 def list_market_instruments(
     exchange_id: int | None = None,
@@ -33,7 +33,7 @@ def list_market_instruments(
 @router.get(
     "/search",
     response_model=list[MarketInstrumentSearchRead],
-    summary="搜索金融标的",
+    summary="模糊匹配搜索标的名、标的代码",
 )
 def search_market_instruments(
     query: str = Query(min_length=1, max_length=100),
@@ -46,7 +46,7 @@ def search_market_instruments(
 @router.get(
     "",
     response_model=list[MarketInstrumentRead],
-    summary="批量查询金融标的",
+    summary="根据金融标的ids查询列表",
 )
 def get_market_instruments(
     instrument_ids: str = Query(min_length=1, alias="instrumentIds"),

@@ -113,7 +113,7 @@ export const getMarketInstruments = (instrumentIds: number[]) =>
   dataCenterRequest<MarketInstrument[]>(`/api/v1/market-instruments?${new URLSearchParams({ instrumentIds: instrumentIds.join(',') })}`)
 
 export const listLatestKlines = (instrumentIds: number[]) =>
-  dataCenterRequest<LatestKline[]>(`/market_data/kline/latest?instrument_ids=${instrumentIds.join(',')}`)
+  dataCenterRequest<LatestKline[]>(`/klines/latest?instrument_ids=${instrumentIds.join(',')}`)
 
 export const listFutureCnKlineBars = (
   instrumentId: number,
@@ -129,22 +129,22 @@ export const listFutureCnKlineBars = (
     to: String(toTimestamp),
   })
   if (countBack !== undefined) parameters.set('count_back', String(countBack))
-  return dataCenterRequest<FutureCnKlineBar[]>(`/market_data/kline/bars?${parameters}`)
+  return dataCenterRequest<FutureCnKlineBar[]>(`/klines/bars?${parameters}`)
 }
 
 export const syncKline = (symbol: string, interval: KlineInterval) =>
-  dataCenterRequest<KlineSyncResult>('/market_data/kline/sync', {
+  dataCenterRequest<KlineSyncResult>('/klines/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ symbol, interval }),
   })
 
 export const syncKlinesBatch = (symbols: string[], interval: KlineInterval) =>
-  dataCenterRequest<KlineBatchSyncJob>('/market_data/kline/sync/batch', {
+  dataCenterRequest<KlineBatchSyncJob>('/klines/sync/batch', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ symbols, interval }),
   })
 
 export const getKlineBatchSyncJob = (jobId: string) =>
-  dataCenterRequest<KlineBatchSyncJob>(`/market_data/kline/sync/batch/${jobId}`)
+  dataCenterRequest<KlineBatchSyncJob>(`/klines/sync/batch/${jobId}`)

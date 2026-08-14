@@ -9,15 +9,20 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.config.settings import settings
 from app.config.logging_config import configure_logging, get_logger
 from app.db import check_database_connection, dispose_database_engine, initialize_market_data_schema
+from app.redis import check_redis_connection, close_redis_client
+from app.redis.client import get_redis_client
 from app.middlewares import install_exception_middleware, install_request_middleware
 from app.services.data_provider.tqsdk_provider import tqsdk_client_manager
 from app.api.routes.market_exchange import router as market_exchange_router
 from app.api.routes.market_instrument import router as market_instrument_router
 from app.api.routes.market_instrument_sync import router as market_instrument_sync_router
 from app.api.routes.future_cn_kline import router as future_cn_kline_router
+from app.api.routes.realtime_market import configure_realtime_market_service, router as realtime_market_router
+from app.services.market_data.realtime_market_service import RealtimeMarketService
 
 configure_logging()
 logger = get_logger(__name__)
+realtime_market_service = RealtimeMarketService(get_redis_client())
 
 def _request_id(request) -> str | None:
     return getattr(request.state, "request_id", None)
@@ -40,7 +45,9 @@ async def handle_validation_exception(request, exc: RequestValidationError):
 async def lifespan(_: FastAPI):
     logger.info("Starting %s", settings.app_name)
     check_database_connection()
+    check_redis_connection()
     initialize_market_data_schema()
+    realtime_market_service.start()
     try:
         tqsdk_client_manager.start()
     except Exception as exc:
@@ -49,7 +56,9 @@ async def lifespan(_: FastAPI):
         yield
     finally:
         tqsdk_client_manager.close()
+        realtime_market_service.close()
         dispose_database_engine()
+        close_redis_client()
         logger.info("Stopping %s", settings.app_name)
 
 def create_application() -> FastAPI:
@@ -66,6 +75,8 @@ def create_application() -> FastAPI:
     application.include_router(market_instrument_router)
     application.include_router(market_instrument_sync_router)
     application.include_router(future_cn_kline_router)
+    configure_realtime_market_service(realtime_market_service)
+    application.include_router(realtime_market_router)
 
     @application.get("/health/database", tags=["Health"])
     def database_health() -> dict[str, str]:
@@ -74,6 +85,15 @@ def create_application() -> FastAPI:
         except Exception as exc:
             logger.exception("Database health check failed")
             raise HTTPException(status_code=503, detail="Database unavailable") from exc
+        return {"status": "ok"}
+
+    @application.get("/health/redis", tags=["Health"])
+    def redis_health() -> dict[str, str]:
+        try:
+            check_redis_connection()
+        except Exception as exc:
+            logger.exception("Redis health check failed")
+            raise HTTPException(status_code=503, detail="Redis unavailable") from exc
         return {"status": "ok"}
 
     return application

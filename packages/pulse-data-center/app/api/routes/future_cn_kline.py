@@ -24,7 +24,7 @@ from app.services.market_data.future_cn_kline_service import (
     sync_future_cn_kline,
 )
 
-router = APIRouter(prefix="/market_data/kline", tags=["Market Data"])
+router = APIRouter(prefix="/klines", tags=["KLines"])
 
 
 @router.get(
