@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { List, X } from '@lucide/vue'
+import { List, ListChecks } from '@lucide/vue'
 import { ref } from 'vue'
 
+import type { TradeRecord } from '@/api/trading'
+import TradeRecordsPanel from './TradeRecordsPanel.vue'
 import WatchlistPanel from './WatchlistPanel.vue'
 
-type ToolId = 'watchlist'
+type ToolId = 'watchlist' | 'trades'
 
 const activeTool = ref<ToolId | null>(null)
-const emit = defineEmits<{ selectSymbol: [instrument: { id: number, symbol: string }] }>()
+const emit = defineEmits<{
+  selectSymbol: [instrument: { id: number, symbol: string }]
+  selectTrade: [record: TradeRecord]
+}>()
 
 const tools = [
   { id: 'watchlist' as const, title: '自选列表', icon: List },
+  { id: 'trades' as const, title: '交易记录', icon: ListChecks },
 ]
 
 const toggleTool = (toolId: ToolId) => {
@@ -23,6 +29,7 @@ const toggleTool = (toolId: ToolId) => {
     <section v-if="activeTool" class="w-[280px] border-r border-slate-200 bg-white shadow-md">
       <div class="h-[calc(100%-2.5rem)]">
         <WatchlistPanel v-if="activeTool === 'watchlist'" @select-symbol="emit('selectSymbol', $event)" />
+        <TradeRecordsPanel v-else-if="activeTool === 'trades'" @select-trade="emit('selectTrade', $event)" />
       </div>
     </section>
     <nav class="flex w-11 flex-col items-center border-r border-slate-200 bg-white/95 py-2 shadow-sm backdrop-blur" aria-label="图表工具">
