@@ -42,14 +42,14 @@ const renderKlines = (bars: FutureCnKlineBar[]) => {
   candlestickSeries?.setData(chartBars)
   chart?.timeScale().setVisibleLogicalRange({
     from: Math.max(0, chartBars.length - DEFAULT_VISIBLE_BAR_COUNT),
-    to: chartBars.length - 1,
+    to: chartBars.length + 10,
   })
 }
 
-const { loadDefaultInstrument, selectKline, selectedInstrumentId, selectedInstrumentName, selectedInterval, selectedSymbol } = useKlineData(renderKlines)
+const { loadDefaultInstrument, selectKline, selectedInstrumentId, selectedInterval, selectedSymbol } = useKlineData(renderKlines)
 const { activeScriptIds, dispose: disposePineIndicators, toggle: togglePineIndicator } = usePinePlotIndicators(() => candlestickSeries)
-watch([selectedInstrumentName, selectedSymbol, selectedInterval], () => {
-  updateWatermark(selectedInstrumentName.value, selectedSymbol.value, selectedInterval.value)
+watch([selectedSymbol, selectedInterval], () => {
+  updateWatermark(selectedSymbol.value, selectedInterval.value)
 })
 watch([selectedInstrumentId, selectedInterval], () => {
   realtimeBars.clear()
@@ -79,7 +79,7 @@ onMounted(() => {
   if (!chartContainer.value) return
   chart = createChart(chartContainer.value, chartOptions)
   candlestickSeries = chart.addSeries(CandlestickSeries, candlestickOptions)
-  attachWatermark(chart, selectedInstrumentName.value, selectedSymbol.value, selectedInterval.value)
+  attachWatermark(chart, selectedSymbol.value, selectedInterval.value)
   chart.subscribeCrosshairMove(updateFromCrosshair)
   resizeObserver = new ResizeObserver(resizeChart)
   resizeObserver.observe(chartContainer.value)

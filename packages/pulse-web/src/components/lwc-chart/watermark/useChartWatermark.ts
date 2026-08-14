@@ -13,22 +13,21 @@ const intervalLabels: Record<KlineQueryInterval, string> = {
 export const useChartWatermark = () => {
   let watermark: ITextWatermarkPluginApi<Time> | undefined
 
-  const update = (name: string, symbol: string, interval: KlineQueryInterval) => {
+  const update = (symbol: string, interval: KlineQueryInterval) => {
     watermark?.applyOptions({
       lines: [
-        { text: name || symbol.toUpperCase(), color: 'rgba(148, 163, 184, 0.32)', fontSize: 64 },
-        { text: `${symbol.toUpperCase()} · ${intervalLabels[interval]}`, color: 'rgba(148, 163, 184, 0.24)', fontSize: 32 },
+        { text: `${symbol.toUpperCase()} · ${intervalLabels[interval]}`, color: 'rgba(148, 163, 184, 0.32)', fontSize: 64 },
       ],
     })
   }
 
-  const attach = (chart: IChartApi, name: string, symbol: string, interval: KlineQueryInterval) => {
+  const attach = (chart: IChartApi, symbol: string, interval: KlineQueryInterval) => {
     watermark = createTextWatermark(chart.panes()[0], {
       horzAlign: 'center',
       vertAlign: 'center',
       lines: [],
     })
-    update(name, symbol, interval)
+    update(symbol, interval)
   }
 
   const dispose = () => {

@@ -1,4 +1,4 @@
-export type PinePlotItemKind = 'box' | 'label' | 'line' | 'plot'
+export type PinePlotItemKind = 'box' | 'label' | 'line' | 'plot' | 'table'
 
 export type PinePlotItem = {
   key: string
@@ -9,6 +9,7 @@ const drawingKeyByKind: Record<Exclude<PinePlotItemKind, 'plot'>, string> = {
   box: '__boxes__',
   label: '__labels__',
   line: '__lines__',
+  table: '__tables__',
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -34,5 +35,8 @@ export const getPlotItems = (plots: unknown, kind: PinePlotItemKind): PinePlotIt
   const drawingKey = drawingKeyByKind[kind]
   return Object.entries(plots)
     .filter(([key]) => key === drawingKey || key.startsWith(`${drawingKey}-`))
-    .flatMap(([key, value]) => getItems(value).map((item) => ({ key, value: item })))
+    .flatMap(([key, value]) => {
+      const items = kind === 'table' && isRecord(value) && Array.isArray(value.cells) ? [value] : getItems(value)
+      return items.map((item) => ({ key, value: item }))
+    })
 }

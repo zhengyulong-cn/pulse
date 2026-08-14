@@ -13,6 +13,7 @@ import { PineBoxPrimitive, type PineBox } from './PineBoxPrimitive'
 import { PineLabelPrimitive, type PineLabel } from './PineLabelPrimitive'
 import { getPlotItems } from './PinePlotItems'
 import { PineLinePrimitive, type PineLine } from './PineLinePrimitive'
+import { PineTablePrimitive, type PineTable } from './PineTablePrimitive'
 
 type PinePlotPoint = {
   time?: number
@@ -98,6 +99,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
   private linePrimitive = new PineLinePrimitive()
   private labelPrimitive = new PineLabelPrimitive()
   private boxPrimitive = new PineBoxPrimitive()
+  private tablePrimitive = new PineTablePrimitive()
   private renderVersion = 0
 
   constructor(private readonly source: string) {}
@@ -108,6 +110,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     series.attachPrimitive(this.linePrimitive)
     series.attachPrimitive(this.labelPrimitive)
     series.attachPrimitive(this.boxPrimitive)
+    series.attachPrimitive(this.tablePrimitive)
     series.subscribeDataChanged(this.update)
     void this.update()
   }
@@ -118,6 +121,7 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     this.baseSeries?.detachPrimitive(this.linePrimitive)
     this.baseSeries?.detachPrimitive(this.labelPrimitive)
     this.baseSeries?.detachPrimitive(this.boxPrimitive)
+    this.baseSeries?.detachPrimitive(this.tablePrimitive)
     this.plotSeries.forEach((series) => this.chart?.removeSeries(series))
     this.plotSeries.clear()
     this.baseSeries = undefined
@@ -218,6 +222,17 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     this.boxPrimitive.setBoxes(boxes)
   }
 
+  private drawTables = (plots: unknown) => {
+    const tablesById = new Map<number, PineTable>()
+    getPlotItems(plots, 'table').forEach(({ value }) => {
+      if (!value || typeof value !== 'object') return
+      const table = value as PineTable
+      if (!Array.isArray(table.cells)) return
+      tablesById.set(table.id, table)
+    })
+    this.tablePrimitive.setTables([...tablesById.values()])
+  }
+
   private toLineTime = (value: unknown, xloc: unknown, candles: PineCandle[]) => {
     if (typeof value !== 'number') return undefined
     if (xloc === 'bar_time') return toTimestamp(value)
@@ -251,5 +266,6 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
     this.drawLines(context.plots, candles)
     this.drawLabels(context.plots, candles)
     this.drawBoxes(context.plots, candles)
+    this.drawTables(context.plots)
   }
 }
