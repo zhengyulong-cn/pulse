@@ -11,6 +11,7 @@ import { useKlineData } from './useKlineData'
 import { usePinePlotIndicators } from './usePinePlotIndicators'
 import { useRealtimeKline } from './useRealtimeKline'
 import { useChartBars } from './useChartBars'
+import { useDrawingTool } from './drawing/useDrawingTool'
 import { useChartWatermark } from './watermark/useChartWatermark'
 import { useTradeAnnotations } from './side_bar/trade/useTradeAnnotations'
 import { useTradeNavigation } from './side_bar/trade/useTradeNavigation'
@@ -23,6 +24,7 @@ let resizeObserver: ResizeObserver | undefined
 const { attach: attachTradeAnnotations, dispose: disposeTradeAnnotations, pendingTrade, render: renderTradeAnnotations } = useTradeAnnotations(() => chart, () => candlestickSeries)
 const { barsByTime, clear: clearChartBars, render: renderKlines, updateRealtime } = useChartBars(() => chart, () => candlestickSeries, renderTradeAnnotations)
 const { tooltip, updateFromCrosshair } = useChartTooltip(() => candlestickSeries, barsByTime)
+const { activeDrawingTool, selectDrawingTool } = useDrawingTool()
 const { attach: attachWatermark, dispose: disposeWatermark, update: updateWatermark } = useChartWatermark()
 
 const { loadDefaultInstrument, selectKline, selectedInstrumentId, selectedInterval, selectedSymbol } = useKlineData(renderKlines)
@@ -72,14 +74,16 @@ onBeforeUnmount(() => {
   <div class="relative flex size-full flex-col bg-white">
     <ChartTopBar
       :active-script-ids="activeScriptIds"
+      :active-drawing-tool="activeDrawingTool"
       :selected-interval="selectedInterval"
+      @select-drawing-tool="selectDrawingTool"
       @select-interval="selectInterval"
       @toggle-indicator="togglePineIndicator"
     />
     <div class="flex min-h-0 flex-1">
       <div class="relative min-w-0 flex-1">
         <ChartTooltip :chart-height="chartHeight" :tooltip="tooltip" />
-        <div ref="chartContainer" class="size-full" />
+        <div ref="chartContainer" class="size-full" :class="{ 'cursor-crosshair': activeDrawingTool }" />
       </div>
       <ChartSideBar class="shrink-0" @select-symbol="selectSymbol" @select-trade="selectTrade" />
     </div>
