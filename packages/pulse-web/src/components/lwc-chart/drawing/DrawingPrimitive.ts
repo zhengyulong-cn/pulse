@@ -45,7 +45,10 @@ class DrawingPaneView implements IPrimitivePaneView {
       const startY = this.series.priceToCoordinate(drawing.start.price)
       const endY = this.series.priceToCoordinate(drawing.end.price)
       if (startX === null || endX === null || startY === null || endY === null) return []
-      return [{ ...drawing, endX, endY, startX, startY }]
+      const positionLevels = drawing.positionLevels
+      const upperY = positionLevels ? this.series.priceToCoordinate(positionLevels.upperPrice) : undefined
+      const lowerY = positionLevels ? this.series.priceToCoordinate(positionLevels.lowerPrice) : undefined
+      return [{ ...drawing, endX, endY, startX, startY, ...(upperY !== null && lowerY !== null ? { upperY, lowerY } : {}) }]
     })
   }
 
@@ -111,7 +114,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
     return undefined
   }
 
-  updateDrawing(id: string, update: Pick<TwoPointDrawing, 'start' | 'end'>) {
+  updateDrawing(id: string, update: Partial<TwoPointDrawing>) {
     this.drawings = this.drawings.map((drawing) => drawing.id === id ? { ...drawing, ...update, updatedAt: dayjs().toISOString() } : drawing)
     this.refresh()
   }

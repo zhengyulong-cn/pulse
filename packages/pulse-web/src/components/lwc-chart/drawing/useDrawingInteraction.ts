@@ -6,7 +6,7 @@ import { DrawingPrimitive } from './DrawingPrimitive'
 import type { DrawingToolId } from './drawingTools'
 import { createDrawingDocument, loadDrawingDocuments, saveDrawingDocuments, type DrawingDocumentScope } from './drawingDocument'
 import { getTwoPointDrawingStrategy, isTwoPointDrawingTool } from './strategies/drawingStrategyRegistry'
-import type { TwoPointDrawingTool } from './strategies/types'
+import type { TwoPointDrawing, TwoPointDrawingTool } from './strategies/types'
 
 export const useDrawingInteraction = (
   getChart: () => IChartApi | undefined,
@@ -22,7 +22,7 @@ export const useDrawingInteraction = (
     drawingId: string
     origin: DrawingPoint
     originCoordinate: { x: number, y: number }
-    original: { end: DrawingPoint, start: DrawingPoint }
+    original: TwoPointDrawing
     originalCoordinates: { endX: number, endY: number, startX: number, startY: number }
     part: DrawingHitPart
     tool: TwoPointDrawingTool
@@ -93,7 +93,7 @@ export const useDrawingInteraction = (
       drawingId: hit.drawing.id,
       origin,
       originCoordinate: { x, y },
-      original: { start: hit.drawing.start, end: hit.drawing.end },
+      original: hit.drawing,
       originalCoordinates: {
         startX: hit.drawing.startX,
         startY: hit.drawing.startY,
@@ -127,7 +127,7 @@ export const useDrawingInteraction = (
       current: point,
       currentCoordinate: { x, y },
       originCoordinate: drag.originCoordinate,
-      original: { ...drag.original, id: drag.drawingId, tool: drag.tool },
+      original: drag.original,
       originalCoordinates: { ...drag.originalCoordinates, id: drag.drawingId, tool: drag.tool, start: drag.original.start, end: drag.original.end },
       part: drag.part,
       pointAtCoordinate: getPointAtCoordinate,

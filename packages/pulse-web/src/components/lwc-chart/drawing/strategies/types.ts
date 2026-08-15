@@ -10,6 +10,10 @@ export type TwoPointDrawingTool = 'arrow_segment' | 'long_position' | 'rectangle
 export type TwoPointDrawing = {
   end: DrawingPoint
   id: string
+  positionLevels?: {
+    lowerPrice: number
+    upperPrice: number
+  }
   start: DrawingPoint
   tool: TwoPointDrawingTool
 }
@@ -17,8 +21,10 @@ export type TwoPointDrawing = {
 export type DrawingCoordinates = TwoPointDrawing & {
   endX: number
   endY: number
+  lowerY?: number
   startX: number
   startY: number
+  upperY?: number
 }
 
 export type DrawingRenderContext = {
@@ -34,6 +40,10 @@ export type DrawingHitPart =
   | 'bottom_right'
   | 'end'
   | 'left'
+  | 'position_entry_left'
+  | 'position_entry_right'
+  | 'position_stop'
+  | 'position_target'
   | 'right'
   | 'start'
   | 'top'
@@ -60,6 +70,6 @@ export type TwoPointDrawingStrategy = {
   drawSelection?(drawing: DrawingCoordinates, context: DrawingRenderContext): void
   hitTest?(drawing: DrawingCoordinates, x: number, y: number): DrawingHitTestResult | undefined
   cursor?(part: DrawingHitPart): string
-  updateForDrag?(context: DrawingDragContext): Pick<TwoPointDrawing, 'start' | 'end'> | undefined
+  updateForDrag?(context: DrawingDragContext): Partial<TwoPointDrawing> | undefined
   tool: TwoPointDrawingTool
 }

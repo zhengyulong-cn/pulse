@@ -15,7 +15,7 @@ export abstract class DrawingStrategy implements TwoPointDrawingStrategy {
 
   cursor(_part: DrawingHitPart) { return 'default' }
 
-  updateForDrag(_context: DrawingDragContext): Pick<TwoPointDrawing, 'start' | 'end'> | undefined { return undefined }
+  updateForDrag(_context: DrawingDragContext): Partial<TwoPointDrawing> | undefined { return undefined }
 
   protected moveForDrag({ currentCoordinate, originCoordinate, originalCoordinates, pointAtCoordinate }: DrawingDragContext) {
     const deltaX = currentCoordinate.x - originCoordinate.x
