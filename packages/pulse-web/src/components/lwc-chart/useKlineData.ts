@@ -21,7 +21,7 @@ type SelectKlineOptions = {
 }
 
 export const useKlineData = (onData: (bars: FutureCnKlineBar[]) => void) => {
-  const selectedSymbol = ref('')
+  const selectedSymbol = ref('jm2701')
   const selectedInstrumentId = ref<number>()
   const selectedInterval = ref<KlineQueryInterval>('5m')
   const klineQueryKey = computed(() => ['future-cn-kline-bars', selectedInstrumentId.value, selectedInterval.value])

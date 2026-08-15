@@ -4,6 +4,10 @@ import { ChartNoAxesCombined, Database, Wallet, CodeXml } from "@lucide/vue"
 
 export const RouterModules: RouteRecordRaw[] = [
   {
+    path: "/",
+    redirect: "/chart-space",
+  },
+  {
     path: "/chart-space",
     component: () => import("@/views/chart_space/ChartSpace.vue"),
     meta: {

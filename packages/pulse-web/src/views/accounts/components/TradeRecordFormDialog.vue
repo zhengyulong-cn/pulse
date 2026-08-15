@@ -180,20 +180,20 @@ watch(visible, (isVisible) => {
   <el-dialog v-model="visible" :title="title" width="min(840px, calc(100vw - 32px))" destroy-on-close>
     <div class="mb-4 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-blue-700"><Landmark :size="17" /><span>{{ isEditing ? '记录所属账户：' : '记录将添加到：' }}</span><strong>{{ account?.name }} · {{ account?.account }}（{{ account?.currency }}）</strong></div>
     <el-form label-position="top" @submit.prevent="save">
-      <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-5">
         <el-form-item label="标的名称" required><el-input v-model="form.underlyingName" placeholder="例如：沪深300" /></el-form-item>
         <el-form-item label="标的代码" required><el-input v-model="form.underlyingCode" placeholder="例如：000300" /></el-form-item>
         <el-form-item label="开仓方向" required><el-radio-group v-model="form.direction"><el-radio-button value="LONG">做多</el-radio-button><el-radio-button value="SHORT">做空</el-radio-button></el-radio-group></el-form-item>
         <el-form-item label="手数" required><el-input v-model="form.quantity" inputmode="decimal" placeholder="例如：1" /></el-form-item>
         <el-form-item label="开仓时间" required><el-date-picker v-model="form.openTime" type="datetime" class="!w-full" /></el-form-item>
         <el-form-item label="开仓价格" required><el-input v-model="form.openPrice" inputmode="decimal" placeholder="例如：4000.25" /></el-form-item>
-        <el-form-item label="手续费" required><el-input v-model="form.fee" inputmode="decimal" placeholder="例如：12.50" /></el-form-item>
         <el-form-item label="平仓时间"><el-date-picker v-model="form.closeTime" type="datetime" class="!w-full" clearable /></el-form-item>
         <el-form-item label="平仓价格"><el-input v-model="form.closePrice" inputmode="decimal" placeholder="未平仓可留空" /></el-form-item>
+        <el-form-item label="手续费" required><el-input v-model="form.fee" inputmode="decimal" placeholder="例如：12.50" /></el-form-item>
         <el-form-item label="真实盈亏"><el-input v-model="form.realizedPnl" inputmode="decimal" placeholder="未平仓可留空" /></el-form-item>
-        <el-form-item label="开仓缘由"><el-input v-model="form.openReason" placeholder="例如：突破关键压力位" /></el-form-item>
-        <el-form-item label="平仓缘由"><el-input v-model="form.closeReason" placeholder="例如：止盈离场" /></el-form-item>
-        <el-form-item class="sm:col-span-2 lg:col-span-4" label="截图">
+        <el-form-item class="col-span-2"  label="开仓缘由"><el-input type="textarea" :rows="5" v-model="form.openReason" placeholder="例如：突破关键压力位" /></el-form-item>
+        <el-form-item class="col-span-2" label="平仓缘由"><el-input type="textarea" :rows="5" v-model="form.closeReason" placeholder="例如：止盈离场" /></el-form-item>
+        <el-form-item label="截图">
           <div>
             <el-upload
               v-model:file-list="screenshotFiles"

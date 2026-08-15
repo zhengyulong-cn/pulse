@@ -8,7 +8,7 @@ import WatchlistPanel from './WatchlistPanel.vue'
 
 type ToolId = 'watchlist' | 'trades'
 
-const activeTool = ref<ToolId | null>(null)
+const activeTool = ref<ToolId | null>('watchlist')
 const emit = defineEmits<{
   selectSymbol: [instrument: { id: number, symbol: string }]
   selectTrade: [record: TradeRecord]

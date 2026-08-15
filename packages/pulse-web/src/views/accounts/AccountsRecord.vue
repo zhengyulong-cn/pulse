@@ -19,7 +19,7 @@ import TradeRecordFormDialog from './components/TradeRecordFormDialog.vue'
 
 type PnlFilter = 'PROFIT' | 'LOSS' | 'BREAKEVEN' | 'UNSETTLED' | ''
 
-const selectedAccountId = ref<number>()
+const selectedAccountId = ref<number>(1)
 const accountDialogVisible = ref(false)
 const recordDialogVisible = ref(false)
 const batchRecordDialogVisible = ref(false)
