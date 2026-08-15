@@ -27,8 +27,39 @@ export type DrawingRenderContext = {
   verticalPixelRatio: number
 }
 
+export type DrawingHitPart =
+  | 'body'
+  | 'bottom'
+  | 'bottom_left'
+  | 'bottom_right'
+  | 'end'
+  | 'left'
+  | 'right'
+  | 'start'
+  | 'top'
+  | 'top_left'
+  | 'top_right'
+
+export type DrawingHitTestResult = {
+  part: DrawingHitPart
+}
+
+export type DrawingDragContext = {
+  current: DrawingPoint
+  currentCoordinate: { x: number, y: number }
+  originCoordinate: { x: number, y: number }
+  original: TwoPointDrawing
+  originalCoordinates: DrawingCoordinates
+  part: DrawingHitPart
+  pointAtCoordinate: (x: number, y: number) => DrawingPoint | undefined
+}
+
 export type TwoPointDrawingStrategy = {
   create(id: string, start: DrawingPoint, end: DrawingPoint): TwoPointDrawing
   draw(drawing: DrawingCoordinates, context: DrawingRenderContext): void
+  drawSelection?(drawing: DrawingCoordinates, context: DrawingRenderContext): void
+  hitTest?(drawing: DrawingCoordinates, x: number, y: number): DrawingHitTestResult | undefined
+  cursor?(part: DrawingHitPart): string
+  updateForDrag?(context: DrawingDragContext): Pick<TwoPointDrawing, 'start' | 'end'> | undefined
   tool: TwoPointDrawingTool
 }

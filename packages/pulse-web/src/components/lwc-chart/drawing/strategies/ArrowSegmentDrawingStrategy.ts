@@ -1,8 +1,9 @@
-import type { DrawingCoordinates, DrawingRenderContext, DrawingPoint, TwoPointDrawing, TwoPointDrawingStrategy } from './types'
+import { LineDrawingStrategy } from './DrawingStrategy'
+import type { DrawingCoordinates, DrawingRenderContext } from './types'
 
-export const arrowSegmentDrawingStrategy: TwoPointDrawingStrategy = {
-  tool: 'arrow_segment',
-  create: (id: string, start: DrawingPoint, end: DrawingPoint): TwoPointDrawing => ({ id, start, end, tool: 'arrow_segment' }),
+export class ArrowSegmentDrawingStrategy extends LineDrawingStrategy {
+  readonly tool = 'arrow_segment' as const
+
   draw(drawing: DrawingCoordinates, { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext) {
     const startX = drawing.startX * horizontalPixelRatio
     const startY = drawing.startY * verticalPixelRatio
@@ -21,5 +22,7 @@ export const arrowSegmentDrawingStrategy: TwoPointDrawingStrategy = {
     context.lineTo(endX - size * Math.cos(angle + Math.PI / 6), endY - size * Math.sin(angle + Math.PI / 6))
     context.closePath()
     context.fill()
-  },
+  }
 }
+
+export const arrowSegmentDrawingStrategy = new ArrowSegmentDrawingStrategy()

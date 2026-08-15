@@ -1,4 +1,5 @@
-import type { DrawingCoordinates, DrawingPoint, DrawingRenderContext, TwoPointDrawing, TwoPointDrawingStrategy } from './types'
+import { DrawingStrategy } from './DrawingStrategy'
+import type { DrawingCoordinates, DrawingRenderContext } from './types'
 
 const RISK_REWARD_RATIO = 1
 
@@ -22,11 +23,13 @@ const drawLabel = (context: CanvasRenderingContext2D, text: string, x: number, y
   context.restore()
 }
 
-const createPositionStrategy = (tool: 'long_position' | 'short_position'): TwoPointDrawingStrategy => ({
-  tool,
-  create: (id: string, start: DrawingPoint, end: DrawingPoint): TwoPointDrawing => ({ id, start, end, tool }),
+export class PositionMeasurementDrawingStrategy extends DrawingStrategy {
+  constructor(readonly tool: 'long_position' | 'short_position') {
+    super()
+  }
+
   draw(drawing: DrawingCoordinates, { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext) {
-    const isLong = tool === 'long_position'
+    const isLong = this.tool === 'long_position'
     const entryPrice = drawing.start.price
     const distance = Math.abs(drawing.end.price - entryPrice)
     if (distance === 0) return
@@ -78,8 +81,8 @@ const createPositionStrategy = (tool: 'long_position' | 'short_position'): TwoPo
     drawLabel(context, `止盈价: ${formatPrice(targetPrice)} (${formatPercent(targetChange)})`, labelX, targetY - 14 * verticalPixelRatio, '#16a34a')
     drawLabel(context, `开仓: ${formatPrice(entryPrice)} 风险回报比: ${RISK_REWARD_RATIO.toFixed(2)}`, labelX, entryY, '#ca8a04')
     drawLabel(context, `止损价: ${formatPrice(stopPrice)} (${formatPercent(stopChange)})`, labelX, stopY + 14 * verticalPixelRatio, '#dc2626')
-  },
-})
+  }
+}
 
-export const longPositionDrawingStrategy = createPositionStrategy('long_position')
-export const shortPositionDrawingStrategy = createPositionStrategy('short_position')
+export const longPositionDrawingStrategy = new PositionMeasurementDrawingStrategy('long_position')
+export const shortPositionDrawingStrategy = new PositionMeasurementDrawingStrategy('short_position')

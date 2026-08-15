@@ -25,8 +25,14 @@ let resizeObserver: ResizeObserver | undefined
 const { attach: attachTradeAnnotations, dispose: disposeTradeAnnotations, pendingTrade, render: renderTradeAnnotations } = useTradeAnnotations(() => chart, () => candlestickSeries)
 const { barsByTime, clear: clearChartBars, render: renderKlines, updateRealtime } = useChartBars(() => chart, () => candlestickSeries, renderTradeAnnotations)
 const { tooltip, updateFromCrosshair } = useChartTooltip(() => candlestickSeries, barsByTime)
-const { activeDrawingTool, selectDrawingTool } = useDrawingTool()
-const { attach: attachDrawingInteraction, dispose: disposeDrawingInteraction } = useDrawingInteraction(() => chart, () => candlestickSeries, activeDrawingTool)
+const { activeDrawingTool, clearDrawingTool, selectDrawingTool } = useDrawingTool()
+const { attach: attachDrawingInteraction, cursor: drawingCursor, dispose: disposeDrawingInteraction, restore: restoreDrawings } = useDrawingInteraction(
+  () => chart,
+  () => candlestickSeries,
+  activeDrawingTool,
+  () => selectedInstrumentId.value === undefined ? undefined : { instrumentId: selectedInstrumentId.value, interval: selectedInterval.value },
+  clearDrawingTool,
+)
 const { attach: attachWatermark, dispose: disposeWatermark, update: updateWatermark } = useChartWatermark()
 
 const { loadDefaultInstrument, selectKline, selectedInstrumentId, selectedInterval, selectedSymbol } = useKlineData(renderKlines)
@@ -36,6 +42,7 @@ const { selectInterval, selectSymbol, selectTrade } = useTradeNavigation(selecte
 watch([selectedSymbol, selectedInterval], () => updateWatermark(selectedSymbol.value, selectedInterval.value))
 watch([selectedInstrumentId, selectedInterval], () => {
   clearChartBars()
+  restoreDrawings()
 })
 
 useRealtimeKline(selectedInstrumentId, selectedInterval, updateRealtime)
@@ -51,7 +58,7 @@ onMounted(() => {
   if (!chartContainer.value) return
   chart = createChart(chartContainer.value, chartOptions)
   candlestickSeries = chart.addSeries(CandlestickSeries, candlestickOptions)
-  attachDrawingInteraction(candlestickSeries)
+  attachDrawingInteraction(candlestickSeries, chartContainer.value)
   attachTradeAnnotations(candlestickSeries)
   attachWatermark(chart, selectedSymbol.value, selectedInterval.value)
   chart.subscribeCrosshairMove(updateFromCrosshair)
@@ -63,7 +70,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   disposePineIndicators()
-  disposeDrawingInteraction()
+  disposeDrawingInteraction(chartContainer.value)
   disposeTradeAnnotations()
   disposeWatermark()
   resizeObserver?.disconnect()
@@ -87,7 +94,7 @@ onBeforeUnmount(() => {
     <div class="flex min-h-0 flex-1">
       <div class="relative min-w-0 flex-1">
         <ChartTooltip :chart-height="chartHeight" :tooltip="tooltip" />
-        <div ref="chartContainer" class="size-full" :class="{ 'cursor-crosshair': activeDrawingTool }" />
+        <div ref="chartContainer" class="size-full" :style="{ cursor: activeDrawingTool ? 'crosshair' : drawingCursor }" />
       </div>
       <ChartSideBar class="shrink-0" @select-symbol="selectSymbol" @select-trade="selectTrade" />
     </div>
