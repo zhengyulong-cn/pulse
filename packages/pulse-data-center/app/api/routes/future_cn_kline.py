@@ -1,7 +1,10 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
 
 from app.db import get_session
+from app.redis import get_redis_client
 from app.schemas.future_cn_kline import (
     FutureCnKlineBatchSyncJobRead,
     FutureCnKlineBatchSyncRequest,
@@ -50,6 +53,7 @@ def list_future_cn_kline_bars_route(
             to_timestamp,
             limit,
             count_back,
+            _get_realtime_bar(instrument_id, interval),
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -66,6 +70,17 @@ def list_future_cn_kline_bars_route(
         )
         for kline in klines
     ]
+
+
+def _get_realtime_bar(instrument_id: int, interval: KlineQueryInterval) -> dict[str, object] | None:
+    entry = get_redis_client().get(f"market:bar:{instrument_id}:{interval}")
+    if not entry:
+        return None
+    try:
+        value = json.loads(entry)
+    except (TypeError, ValueError):
+        return None
+    return value if isinstance(value, dict) else None
 
 
 @router.post(

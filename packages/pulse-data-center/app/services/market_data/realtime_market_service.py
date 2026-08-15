@@ -4,6 +4,7 @@ import time
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from numbers import Integral
 from threading import Event, RLock, Thread
 from zoneinfo import ZoneInfo
 
@@ -11,6 +12,7 @@ from redis import Redis
 from tqsdk import TqApi, TqAuth
 
 from app.config.settings import settings
+from app.services.market_data.future_cn_kline_service import upsert_realtime_kline_bar, upsert_realtime_kline_bars
 
 KLINE_INTERVAL_SECONDS = {"1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1h": 3600}
 REALTIME_BACKFILL_BAR_COUNT = 500
@@ -18,8 +20,8 @@ SHANGHAI_TIMEZONE = ZoneInfo("Asia/Shanghai")
 
 
 def _to_timestamp_nanoseconds(value: object) -> int | None:
-    if isinstance(value, int):
-        return value
+    if isinstance(value, Integral):
+        return int(value)
     if not isinstance(value, str):
         return None
     try:
@@ -83,8 +85,8 @@ class RealtimeMarketService:
         bars: list[dict] = []
         for instrument_id in set(instrument_ids):
             for interval in KLINE_INTERVAL_SECONDS:
-                entries = self._redis.hvals(f"market:bars:{instrument_id}:{interval}")
-                for entry in entries:
+                entry = self._redis.get(self._bar_key(instrument_id, interval))
+                if entry:
                     bars.append(json.loads(entry))
         return sorted(bars, key=lambda bar: (bar["instrument_id"], bar["interval"], bar["time"]))
 
@@ -116,12 +118,12 @@ class RealtimeMarketService:
                 api.wait_update(deadline=time.time() + 0.5)
                 for instrument_id, quote in quotes.items():
                     if api.is_changing(quote):
-                        self._handle_quote(instrument_id, quote)
+                        self._handle_quote(api, instrument_id, subscribed_symbols[instrument_id], quote)
         finally:
             if api:
                 api.close()
 
-    def _handle_quote(self, instrument_id: int, quote: object) -> None:
+    def _handle_quote(self, api: TqApi, instrument_id: int, symbol: str, quote: object) -> None:
         price = getattr(quote, "last_price", None)
         timestamp = _to_timestamp_nanoseconds(getattr(quote, "datetime", None))
         if not isinstance(price, (int, float)) or timestamp is None or price != price:
@@ -136,6 +138,10 @@ class RealtimeMarketService:
             key = (instrument_id, interval)
             bar = self._bars.get(key)
             if bar is None or bar.time != bar_time:
+                if bar is not None:
+                    confirmed_bar = self._get_confirmed_bar(api, symbol, seconds, bar.time) or asdict(bar)
+                    if interval in {"1m", "5m"}:
+                        upsert_realtime_kline_bar(instrument_id, interval, confirmed_bar)
                 bar = RealtimeBar(float(price), float(price), hold, float(price), float(price), bar_time, volume)
                 self._bars[key] = bar
             else:
@@ -150,34 +156,53 @@ class RealtimeMarketService:
     def _backfill_bars(self, api: TqApi, instrument_id: int, symbol: str) -> None:
         for interval, seconds in KLINE_INTERVAL_SECONDS.items():
             serial = api.get_kline_serial(symbol, seconds, REALTIME_BACKFILL_BAR_COUNT)
-            for _, row in serial.iterrows():
-                timestamp = _to_timestamp_nanoseconds(row.get("datetime"))
-                open_price = row.get("open")
-                high_price = row.get("high")
-                low_price = row.get("low")
-                close_price = row.get("close")
-                if timestamp is None or not all(isinstance(price, (int, float)) and price == price for price in (open_price, high_price, low_price, close_price)):
-                    continue
-                bar = RealtimeBar(
-                    close=float(close_price),
-                    high=float(high_price),
-                    hold=float(row.get("close_oi", 0) or 0),
-                    low=float(low_price),
-                    open=float(open_price),
-                    time=timestamp // 1_000_000_000 * 1_000,
-                    volume=float(row.get("volume", 0) or 0),
-                )
-                self._bars[(instrument_id, interval)] = bar
-                event = {"type": "bar", "data": {"instrument_id": instrument_id, "interval": interval, **asdict(bar)}}
-                self._save_and_publish_bar(event)
+            rows = list(serial.iterrows())
+            if not rows:
+                continue
+            if interval in {"1m", "5m"}:
+                confirmed_bars = [asdict(bar) for _, current_row in rows[:-1] if (bar := self._bar_from_row(current_row)) is not None]
+                upsert_realtime_kline_bars(instrument_id, interval, confirmed_bars)
+            _, row = rows[-1]
+            bar = self._bar_from_row(row)
+            if bar is None:
+                continue
+            self._bars[(instrument_id, interval)] = bar
+            self._save_and_publish_bar({"type": "bar", "data": {"instrument_id": instrument_id, "interval": interval, **asdict(bar)}})
 
     def _save_and_publish_bar(self, event: dict) -> None:
         bar = event["data"]
-        bar_key = f"market:bars:{bar['instrument_id']}:{bar['interval']}"
-        self._redis.hset(bar_key, str(bar["time"]), json.dumps(bar))
+        bar_key = self._bar_key(bar["instrument_id"], bar["interval"])
+        self._redis.set(bar_key, json.dumps(bar))
         self._redis.expire(bar_key, 172_800)
         self._redis.publish("market:bars", json.dumps(event))
         self._publish(event)
+
+    @staticmethod
+    def _bar_key(instrument_id: int, interval: str) -> str:
+        return f"market:bar:{instrument_id}:{interval}"
+
+    def _get_confirmed_bar(self, api: TqApi, symbol: str, seconds: int, timestamp: int) -> dict[str, object] | None:
+        serial = api.get_kline_serial(symbol, seconds, 3)
+        for _, row in serial.iterrows():
+            bar = self._bar_from_row(row)
+            if bar and bar.time == timestamp:
+                return asdict(bar)
+        return None
+
+    @staticmethod
+    def _bar_from_row(row: object) -> RealtimeBar | None:
+        get_value = getattr(row, "get", None)
+        if not callable(get_value):
+            return None
+        timestamp = _to_timestamp_nanoseconds(get_value("datetime"))
+        prices = (get_value("open"), get_value("high"), get_value("low"), get_value("close"))
+        if timestamp is None or not all(isinstance(price, (int, float)) and price == price for price in prices):
+            return None
+        return RealtimeBar(
+            close=float(prices[3]), high=float(prices[1]), hold=float(get_value("close_oi", 0) or 0),
+            low=float(prices[2]), open=float(prices[0]), time=timestamp // 1_000_000_000 * 1_000,
+            volume=float(get_value("volume", 0) or 0),
+        )
 
     def _publish(self, event: dict) -> None:
         with self._lock:
