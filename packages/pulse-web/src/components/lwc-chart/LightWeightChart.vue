@@ -12,6 +12,7 @@ import { usePinePlotIndicators } from './usePinePlotIndicators'
 import { useRealtimeKline } from './useRealtimeKline'
 import { useChartBars } from './useChartBars'
 import { useDrawingTool } from './drawing/useDrawingTool'
+import { useDrawingInteraction } from './drawing/useDrawingInteraction'
 import { useChartWatermark } from './watermark/useChartWatermark'
 import { useTradeAnnotations } from './side_bar/trade/useTradeAnnotations'
 import { useTradeNavigation } from './side_bar/trade/useTradeNavigation'
@@ -25,6 +26,7 @@ const { attach: attachTradeAnnotations, dispose: disposeTradeAnnotations, pendin
 const { barsByTime, clear: clearChartBars, render: renderKlines, updateRealtime } = useChartBars(() => chart, () => candlestickSeries, renderTradeAnnotations)
 const { tooltip, updateFromCrosshair } = useChartTooltip(() => candlestickSeries, barsByTime)
 const { activeDrawingTool, selectDrawingTool } = useDrawingTool()
+const { attach: attachDrawingInteraction, dispose: disposeDrawingInteraction } = useDrawingInteraction(() => chart, () => candlestickSeries, activeDrawingTool)
 const { attach: attachWatermark, dispose: disposeWatermark, update: updateWatermark } = useChartWatermark()
 
 const { loadDefaultInstrument, selectKline, selectedInstrumentId, selectedInterval, selectedSymbol } = useKlineData(renderKlines)
@@ -49,6 +51,7 @@ onMounted(() => {
   if (!chartContainer.value) return
   chart = createChart(chartContainer.value, chartOptions)
   candlestickSeries = chart.addSeries(CandlestickSeries, candlestickOptions)
+  attachDrawingInteraction(candlestickSeries)
   attachTradeAnnotations(candlestickSeries)
   attachWatermark(chart, selectedSymbol.value, selectedInterval.value)
   chart.subscribeCrosshairMove(updateFromCrosshair)
@@ -60,6 +63,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   disposePineIndicators()
+  disposeDrawingInteraction()
   disposeTradeAnnotations()
   disposeWatermark()
   resizeObserver?.disconnect()
