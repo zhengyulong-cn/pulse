@@ -10,10 +10,11 @@
     "dev": "node --env-file=.env --import tsx --watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "contract:emit": "prisma-next contract emit",
-    "db:init": "prisma-next db init",
-    "db:sign": "prisma-next db sign",
-    "db:update": "prisma-next db update",
-    "db:setup": "pnpm run db:init && pnpm run db:sign"
+    "db-init": "prisma-next db init",
+    "db-sign": "prisma-next db sign",
+    "db-update": "prisma-next db update",
+    "db:init": "pnpm run db-init && pnpm run db-sign",
+    "db:update": "pnpm run db-update && pnpm run db-sign"
   },
   "dependencies": {
     "@fastify/multipart": "^10.1.0",

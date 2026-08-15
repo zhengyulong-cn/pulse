@@ -10,6 +10,10 @@ const configuredUploadFileSize = Number(process.env.UPLOAD_MAX_FILE_SIZE_BYTES ?
 const uploadFileSize = Number.isFinite(configuredUploadFileSize) && configuredUploadFileSize > 0
   ? configuredUploadFileSize
   : 50 * 1024 * 1024
+const configuredUploadFileCount = Number(process.env.UPLOAD_MAX_FILES ?? 20)
+const uploadFileCount = Number.isInteger(configuredUploadFileCount) && configuredUploadFileCount > 0
+  ? configuredUploadFileCount
+  : 20
 
 export const buildApp = () => {
   const app = Fastify({
@@ -24,7 +28,7 @@ export const buildApp = () => {
   registerDatabase(app)
   app.register(multipart, {
     limits: {
-      files: 1,
+      files: uploadFileCount,
       fileSize: uploadFileSize,
     },
   })

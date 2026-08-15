@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.tradeRecord.screenshot",
+    "label": "Add column \"screenshot\" to \"tradeRecord\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "screenshot",
+        "table": "tradeRecord"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"screenshot\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "tradeRecord",
+          "screenshot"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"screenshot\"",
+        "sql": "ALTER TABLE \"public\".\"tradeRecord\" ADD COLUMN \"screenshot\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"screenshot\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "tradeRecord",
+          "screenshot"
+        ]
+      }
+    ]
+  }
+]

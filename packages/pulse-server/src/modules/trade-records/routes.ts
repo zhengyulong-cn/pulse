@@ -15,7 +15,7 @@ const decimalSchema = { anyOf: [{ type: 'number' }, { type: 'string', minLength:
 
 const tradeRecordSchema = {
   type: 'object',
-  required: ['id', 'accountId', 'underlyingName', 'underlyingCode', 'direction', 'quantity', 'openTime', 'openPrice', 'fee'],
+  required: ['id', 'accountId', 'underlyingName', 'underlyingCode', 'direction', 'quantity', 'openTime', 'openPrice', 'screenshots', 'fee'],
   properties: {
     id: { type: 'integer' },
     accountId: { type: 'integer' },
@@ -26,6 +26,7 @@ const tradeRecordSchema = {
     openTime: { type: 'string', format: 'date-time' },
     openPrice: decimalSchema,
     openReason: { type: ['string', 'null'] },
+    screenshots: { anyOf: [{ type: 'array', items: { type: 'object', required: ['path', 'size', 'content_type', 'original_name'], properties: { path: { type: 'string' }, size: { type: 'integer', minimum: 0 }, content_type: { type: 'string' }, original_name: { type: 'string' } } } }, { type: 'null' }] },
     closeTime: { type: ['string', 'null'], format: 'date-time' },
     closePrice: { anyOf: [decimalSchema, { type: 'null' }] },
     closeReason: { type: ['string', 'null'] },
@@ -44,6 +45,7 @@ const tradeRecordBodyProperties = {
   openTime: { type: 'string', format: 'date-time' },
   openPrice: decimalSchema,
   openReason: { type: ['string', 'null'] },
+  screenshots: { anyOf: [{ type: 'array', items: { type: 'object' } }, { type: 'null' }] },
   closeTime: { type: ['string', 'null'], format: 'date-time' },
   closePrice: { anyOf: [decimalSchema, { type: 'null' }] },
   closeReason: { type: ['string', 'null'] },
@@ -60,6 +62,7 @@ const batchTradeRecordProperties = {
   openTime: tradeRecordBodyProperties.openTime,
   openPrice: tradeRecordBodyProperties.openPrice,
   openReason: tradeRecordBodyProperties.openReason,
+  screenshots: tradeRecordBodyProperties.screenshots,
   closeTime: tradeRecordBodyProperties.closeTime,
   closePrice: tradeRecordBodyProperties.closePrice,
   closeReason: tradeRecordBodyProperties.closeReason,

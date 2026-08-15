@@ -30,7 +30,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'5fa7a6c2ccde4b9de27861143901b1531785a04426eceac726f786dc9d5846c3'>;
+  StorageHashBase<'cd4a4d519c29972c91c5c3e86f9c1a51758de97e134b99801cb922d77d811eb9'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -64,7 +64,7 @@ export type FieldOutputTypes = {
       readonly openTime: CodecTypes['pg/timestamptz@1']['output'];
       readonly openPrice: CodecTypes['pg/numeric@1']['output'];
       readonly openReason: CodecTypes['pg/text@1']['output'] | null;
-      readonly screenshots: CodecTypes['pg/json@1']['output'] | null;
+      readonly screenshot: CodecTypes['pg/text@1']['output'] | null;
       readonly closeTime: CodecTypes['pg/timestamptz@1']['output'] | null;
       readonly closePrice: CodecTypes['pg/numeric@1']['output'] | null;
       readonly closeReason: CodecTypes['pg/text@1']['output'] | null;
@@ -111,7 +111,7 @@ export type FieldInputTypes = {
       readonly openTime: CodecTypes['pg/timestamptz@1']['input'];
       readonly openPrice: CodecTypes['pg/numeric@1']['input'];
       readonly openReason: CodecTypes['pg/text@1']['input'] | null;
-      readonly screenshots: CodecTypes['pg/json@1']['input'] | null;
+      readonly screenshot: CodecTypes['pg/text@1']['input'] | null;
       readonly closeTime: CodecTypes['pg/timestamptz@1']['input'] | null;
       readonly closePrice: CodecTypes['pg/numeric@1']['input'] | null;
       readonly closeReason: CodecTypes['pg/text@1']['input'] | null;
@@ -162,7 +162,7 @@ export type StorageColumnTypes = {
       readonly openTime: CodecTypes['pg/timestamptz@1']['output'];
       readonly quantity: CodecTypes['pg/numeric@1']['output'];
       readonly realizedPnl: CodecTypes['pg/numeric@1']['output'] | null;
-      readonly screenshots: CodecTypes['pg/json@1']['output'] | null;
+      readonly screenshot: CodecTypes['pg/text@1']['output'] | null;
       readonly underlyingCode: CodecTypes['pg/text@1']['output'];
       readonly underlyingName: CodecTypes['pg/text@1']['output'];
     };
@@ -209,7 +209,7 @@ export type StorageColumnInputTypes = {
       readonly openTime: CodecTypes['pg/timestamptz@1']['input'];
       readonly quantity: CodecTypes['pg/numeric@1']['input'];
       readonly realizedPnl: CodecTypes['pg/numeric@1']['input'] | null;
-      readonly screenshots: CodecTypes['pg/json@1']['input'] | null;
+      readonly screenshot: CodecTypes['pg/text@1']['input'] | null;
       readonly underlyingCode: CodecTypes['pg/text@1']['input'];
       readonly underlyingName: CodecTypes['pg/text@1']['input'];
     };
@@ -351,9 +351,9 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly screenshots: {
-                  readonly nativeType: 'json';
-                  readonly codecId: 'pg/json@1';
+                readonly screenshot: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
                 readonly closeTime: {
@@ -672,9 +672,9 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly screenshots: {
+              readonly screenshot: {
                 readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly closeTime: {
                 readonly nullable: true;
@@ -727,7 +727,7 @@ type ContractBase = Omit<
                 readonly openTime: { readonly column: 'openTime' };
                 readonly openPrice: { readonly column: 'openPrice' };
                 readonly openReason: { readonly column: 'openReason' };
-                readonly screenshots: { readonly column: 'screenshots' };
+                readonly screenshot: { readonly column: 'screenshot' };
                 readonly closeTime: { readonly column: 'closeTime' };
                 readonly closePrice: { readonly column: 'closePrice' };
                 readonly closeReason: { readonly column: 'closeReason' };

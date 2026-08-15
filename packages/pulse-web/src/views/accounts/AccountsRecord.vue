@@ -8,8 +8,10 @@ import { CalendarDays, CircleDollarSign, ListChecks, Plus, RefreshCw, TrendingDo
 import {
   listTradeRecords,
   listTradingAccounts,
+  getUploadedFileUrl,
   type TradeRecord,
   type TradeRecordReq,
+  type TradeScreenshot,
 } from '@/api/trading'
 import AccountConfigDialog from './components/AccountConfigDialog.vue'
 import BatchTradeRecordDialog from './components/BatchTradeRecordDialog.vue'
@@ -87,6 +89,7 @@ const formatDateTime = (value: string | null) =>
   value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
 
 const formatJson = (value: Record<string, unknown> | null) => (value ? JSON.stringify(value) : '—')
+const getScreenshotUrls = (screenshots: TradeScreenshot[]) => screenshots.map((screenshot) => getUploadedFileUrl(screenshot.path))
 
 const pnlClass = (value: string | null) => {
   if (value === null) return 'text-slate-400'
@@ -244,6 +247,7 @@ const handleAccountDeleted = (accountId: number) => {
             <el-table-column prop="fee" label="手续费" width="95" align="right" />
             <el-table-column prop="openReason" label="开仓缘由" min-width="150" show-overflow-tooltip><template #default="{ row }">{{ row.openReason || '—' }}</template></el-table-column>
             <el-table-column prop="closeReason" label="平仓缘由" min-width="150" show-overflow-tooltip><template #default="{ row }">{{ row.closeReason || '—' }}</template></el-table-column>
+            <el-table-column label="截图" min-width="96" align="center"><template #default="{ row }"><div v-if="row.screenshots?.length" class="flex items-center justify-center gap-1"><el-image v-for="screenshot in row.screenshots" :key="screenshot.path" :src="getUploadedFileUrl(screenshot.path)" :preview-src-list="getScreenshotUrls(row.screenshots)" preview-teleported fit="cover" class="size-8 rounded border border-slate-200" /><span class="text-xs text-slate-400">{{ row.screenshots.length }}</span></div><span v-else class="text-slate-400">—</span></template></el-table-column>
             <el-table-column label="extra_json" min-width="170" show-overflow-tooltip><template #default="{ row }">{{ formatJson(row.extraJson) }}</template></el-table-column>
             <el-table-column label="操作" width="76" fixed="right"><template #default="{ row }"><el-button link type="primary" @click="editRecord(row)">修改</el-button></template></el-table-column>
           </el-table>

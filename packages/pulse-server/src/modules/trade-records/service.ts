@@ -30,6 +30,7 @@ export type CreateTradeRecordBody = {
   openTime: string
   openPrice: DecimalInput
   openReason?: string | null
+  screenshots?: Record<string, unknown>[] | null
   closeTime?: string | null
   closePrice?: DecimalInput | null
   closeReason?: string | null
@@ -63,6 +64,7 @@ const normalizeTradeRecordForCreate = (tradeRecord: CreateTradeRecordBody) => ({
   openTime: parseDateTime(tradeRecord.openTime),
   openPrice: String(tradeRecord.openPrice),
   ...(tradeRecord.openReason === undefined ? {} : { openReason: tradeRecord.openReason }),
+  ...(tradeRecord.screenshots === undefined ? {} : { screenshots: tradeRecord.screenshots as TradeRecordInput['screenshots'] }),
   fee: String(tradeRecord.fee),
   ...(tradeRecord.closeTime === undefined ? {} : { closeTime: tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime) }),
   ...(tradeRecord.closePrice === undefined ? {} : { closePrice: tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice) }),
@@ -82,6 +84,7 @@ const normalizeTradeRecordForUpdate = (tradeRecord: UpdateTradeRecordBody): Trad
   if (tradeRecord.openTime !== undefined) normalized.openTime = parseDateTime(tradeRecord.openTime)
   if (tradeRecord.openPrice !== undefined) normalized.openPrice = String(tradeRecord.openPrice)
   if (tradeRecord.openReason !== undefined) normalized.openReason = tradeRecord.openReason
+  if (tradeRecord.screenshots !== undefined) normalized.screenshots = tradeRecord.screenshots as TradeRecordInput['screenshots']
   if (tradeRecord.closeTime !== undefined) normalized.closeTime = tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime)
   if (tradeRecord.closePrice !== undefined) normalized.closePrice = tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice)
   if (tradeRecord.closeReason !== undefined) normalized.closeReason = tradeRecord.closeReason

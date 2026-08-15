@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import dayjs from 'dayjs'
-import { ElMessage } from 'element-plus'
+import { ElMessage, type UploadRequestOptions, type UploadUserFile } from 'element-plus'
 import { Landmark } from '@lucide/vue'
 
 import {
   createTradeRecord,
+  getUploadedFileUrl,
+  type TradeScreenshot,
   type TradeRecord,
   type TradingAccount,
+  uploadFiles,
   updateTradeRecord,
 } from '@/api/trading'
 
@@ -35,6 +38,7 @@ const form = reactive({
   openTime: dayjs().toDate(),
   openPrice: '',
   openReason: '',
+  screenshots: [] as TradeScreenshot[],
   closeTime: null as Date | null,
   closePrice: '',
   closeReason: '',
@@ -42,6 +46,10 @@ const form = reactive({
   fee: '',
   extraJson: '',
 })
+const screenshotFiles = ref<UploadUserFile[]>([])
+const screenshotUploading = ref(false)
+const screenshotPreviewVisible = ref(false)
+const screenshotPreviewUrl = ref('')
 
 const isEditing = computed(() => props.record !== undefined)
 const title = computed(() => isEditing.value ? '修改交易记录' : '新增交易记录')
@@ -56,12 +64,56 @@ const resetForm = () => {
   form.openTime = record ? dayjs(record.openTime).toDate() : dayjs().toDate()
   form.openPrice = record?.openPrice ?? ''
   form.openReason = record?.openReason ?? ''
+  form.screenshots = record?.screenshots ? [...record.screenshots] : []
+  screenshotFiles.value = form.screenshots.map((screenshot) => ({
+    name: screenshot.original_name,
+    response: screenshot,
+    status: 'success',
+    url: getUploadedFileUrl(screenshot.path),
+  }))
   form.closeTime = record?.closeTime ? dayjs(record.closeTime).toDate() : null
   form.closePrice = record?.closePrice ?? ''
   form.closeReason = record?.closeReason ?? ''
   form.realizedPnl = record?.realizedPnl ?? ''
   form.fee = record?.fee ?? ''
   form.extraJson = record?.extraJson ? JSON.stringify(record.extraJson, null, 2) : ''
+}
+
+const beforeScreenshotUpload = (file: File) => {
+  if (file.type.startsWith('image/')) return true
+  ElMessage.warning('截图仅支持图片文件。')
+  return false
+}
+
+const uploadScreenshot = async (options: UploadRequestOptions) => {
+  screenshotUploading.value = true
+  try {
+    const uploadedFile = (await uploadFiles([options.file], 'trade_records_screenshots'))[0]
+    if (!uploadedFile) throw new Error('截图上传没有返回文件信息。')
+    form.screenshots = [...form.screenshots, uploadedFile]
+    const fileItem = screenshotFiles.value.find((item) => item.uid === options.file.uid)
+    if (fileItem) {
+      fileItem.name = uploadedFile.original_name
+      fileItem.response = uploadedFile
+      fileItem.status = 'success'
+      fileItem.url = getUploadedFileUrl(uploadedFile.path)
+    }
+    ElMessage.success('截图已上传。')
+    return uploadedFile
+  } finally {
+    screenshotUploading.value = false
+  }
+}
+
+const removeScreenshot = (file: UploadUserFile) => {
+  const uploadedFile = file.response as TradeScreenshot | undefined
+  if (uploadedFile?.path) form.screenshots = form.screenshots.filter((screenshot) => screenshot.path !== uploadedFile.path)
+}
+
+const previewScreenshot = (file: UploadUserFile) => {
+  if (!file.url) return
+  screenshotPreviewUrl.value = file.url
+  screenshotPreviewVisible.value = true
 }
 
 const save = async () => {
@@ -92,6 +144,7 @@ const save = async () => {
     openTime: formatApiDateTime(form.openTime),
     openPrice: form.openPrice,
     openReason: form.openReason.trim() || null,
+    screenshots: form.screenshots.length > 0 ? form.screenshots : null,
     closeTime: form.closeTime ? formatApiDateTime(form.closeTime) : null,
     closePrice: form.closePrice || null,
     closeReason: form.closeReason.trim() || null,
@@ -140,9 +193,30 @@ watch(visible, (isVisible) => {
         <el-form-item label="真实盈亏"><el-input v-model="form.realizedPnl" inputmode="decimal" placeholder="未平仓可留空" /></el-form-item>
         <el-form-item label="开仓缘由"><el-input v-model="form.openReason" placeholder="例如：突破关键压力位" /></el-form-item>
         <el-form-item label="平仓缘由"><el-input v-model="form.closeReason" placeholder="例如：止盈离场" /></el-form-item>
+        <el-form-item class="sm:col-span-2 lg:col-span-4" label="截图">
+          <div>
+            <el-upload
+              v-model:file-list="screenshotFiles"
+              accept="image/*"
+              list-type="picture-card"
+              :auto-upload="true"
+              :before-upload="beforeScreenshotUpload"
+              :http-request="uploadScreenshot"
+              :limit="10"
+              multiple
+              :disabled="screenshotUploading"
+              @preview="previewScreenshot"
+              @remove="removeScreenshot"
+            ><span class="text-xl leading-none">+</span></el-upload>
+            <p class="mt-1 text-xs text-slate-400">支持单张图片，上传后可点击预览。</p>
+          </div>
+        </el-form-item>
         <el-form-item class="sm:col-span-2 lg:col-span-4" label="extra_json"><el-input v-model="form.extraJson" type="textarea" :rows="3" placeholder='例如：{ "strategy": "突破" }' /></el-form-item>
       </div>
       <div class="mt-2 flex justify-end gap-2"><el-button @click="visible = false">取消</el-button><el-button type="primary" native-type="submit" :loading="saving">{{ isEditing ? '保存修改' : '保存记录' }}</el-button></div>
     </el-form>
+    <el-dialog v-model="screenshotPreviewVisible" append-to-body title="交易截图" width="min(920px, calc(100vw - 32px))">
+      <img :src="screenshotPreviewUrl" class="mx-auto max-h-[70vh] max-w-full object-contain" alt="交易截图" />
+    </el-dialog>
   </el-dialog>
 </template>

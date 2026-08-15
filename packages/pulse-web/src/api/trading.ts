@@ -1,5 +1,16 @@
 import { request } from './client'
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '/api/server'
+
+export type TradeScreenshot = {
+  path: string
+  size: number
+  content_type: string
+  original_name: string
+}
+
+export type UploadedFile = TradeScreenshot
+
 export type TradeDirection = 'LONG' | 'SHORT'
 
 export type TradingAccount = {
@@ -21,6 +32,7 @@ export type TradeRecord = {
   openTime: string
   openPrice: string
   openReason: string | null
+  screenshots: TradeScreenshot[] | null
   closeTime: string | null
   closePrice: string | null
   closeReason: string | null
@@ -44,6 +56,16 @@ export type TradeRecordReq = {
 }
 
 export const listTradingAccounts = () => request<TradingAccount[]>('/trading-accounts')
+
+export const uploadFiles = (files: File[], storageScope: string) => {
+  const formData = new FormData()
+  files.forEach((file) => formData.append('file', file))
+  formData.append('storage-scope', storageScope)
+  return request<UploadedFile[]>('/files', { method: 'POST', body: formData })
+}
+
+export const getUploadedFileUrl = (relativePath: string) =>
+  `${apiBaseUrl}/storage/${relativePath.split('/').map(encodeURIComponent).join('/')}`
 
 export const createTradingAccount = (payload: TradingAccountInput) =>
   request<TradingAccount>('/trading-accounts', {

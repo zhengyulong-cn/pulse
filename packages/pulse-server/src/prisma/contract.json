@@ -233,6 +233,13 @@
                   "kind": "scalar"
                 }
               },
+              "screenshots": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/json@1",
+                  "kind": "scalar"
+                }
+              },
               "underlyingCode": {
                 "nullable": false,
                 "type": {
@@ -305,6 +312,9 @@
                 },
                 "realizedPnl": {
                   "column": "realizedPnl"
+                },
+                "screenshots": {
+                  "column": "screenshots"
                 },
                 "underlyingCode": {
                   "column": "underlyingCode"
@@ -687,6 +697,11 @@
                   "nativeType": "numeric",
                   "nullable": true
                 },
+                "screenshots": {
+                  "codecId": "pg/json@1",
+                  "nativeType": "json",
+                  "nullable": true
+                },
                 "underlyingCode": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -931,7 +946,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "85fb6d566d342d4699e8c3b430bac6dee45256e59325066c86e471117c8db8f2"
+    "storageHash": "5fa7a6c2ccde4b9de27861143901b1531785a04426eceac726f786dc9d5846c3"
   },
   "capabilities": {
     "postgres": {

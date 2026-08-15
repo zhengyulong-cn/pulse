@@ -28,6 +28,7 @@ model TradeRecord {
   openTime       DateTime
   openPrice      Decimal
   openReason     String?
+  screenshots    Json?
   closeTime      DateTime?
   closePrice     Decimal?
   closeReason    String?

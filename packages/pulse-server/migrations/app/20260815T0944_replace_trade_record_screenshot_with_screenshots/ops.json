@@ -1,0 +1,86 @@
+[
+  {
+    "id": "dropColumn.tradeRecord.screenshot",
+    "label": "Drop column \"screenshot\" from \"tradeRecord\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "screenshot",
+        "table": "tradeRecord"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"screenshot\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "tradeRecord",
+          "screenshot"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"screenshot\"",
+        "sql": "ALTER TABLE \"public\".\"tradeRecord\" DROP COLUMN \"screenshot\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"screenshot\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "tradeRecord",
+          "screenshot"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.tradeRecord.screenshots",
+    "label": "Add column \"screenshots\" to \"tradeRecord\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "screenshots",
+        "table": "tradeRecord"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"screenshots\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "tradeRecord",
+          "screenshots"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"screenshots\"",
+        "sql": "ALTER TABLE \"public\".\"tradeRecord\" ADD COLUMN \"screenshots\" json"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"screenshots\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "tradeRecord",
+          "screenshots"
+        ]
+      }
+    ]
+  }
+]
