@@ -28,7 +28,7 @@ const { barsByTime, clear: clearChartBars, render: renderKlines, updateRealtime 
 const drawingStrategies = new DrawingStrategyRegistry(() => [...barsByTime.values()])
 const { tooltip, updateFromCrosshair } = useChartTooltip(() => candlestickSeries, barsByTime)
 const { activeDrawingTool, clearDrawingTool, selectDrawingTool } = useDrawingTool()
-const { attach: attachDrawingInteraction, cursor: drawingCursor, dispose: disposeDrawingInteraction, restore: restoreDrawings } = useDrawingInteraction(
+const { attach: attachDrawingInteraction, clearDrawings, cursor: drawingCursor, dispose: disposeDrawingInteraction, isCrossInterval: crossIntervalDrawing, isVisible: drawingsVisible, restore: restoreDrawings, toggleCrossInterval: toggleCrossIntervalDrawing, toggleVisibility: toggleDrawingsVisibility } = useDrawingInteraction(
   () => chart,
   () => candlestickSeries,
   activeDrawingTool,
@@ -89,8 +89,13 @@ onBeforeUnmount(() => {
     <ChartTopBar
       :active-script-ids="activeScriptIds"
       :active-drawing-tool="activeDrawingTool"
+      :cross-interval-drawing="crossIntervalDrawing"
+      :drawings-visible="drawingsVisible"
       :selected-interval="selectedInterval"
       @select-drawing-tool="selectDrawingTool"
+      @clear-drawings="clearDrawings"
+      @toggle-cross-interval-drawing="toggleCrossIntervalDrawing"
+      @toggle-drawings-visibility="toggleDrawingsVisibility"
       @select-interval="selectInterval"
       @toggle-indicator="togglePineIndicator"
     />

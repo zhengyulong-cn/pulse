@@ -41,8 +41,8 @@ class DrawingPaneView implements IPrimitivePaneView {
 
   update() {
     this.coordinates = this.drawings().flatMap((drawing) => {
-      const startX = this.chart.timeScale().timeToCoordinate(drawing.start.time)
-      const endX = this.chart.timeScale().timeToCoordinate(drawing.end.time)
+      const startX = this.coordinateForTime(drawing.start.time)
+      const endX = this.coordinateForTime(drawing.end.time)
       const startY = this.series.priceToCoordinate(drawing.start.price)
       const endY = this.series.priceToCoordinate(drawing.end.price)
       if (startX === null || endX === null || startY === null || endY === null) return []
@@ -60,6 +60,19 @@ class DrawingPaneView implements IPrimitivePaneView {
   getCoordinates() {
     return this.coordinates
   }
+
+  private coordinateForTime(time: Time) {
+    const coordinate = this.chart.timeScale().timeToCoordinate(time)
+    if (coordinate !== null) return coordinate
+    const target = Number(time)
+    if (!Number.isFinite(target)) return null
+    const nearestTime = this.series.data().reduce<Time | undefined>((nearest, bar) => {
+      if (typeof bar.time !== 'number') return nearest
+      if (nearest === undefined || Math.abs(Number(bar.time) - target) < Math.abs(Number(nearest) - target)) return bar.time
+      return nearest
+    }, undefined)
+    return nearestTime === undefined ? null : this.chart.timeScale().timeToCoordinate(nearestTime)
+  }
 }
 
 export class DrawingPrimitive implements ISeriesPrimitive<Time> {
@@ -68,6 +81,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
   private paneView: DrawingPaneView | undefined
   private requestUpdate: (() => void) | undefined
   private selectedDrawingId: string | undefined
+  private visible = true
 
   constructor(private readonly strategies: DrawingStrategyRegistry) {}
 
@@ -108,7 +122,19 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
     this.refresh()
   }
 
+  setVisible(visible: boolean) {
+    this.visible = visible
+    this.refresh()
+  }
+
+  clearDrawings() {
+    this.drawings = []
+    this.selectedDrawingId = undefined
+    this.refresh()
+  }
+
   hitTestDrawing(x: number, y: number) {
+    if (!this.visible) return undefined
     const selectable = this.paneView?.getCoordinates() ?? []
     for (const drawing of [...selectable].reverse()) {
       const hit = this.strategies.get(drawing.tool)?.hitTest?.(drawing, x, y)
@@ -123,6 +149,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
   }
 
   private allDrawings() {
+    if (!this.visible) return []
     return this.draft ? [...this.drawings, this.draft] : this.drawings
   }
 

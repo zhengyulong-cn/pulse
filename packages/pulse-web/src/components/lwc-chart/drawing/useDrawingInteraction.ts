@@ -18,6 +18,8 @@ export const useDrawingInteraction = (
 ) => {
   const primitive = new DrawingPrimitive(strategies)
   const cursor = ref('default')
+  const isCrossInterval = ref(false)
+  const isVisible = ref(true)
   let start: DrawingPoint | undefined
   let drag: {
     drawingId: string
@@ -49,7 +51,7 @@ export const useDrawingInteraction = (
       const strategy = strategies.get(activeTool.value)
       const scope = getScope()
       if (!strategy || !scope) return
-      primitive.addDrawing(createDrawingDocument(scope, strategy.create(crypto.randomUUID(), point, point)))
+      primitive.addDrawing(createDrawingDocument(scope, strategy.create(crypto.randomUUID(), point, point), isCrossInterval.value))
       saveDrawingDocuments(scope, primitive.getDrawings())
       clearActiveTool()
       return
@@ -62,7 +64,7 @@ export const useDrawingInteraction = (
     if (!strategy) return
     const scope = getScope()
     if (!scope) return
-    primitive.addDrawing(createDrawingDocument(scope, strategy.create(crypto.randomUUID(), start, point)))
+    primitive.addDrawing(createDrawingDocument(scope, strategy.create(crypto.randomUUID(), start, point), isCrossInterval.value))
     saveDrawingDocuments(scope, primitive.getDrawings())
     start = undefined
     primitive.setDraft(undefined)
@@ -174,6 +176,22 @@ export const useDrawingInteraction = (
     primitive.setDrawings(loadDrawingDocuments(getScope()))
   }
 
+  const toggleVisibility = () => {
+    isVisible.value = !isVisible.value
+    primitive.setVisible(isVisible.value)
+  }
+
+  const clearDrawings = () => {
+    const scope = getScope()
+    if (!scope) return
+    primitive.setDrawings(primitive.getDrawings().filter((drawing) => drawing.anchor.instrumentId !== scope.instrumentId || drawing.anchor.interval !== scope.interval))
+    saveDrawingDocuments(scope, [])
+  }
+
+  const toggleCrossInterval = () => {
+    isCrossInterval.value = !isCrossInterval.value
+  }
+
   const dispose = (container: HTMLElement | undefined) => {
     getChart()?.unsubscribeClick(handleClick)
     getChart()?.unsubscribeCrosshairMove(handleCrosshairMove)
@@ -184,5 +202,5 @@ export const useDrawingInteraction = (
     container?.removeEventListener('pointerleave', handlePointerLeave)
   }
 
-  return { attach, cursor, dispose, restore }
+  return { attach, clearDrawings, cursor, dispose, isCrossInterval, isVisible, restore, toggleCrossInterval, toggleVisibility }
 }

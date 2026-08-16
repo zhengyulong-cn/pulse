@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import { ArrowDown, ArrowUp, ChartNoAxesColumn, MousePointer2, MoveUpRight, PencilLine, Ruler, Square, Type } from '@lucide/vue'
+import { ArrowDown, ArrowUp, ChartNoAxesColumn, Eye, EyeOff, MousePointer2, MoveUpRight, PencilLine, Ruler, Square, Trash2, Type, Workflow } from '@lucide/vue'
 import { ref } from 'vue'
 
 import { listPineScripts, type PineScript } from '@/api/pine-scripts'
@@ -10,12 +10,17 @@ import { drawingTools, type DrawingToolId } from '../drawing/drawingTools'
 defineProps<{
   activeScriptIds: number[]
   activeDrawingTool?: DrawingToolId
+  crossIntervalDrawing: boolean
+  drawingsVisible: boolean
   selectedInterval: KlineQueryInterval
 }>()
 
 const emit = defineEmits<{
   selectInterval: [interval: KlineQueryInterval]
   selectDrawingTool: [tool: DrawingToolId]
+  clearDrawings: []
+  toggleCrossIntervalDrawing: []
+  toggleDrawingsVisibility: []
   toggleIndicator: [script: PineScript]
 }>()
 
@@ -108,7 +113,24 @@ const getScriptName = (script: PineScript) => (
         >
           <component :is="drawingToolIcons[tool.id]" :size="16" />
         </button>
-      </el-tooltip>
+        </el-tooltip>
+        <span class="mx-0.5 h-5 w-px bg-slate-200" />
+        <el-tooltip :content="drawingsVisible ? '隐藏绘图' : '显示绘图'" placement="bottom">
+          <button type="button" class="flex size-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100" @click="emit('toggleDrawingsVisibility')">
+            <EyeOff v-if="drawingsVisible" :size="16" />
+            <Eye v-else :size="16" />
+          </button>
+        </el-tooltip>
+        <el-tooltip content="删除当前周期全部绘图" placement="bottom">
+          <button type="button" class="flex size-8 items-center justify-center rounded text-slate-600 hover:bg-rose-50 hover:text-rose-600" @click="emit('clearDrawings')">
+            <Trash2 :size="16" />
+          </button>
+        </el-tooltip>
+        <el-tooltip :content="crossIntervalDrawing ? '关闭跨周期绘图' : '开启跨周期绘图'" placement="bottom">
+          <button type="button" class="flex size-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100" :class="{ 'bg-blue-50 text-blue-600 hover:bg-blue-50': crossIntervalDrawing }" @click="emit('toggleCrossIntervalDrawing')">
+            <Workflow :size="16" />
+          </button>
+        </el-tooltip>
     </div>
   </header>
 </template>
