@@ -5,7 +5,7 @@ export type DrawingPoint = {
   time: Time
 }
 
-export type TwoPointDrawingTool = 'arrow_segment' | 'long_position' | 'rectangle' | 'segment' | 'short_position'
+export type TwoPointDrawingTool = 'arrow_segment' | 'long_position' | 'measure' | 'rectangle' | 'segment' | 'short_position'
 
 export type TwoPointDrawing = {
   end: DrawingPoint

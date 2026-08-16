@@ -1,21 +1,30 @@
 import { arrowSegmentDrawingStrategy } from './ArrowSegmentDrawingStrategy'
+import { MeasureDrawingStrategy, type MeasureBar } from './MeasureDrawingStrategy'
+import { longPositionDrawingStrategy, shortPositionDrawingStrategy } from './PositionMeasurementDrawingStrategy'
 import { rectangleDrawingStrategy } from './RectangleDrawingStrategy'
 import { segmentDrawingStrategy } from './SegmentDrawingStrategy'
-import { longPositionDrawingStrategy, shortPositionDrawingStrategy } from './PositionMeasurementDrawingStrategy'
 import type { TwoPointDrawingStrategy, TwoPointDrawingTool } from './types'
 
-const strategies: TwoPointDrawingStrategy[] = [
-  segmentDrawingStrategy,
-  arrowSegmentDrawingStrategy,
-  rectangleDrawingStrategy,
-  longPositionDrawingStrategy,
-  shortPositionDrawingStrategy,
-]
+export class DrawingStrategyRegistry {
+  private readonly strategyByTool: Map<TwoPointDrawingTool, TwoPointDrawingStrategy>
 
-const strategyByTool = new Map(strategies.map((strategy) => [strategy.tool, strategy]))
+  constructor(getMeasureBars: () => MeasureBar[]) {
+    const strategies: TwoPointDrawingStrategy[] = [
+      segmentDrawingStrategy,
+      arrowSegmentDrawingStrategy,
+      rectangleDrawingStrategy,
+      longPositionDrawingStrategy,
+      shortPositionDrawingStrategy,
+      new MeasureDrawingStrategy(getMeasureBars),
+    ]
+    this.strategyByTool = new Map(strategies.map((strategy) => [strategy.tool, strategy]))
+  }
 
-export const getTwoPointDrawingStrategy = (tool: TwoPointDrawingTool) => strategyByTool.get(tool)
+  get(tool: TwoPointDrawingTool) {
+    return this.strategyByTool.get(tool)
+  }
 
-export const isTwoPointDrawingTool = (tool: string | undefined): tool is TwoPointDrawingTool => (
-  tool !== undefined && strategyByTool.has(tool as TwoPointDrawingTool)
-)
+  has(tool: string | undefined): tool is TwoPointDrawingTool {
+    return tool !== undefined && this.strategyByTool.has(tool as TwoPointDrawingTool)
+  }
+}

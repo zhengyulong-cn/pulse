@@ -5,17 +5,18 @@ import type { DrawingHitPart, DrawingPoint } from './DrawingPrimitive'
 import { DrawingPrimitive } from './DrawingPrimitive'
 import type { DrawingToolId } from './drawingTools'
 import { createDrawingDocument, loadDrawingDocuments, saveDrawingDocuments, type DrawingDocumentScope } from './drawingDocument'
-import { getTwoPointDrawingStrategy, isTwoPointDrawingTool } from './strategies/drawingStrategyRegistry'
+import type { DrawingStrategyRegistry } from './strategies/drawingStrategyRegistry'
 import type { TwoPointDrawing, TwoPointDrawingTool } from './strategies/types'
 
 export const useDrawingInteraction = (
   getChart: () => IChartApi | undefined,
   getSeries: () => ISeriesApi<'Candlestick'> | undefined,
   activeTool: Ref<DrawingToolId | undefined>,
+  strategies: DrawingStrategyRegistry,
   getScope: () => DrawingDocumentScope | undefined,
   clearActiveTool: () => void,
 ) => {
-  const primitive = new DrawingPrimitive()
+  const primitive = new DrawingPrimitive(strategies)
   const cursor = ref('default')
   let start: DrawingPoint | undefined
   let drag: {
@@ -29,7 +30,7 @@ export const useDrawingInteraction = (
   } | undefined
 
   const cursorForHit = (tool: TwoPointDrawingTool | undefined, part: DrawingHitPart | undefined) => (
-    tool && part ? getTwoPointDrawingStrategy(tool)?.cursor?.(part) ?? 'default' : 'default'
+    tool && part ? strategies.get(tool)?.cursor?.(part) ?? 'default' : 'default'
   )
 
   const getPoint = (parameters: MouseEventParams<Time>): DrawingPoint | undefined => {
@@ -41,14 +42,14 @@ export const useDrawingInteraction = (
   }
 
   const handleClick = (parameters: MouseEventParams<Time>) => {
-    if (!isTwoPointDrawingTool(activeTool.value)) return
+    if (!strategies.has(activeTool.value)) return
     const point = getPoint(parameters)
     if (!point) return
     if (!start) {
       start = point
       return
     }
-    const strategy = getTwoPointDrawingStrategy(activeTool.value)
+    const strategy = strategies.get(activeTool.value)
     if (!strategy) return
     const scope = getScope()
     if (!scope) return
@@ -60,10 +61,10 @@ export const useDrawingInteraction = (
   }
 
   const handleCrosshairMove = (parameters: MouseEventParams<Time>) => {
-    if (!start || !isTwoPointDrawingTool(activeTool.value)) return
+    if (!start || !strategies.has(activeTool.value)) return
     const end = getPoint(parameters)
     if (!end) return
-    const strategy = getTwoPointDrawingStrategy(activeTool.value)
+    const strategy = strategies.get(activeTool.value)
     if (!strategy) return
     primitive.setDraft(strategy.create('draft', start, end))
   }
@@ -123,7 +124,7 @@ export const useDrawingInteraction = (
     }
     const point = getPointAtCoordinate(x, y)
     if (!point) return
-    const update = getTwoPointDrawingStrategy(drag.tool)?.updateForDrag?.({
+    const update = strategies.get(drag.tool)?.updateForDrag?.({
       current: point,
       currentCoordinate: { x, y },
       originCoordinate: drag.originCoordinate,

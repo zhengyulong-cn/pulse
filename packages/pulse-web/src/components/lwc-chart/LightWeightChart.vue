@@ -13,6 +13,7 @@ import { useRealtimeKline } from './useRealtimeKline'
 import { useChartBars } from './useChartBars'
 import { useDrawingTool } from './drawing/useDrawingTool'
 import { useDrawingInteraction } from './drawing/useDrawingInteraction'
+import { DrawingStrategyRegistry } from './drawing/strategies/drawingStrategyRegistry'
 import { useChartWatermark } from './watermark/useChartWatermark'
 import { useTradeAnnotations } from './side_bar/trade/useTradeAnnotations'
 import { useTradeNavigation } from './side_bar/trade/useTradeNavigation'
@@ -24,12 +25,14 @@ let candlestickSeries: ISeriesApi<'Candlestick'> | undefined
 let resizeObserver: ResizeObserver | undefined
 const { attach: attachTradeAnnotations, dispose: disposeTradeAnnotations, pendingTrade, render: renderTradeAnnotations } = useTradeAnnotations(() => chart, () => candlestickSeries)
 const { barsByTime, clear: clearChartBars, render: renderKlines, updateRealtime } = useChartBars(() => chart, () => candlestickSeries, renderTradeAnnotations)
+const drawingStrategies = new DrawingStrategyRegistry(() => [...barsByTime.values()])
 const { tooltip, updateFromCrosshair } = useChartTooltip(() => candlestickSeries, barsByTime)
 const { activeDrawingTool, clearDrawingTool, selectDrawingTool } = useDrawingTool()
 const { attach: attachDrawingInteraction, cursor: drawingCursor, dispose: disposeDrawingInteraction, restore: restoreDrawings } = useDrawingInteraction(
   () => chart,
   () => candlestickSeries,
   activeDrawingTool,
+  drawingStrategies,
   () => selectedInstrumentId.value === undefined ? undefined : { instrumentId: selectedInstrumentId.value, interval: selectedInterval.value },
   clearDrawingTool,
 )

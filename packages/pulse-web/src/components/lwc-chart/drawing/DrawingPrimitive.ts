@@ -2,7 +2,7 @@ import type { CanvasRenderingTarget2D } from 'fancy-canvas'
 import dayjs from 'dayjs'
 import type { IPrimitivePaneRenderer, IPrimitivePaneView, ISeriesApi, ISeriesPrimitive, SeriesAttachedParameter, SeriesType, Time } from 'lightweight-charts'
 
-import { getTwoPointDrawingStrategy } from './strategies/drawingStrategyRegistry'
+import type { DrawingStrategyRegistry } from './strategies/drawingStrategyRegistry'
 import type { DrawingCoordinates, TwoPointDrawing } from './strategies/types'
 import type { DrawingDocument } from './drawingDocument'
 
@@ -11,7 +11,7 @@ export type { DrawingPoint, TwoPointDrawing, TwoPointDrawingTool } from './strat
 export type { DrawingHitPart } from './strategies/types'
 
 class DrawingRenderer implements IPrimitivePaneRenderer {
-  constructor(private readonly drawings: DrawingCoordinates[], private readonly selectedDrawingId: string | undefined) {}
+  constructor(private readonly drawings: DrawingCoordinates[], private readonly selectedDrawingId: string | undefined, private readonly strategies: DrawingStrategyRegistry) {}
 
   draw(target: CanvasRenderingTarget2D) {
     target.useBitmapCoordinateSpace(({ context, horizontalPixelRatio, verticalPixelRatio }) => {
@@ -20,8 +20,8 @@ class DrawingRenderer implements IPrimitivePaneRenderer {
       context.strokeStyle = '#2563eb'
       context.fillStyle = '#2563eb'
       for (const drawing of this.drawings) {
-        getTwoPointDrawingStrategy(drawing.tool)?.draw(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
-        if (drawing.id === this.selectedDrawingId) getTwoPointDrawingStrategy(drawing.tool)?.drawSelection?.(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
+        this.strategies.get(drawing.tool)?.draw(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
+        if (drawing.id === this.selectedDrawingId) this.strategies.get(drawing.tool)?.drawSelection?.(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
       }
       context.restore()
     })
@@ -36,6 +36,7 @@ class DrawingPaneView implements IPrimitivePaneView {
     private readonly series: ISeriesApi<SeriesType>,
     private readonly drawings: () => TwoPointDrawing[],
     private readonly selectedDrawingId: () => string | undefined,
+    private readonly strategies: DrawingStrategyRegistry,
   ) {}
 
   update() {
@@ -53,7 +54,7 @@ class DrawingPaneView implements IPrimitivePaneView {
   }
 
   renderer() {
-    return this.coordinates.length ? new DrawingRenderer(this.coordinates, this.selectedDrawingId()) : null
+    return this.coordinates.length ? new DrawingRenderer(this.coordinates, this.selectedDrawingId(), this.strategies) : null
   }
 
   getCoordinates() {
@@ -68,9 +69,11 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
   private requestUpdate: (() => void) | undefined
   private selectedDrawingId: string | undefined
 
+  constructor(private readonly strategies: DrawingStrategyRegistry) {}
+
   attached(parameter: SeriesAttachedParameter<Time, SeriesType>) {
     this.requestUpdate = parameter.requestUpdate
-    this.paneView = new DrawingPaneView(parameter.chart, parameter.series, () => this.allDrawings(), () => this.selectedDrawingId)
+    this.paneView = new DrawingPaneView(parameter.chart, parameter.series, () => this.allDrawings(), () => this.selectedDrawingId, this.strategies)
   }
 
   updateAllViews() {
@@ -108,7 +111,7 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
   hitTestDrawing(x: number, y: number) {
     const selectable = this.paneView?.getCoordinates() ?? []
     for (const drawing of [...selectable].reverse()) {
-      const hit = getTwoPointDrawingStrategy(drawing.tool)?.hitTest?.(drawing, x, y)
+      const hit = this.strategies.get(drawing.tool)?.hitTest?.(drawing, x, y)
       if (hit) return { drawing, part: hit.part }
     }
     return undefined
