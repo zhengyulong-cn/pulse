@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
 import { ArrowDown, ArrowUp, ChartNoAxesColumn, MousePointer2, MoveUpRight, PencilLine, Ruler, Square, Type } from '@lucide/vue'
+import { ref } from 'vue'
 
 import { listPineScripts, type PineScript } from '@/api/pine-scripts'
 import type { KlineQueryInterval } from '@/api/market-data'
@@ -30,6 +31,8 @@ const drawingToolIcons = {
   measure: Ruler,
 } satisfies Record<DrawingToolId, typeof PencilLine>
 
+const isDrawingPanelVisible = ref(false)
+
 const intervals: Array<{ label: string, value: KlineQueryInterval }> = [
   { label: '1分钟', value: '1m' },
   { label: '5分钟', value: '5m' },
@@ -49,7 +52,7 @@ const getScriptName = (script: PineScript) => (
 </script>
 
 <template>
-  <header class="flex h-10 shrink-0 items-center border-b border-slate-200 bg-white px-3">
+  <header class="relative flex h-10 shrink-0 items-center border-b border-slate-200 bg-white px-3">
     <div class="flex items-center gap-1" aria-label="K线周期">
       <button
         v-for="interval in intervals"
@@ -63,29 +66,9 @@ const getScriptName = (script: PineScript) => (
         {{ interval.label }}
       </button>
     </div>
-    <el-popover placement="bottom-start" trigger="click" :width="280">
-      <template #reference>
-        <button type="button" class="ml-2 flex items-center gap-1 rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100" :class="{ 'bg-blue-50 text-blue-600 hover:bg-blue-50': activeDrawingTool }">
-          <MousePointer2 :size="16" /> 绘图
-        </button>
-      </template>
-      <div class="grid grid-cols-3 gap-1">
-        <button
-          v-for="tool in drawingTools"
-          :key="tool.id"
-          type="button"
-          class="flex min-h-17 flex-col items-center justify-center gap-1 rounded px-1 py-2 text-xs text-slate-600 hover:bg-slate-100"
-          :class="{ 'bg-blue-50 text-blue-600 hover:bg-blue-50': activeDrawingTool === tool.id }"
-          @click="emit('selectDrawingTool', tool.id)"
-        >
-          <component :is="drawingToolIcons[tool.id]" :size="18" />
-          <span>{{ tool.label }}</span>
-        </button>
-      </div>
-    </el-popover>
     <el-popover placement="bottom-start" trigger="click" :width="240">
       <template #reference>
-        <button type="button" class="ml-3 flex items-center gap-1 rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100">
+        <button type="button" class="flex items-center gap-1 rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100">
           <ChartNoAxesColumn :size="16" /> 指标
         </button>
       </template>
@@ -106,5 +89,26 @@ const getScriptName = (script: PineScript) => (
         </button>
       </div>
     </el-popover>
+    <button type="button" class="flex items-center gap-1 rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100" :class="{ 'bg-blue-50 text-blue-600 hover:bg-blue-50': activeDrawingTool || isDrawingPanelVisible }" :aria-expanded="isDrawingPanelVisible" @click="isDrawingPanelVisible = !isDrawingPanelVisible">
+      <MousePointer2 :size="16" /> 绘图
+    </button>
+    <div v-show="isDrawingPanelVisible" class="absolute left-2 top-full z-30 mt-2 flex items-center gap-0.5 rounded-md border border-slate-200 bg-white p-1 shadow-lg">
+      <el-tooltip
+        v-for="tool in drawingTools"
+        :key="tool.id"
+        :content="tool.label"
+        placement="bottom"
+      >
+        <button
+          type="button"
+          class="flex size-8 shrink-0 items-center justify-center rounded text-slate-600 hover:bg-slate-100"
+          :class="{ 'bg-blue-50 text-blue-600 hover:bg-blue-50': activeDrawingTool === tool.id }"
+          :aria-label="tool.label"
+          @click="emit('selectDrawingTool', tool.id)"
+        >
+          <component :is="drawingToolIcons[tool.id]" :size="16" />
+        </button>
+      </el-tooltip>
+    </div>
   </header>
 </template>
