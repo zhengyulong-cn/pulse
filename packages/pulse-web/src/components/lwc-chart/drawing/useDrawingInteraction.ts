@@ -45,6 +45,15 @@ export const useDrawingInteraction = (
     if (!strategies.has(activeTool.value)) return
     const point = getPoint(parameters)
     if (!point) return
+    if (activeTool.value === 'arrow_up' || activeTool.value === 'arrow_down') {
+      const strategy = strategies.get(activeTool.value)
+      const scope = getScope()
+      if (!strategy || !scope) return
+      primitive.addDrawing(createDrawingDocument(scope, strategy.create(crypto.randomUUID(), point, point)))
+      saveDrawingDocuments(scope, primitive.getDrawings())
+      clearActiveTool()
+      return
+    }
     if (!start) {
       start = point
       return

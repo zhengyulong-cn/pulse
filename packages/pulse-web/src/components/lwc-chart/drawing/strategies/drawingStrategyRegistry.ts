@@ -1,4 +1,5 @@
 import { arrowSegmentDrawingStrategy } from './ArrowSegmentDrawingStrategy'
+import { arrowDownDrawingStrategy, arrowUpDrawingStrategy } from './PointArrowDrawingStrategy'
 import { MeasureDrawingStrategy, type MeasureBar } from './MeasureDrawingStrategy'
 import { longPositionDrawingStrategy, shortPositionDrawingStrategy } from './PositionMeasurementDrawingStrategy'
 import { rectangleDrawingStrategy } from './RectangleDrawingStrategy'
@@ -12,6 +13,8 @@ export class DrawingStrategyRegistry {
     const strategies: TwoPointDrawingStrategy[] = [
       segmentDrawingStrategy,
       arrowSegmentDrawingStrategy,
+      arrowUpDrawingStrategy,
+      arrowDownDrawingStrategy,
       rectangleDrawingStrategy,
       longPositionDrawingStrategy,
       shortPositionDrawingStrategy,
