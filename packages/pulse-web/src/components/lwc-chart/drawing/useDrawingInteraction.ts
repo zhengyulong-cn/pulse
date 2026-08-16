@@ -4,7 +4,7 @@ import { ref, type Ref } from 'vue'
 import type { DrawingHitPart, DrawingPoint } from './DrawingPrimitive'
 import { DrawingPrimitive } from './DrawingPrimitive'
 import type { DrawingToolId } from './drawingTools'
-import { createDrawingDocument, loadDrawingDocuments, saveDrawingDocuments, type DrawingDocumentScope } from './drawingDocument'
+import { createDrawingDocument, loadDrawingDocuments, saveDrawingDocuments, type DrawingDocument, type DrawingDocumentScope } from './drawingDocument'
 import type { DrawingStrategyRegistry } from './strategies/drawingStrategyRegistry'
 import type { TwoPointDrawing, TwoPointDrawingTool } from './strategies/types'
 
@@ -19,6 +19,7 @@ export const useDrawingInteraction = (
   const primitive = new DrawingPrimitive(strategies)
   const cursor = ref('default')
   const isCrossInterval = ref(false)
+  const selectedDrawing = ref<DrawingDocument>()
   const isVisible = ref(true)
   let start: DrawingPoint | undefined
   let drag: {
@@ -97,8 +98,10 @@ export const useDrawingInteraction = (
     const y = event.clientY - bounds.top
     const hit = primitive.hitTestDrawing(x, y)
     primitive.setSelectedDrawing(hit?.drawing.id)
+    selectedDrawing.value = hit?.drawing
     cursor.value = cursorForHit(hit?.drawing.tool, hit?.part)
     if (!hit) return
+    if (hit.drawing.locked) return
     const origin = getPointAtCoordinate(x, y)
     if (!origin) return
     drag = {
@@ -173,6 +176,7 @@ export const useDrawingInteraction = (
   const restore = () => {
     primitive.setDraft(undefined)
     start = undefined
+    selectedDrawing.value = undefined
     primitive.setDrawings(loadDrawingDocuments(getScope()))
   }
 
@@ -186,6 +190,30 @@ export const useDrawingInteraction = (
     if (!scope) return
     primitive.setDrawings(primitive.getDrawings().filter((drawing) => drawing.anchor.instrumentId !== scope.instrumentId || drawing.anchor.interval !== scope.interval))
     saveDrawingDocuments(scope, [])
+  }
+
+  const updateSelectedDrawingStyle = (style: Partial<DrawingDocument['style']>) => {
+    if (!selectedDrawing.value) return
+    const drawing = selectedDrawing.value
+    const updated = { ...drawing.style, ...style }
+    primitive.updateDocument(drawing.id, { style: updated })
+    selectedDrawing.value = { ...drawing, style: updated }
+    saveDrawingDocuments(getScope(), primitive.getDrawings())
+  }
+
+  const toggleSelectedDrawingLock = () => {
+    if (!selectedDrawing.value) return
+    const drawing = selectedDrawing.value
+    primitive.updateDocument(drawing.id, { locked: !drawing.locked })
+    selectedDrawing.value = { ...drawing, locked: !drawing.locked }
+    saveDrawingDocuments(getScope(), primitive.getDrawings())
+  }
+
+  const removeSelectedDrawing = () => {
+    if (!selectedDrawing.value) return
+    primitive.removeDrawing(selectedDrawing.value.id)
+    selectedDrawing.value = undefined
+    saveDrawingDocuments(getScope(), primitive.getDrawings())
   }
 
   const toggleCrossInterval = () => {
@@ -202,5 +230,5 @@ export const useDrawingInteraction = (
     container?.removeEventListener('pointerleave', handlePointerLeave)
   }
 
-  return { attach, clearDrawings, cursor, dispose, isCrossInterval, isVisible, restore, toggleCrossInterval, toggleVisibility }
+  return { attach, clearDrawings, cursor, dispose, isCrossInterval, isVisible, removeSelectedDrawing, restore, selectedDrawing, toggleCrossInterval, toggleSelectedDrawingLock, toggleVisibility, updateSelectedDrawingStyle }
 }

@@ -14,7 +14,7 @@ export class RectangleDrawingStrategy extends DrawingStrategy {
     const width = Math.abs(endX - startX)
     const height = Math.abs(endY - startY)
     context.save()
-    context.fillStyle = 'rgba(37, 99, 235, 0.10)'
+    context.fillStyle = (drawing as DrawingCoordinates & { style?: { fillColor?: string } }).style?.fillColor ?? 'rgba(37, 99, 235, 0.10)'
     context.fillRect(left, top, width, height)
     context.restore()
     context.strokeRect(left, top, width, height)

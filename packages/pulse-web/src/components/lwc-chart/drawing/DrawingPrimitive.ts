@@ -20,6 +20,10 @@ class DrawingRenderer implements IPrimitivePaneRenderer {
       context.strokeStyle = '#2563eb'
       context.fillStyle = '#2563eb'
       for (const drawing of this.drawings) {
+        const style = (drawing as DrawingDocument).style
+        context.lineWidth = style?.lineWidth ? style.lineWidth * horizontalPixelRatio : 2 * horizontalPixelRatio
+        context.strokeStyle = style?.color ?? '#2563eb'
+        context.fillStyle = style?.color ?? '#2563eb'
         this.strategies.get(drawing.tool)?.draw(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
         if (drawing.id === this.selectedDrawingId) this.strategies.get(drawing.tool)?.drawSelection?.(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
       }
@@ -145,6 +149,17 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
 
   updateDrawing(id: string, update: Partial<TwoPointDrawing>) {
     this.drawings = this.drawings.map((drawing) => drawing.id === id ? { ...drawing, ...update, updatedAt: dayjs().toISOString() } : drawing)
+    this.refresh()
+  }
+
+  updateDocument(id: string, update: Partial<DrawingDocument>) {
+    this.drawings = this.drawings.map((drawing) => drawing.id === id ? { ...drawing, ...update, updatedAt: dayjs().toISOString() } : drawing)
+    this.refresh()
+  }
+
+  removeDrawing(id: string) {
+    this.drawings = this.drawings.filter((drawing) => drawing.id !== id)
+    this.selectedDrawingId = undefined
     this.refresh()
   }
 

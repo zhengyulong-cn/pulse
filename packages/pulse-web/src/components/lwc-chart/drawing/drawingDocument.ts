@@ -8,8 +8,10 @@ export type DrawingDocument = TwoPointDrawing & {
   }
   createdAt: string
   crossInterval?: boolean
+  locked?: boolean
   style: {
     color: string
+    fillColor?: string
     lineWidth: number
     riskRewardRatio?: number
   }
@@ -69,6 +71,7 @@ export const createDrawingDocument = (
     updatedAt: timestamp,
     style: {
       color: '#2563eb',
+      fillColor: 'rgba(37, 99, 235, 0.10)',
       lineWidth: 2,
       ...(drawing.tool === 'long_position' || drawing.tool === 'short_position' ? { riskRewardRatio: 1 } : {}),
     },

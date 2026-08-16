@@ -13,6 +13,7 @@ import { useRealtimeKline } from './useRealtimeKline'
 import { useChartBars } from './useChartBars'
 import { useDrawingTool } from './drawing/useDrawingTool'
 import { useDrawingInteraction } from './drawing/useDrawingInteraction'
+import DrawingMenu from './drawing/DrawingMenu.vue'
 import { DrawingStrategyRegistry } from './drawing/strategies/drawingStrategyRegistry'
 import { useChartWatermark } from './watermark/useChartWatermark'
 import { useTradeAnnotations } from './side_bar/trade/useTradeAnnotations'
@@ -28,7 +29,7 @@ const { barsByTime, clear: clearChartBars, render: renderKlines, updateRealtime 
 const drawingStrategies = new DrawingStrategyRegistry(() => [...barsByTime.values()])
 const { tooltip, updateFromCrosshair } = useChartTooltip(() => candlestickSeries, barsByTime)
 const { activeDrawingTool, clearDrawingTool, selectDrawingTool } = useDrawingTool()
-const { attach: attachDrawingInteraction, clearDrawings, cursor: drawingCursor, dispose: disposeDrawingInteraction, isCrossInterval: crossIntervalDrawing, isVisible: drawingsVisible, restore: restoreDrawings, toggleCrossInterval: toggleCrossIntervalDrawing, toggleVisibility: toggleDrawingsVisibility } = useDrawingInteraction(
+const { attach: attachDrawingInteraction, clearDrawings, cursor: drawingCursor, dispose: disposeDrawingInteraction, isCrossInterval: crossIntervalDrawing, isVisible: drawingsVisible, removeSelectedDrawing, restore: restoreDrawings, selectedDrawing, toggleCrossInterval: toggleCrossIntervalDrawing, toggleSelectedDrawingLock, toggleVisibility: toggleDrawingsVisibility, updateSelectedDrawingStyle } = useDrawingInteraction(
   () => chart,
   () => candlestickSeries,
   activeDrawingTool,
@@ -102,6 +103,7 @@ onBeforeUnmount(() => {
     <div class="flex min-h-0 flex-1">
       <div class="relative min-w-0 flex-1">
         <ChartTooltip :chart-height="chartHeight" :tooltip="tooltip" />
+        <DrawingMenu v-if="selectedDrawing" :drawing="selectedDrawing" @remove="removeSelectedDrawing" @toggle-lock="toggleSelectedDrawingLock" @update-style="updateSelectedDrawingStyle" />
         <div ref="chartContainer" class="size-full" :style="{ cursor: activeDrawingTool ? 'crosshair' : drawingCursor }" />
       </div>
       <ChartSideBar class="shrink-0" @select-symbol="selectSymbol" @select-trade="selectTrade" />
