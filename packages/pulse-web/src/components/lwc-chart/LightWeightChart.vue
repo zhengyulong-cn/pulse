@@ -11,6 +11,10 @@ import { useKlineData } from './useKlineData'
 import { usePinePlotIndicators } from './usePinePlotIndicators'
 import { useRealtimeKline } from './useRealtimeKline'
 import { useChartBars } from './useChartBars'
+import { useDrawingTool } from './drawing/useDrawingTool'
+import { useDrawingInteraction } from './drawing/useDrawingInteraction'
+import DrawingMenu from './drawing/DrawingMenu.vue'
+import { DrawingStrategyRegistry } from './drawing/strategies/drawingStrategyRegistry'
 import { useChartWatermark } from './watermark/useChartWatermark'
 import { useTradeAnnotations } from './side_bar/trade/useTradeAnnotations'
 import { useTradeNavigation } from './side_bar/trade/useTradeNavigation'
@@ -22,7 +26,17 @@ let candlestickSeries: ISeriesApi<'Candlestick'> | undefined
 let resizeObserver: ResizeObserver | undefined
 const { attach: attachTradeAnnotations, dispose: disposeTradeAnnotations, pendingTrade, render: renderTradeAnnotations } = useTradeAnnotations(() => chart, () => candlestickSeries)
 const { barsByTime, clear: clearChartBars, render: renderKlines, updateRealtime } = useChartBars(() => chart, () => candlestickSeries, renderTradeAnnotations)
+const drawingStrategies = new DrawingStrategyRegistry(() => [...barsByTime.values()])
 const { tooltip, updateFromCrosshair } = useChartTooltip(() => candlestickSeries, barsByTime)
+const { activeDrawingTool, clearDrawingTool, selectDrawingTool } = useDrawingTool()
+const { attach: attachDrawingInteraction, clearDrawings, cursor: drawingCursor, dispose: disposeDrawingInteraction, isCrossInterval: crossIntervalDrawing, isVisible: drawingsVisible, removeSelectedDrawing, restore: restoreDrawings, selectedDrawing, toggleCrossInterval: toggleCrossIntervalDrawing, toggleSelectedDrawingLock, toggleVisibility: toggleDrawingsVisibility, updateSelectedDrawingStyle } = useDrawingInteraction(
+  () => chart,
+  () => candlestickSeries,
+  activeDrawingTool,
+  drawingStrategies,
+  () => selectedInstrumentId.value === undefined ? undefined : { instrumentId: selectedInstrumentId.value, interval: selectedInterval.value },
+  clearDrawingTool,
+)
 const { attach: attachWatermark, dispose: disposeWatermark, update: updateWatermark } = useChartWatermark()
 
 const { loadDefaultInstrument, selectKline, selectedInstrumentId, selectedInterval, selectedSymbol } = useKlineData(renderKlines)
@@ -32,6 +46,7 @@ const { selectInterval, selectSymbol, selectTrade } = useTradeNavigation(selecte
 watch([selectedSymbol, selectedInterval], () => updateWatermark(selectedSymbol.value, selectedInterval.value))
 watch([selectedInstrumentId, selectedInterval], () => {
   clearChartBars()
+  restoreDrawings()
 })
 
 useRealtimeKline(selectedInstrumentId, selectedInterval, updateRealtime)
@@ -47,6 +62,7 @@ onMounted(() => {
   if (!chartContainer.value) return
   chart = createChart(chartContainer.value, chartOptions)
   candlestickSeries = chart.addSeries(CandlestickSeries, candlestickOptions)
+  attachDrawingInteraction(candlestickSeries, chartContainer.value)
   attachTradeAnnotations(candlestickSeries)
   attachWatermark(chart, selectedSymbol.value, selectedInterval.value)
   chart.subscribeCrosshairMove(updateFromCrosshair)
@@ -58,6 +74,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   disposePineIndicators()
+  disposeDrawingInteraction(chartContainer.value)
   disposeTradeAnnotations()
   disposeWatermark()
   resizeObserver?.disconnect()
@@ -72,14 +89,22 @@ onBeforeUnmount(() => {
   <div class="relative flex size-full flex-col bg-white">
     <ChartTopBar
       :active-script-ids="activeScriptIds"
+      :active-drawing-tool="activeDrawingTool"
+      :cross-interval-drawing="crossIntervalDrawing"
+      :drawings-visible="drawingsVisible"
       :selected-interval="selectedInterval"
+      @select-drawing-tool="selectDrawingTool"
+      @clear-drawings="clearDrawings"
+      @toggle-cross-interval-drawing="toggleCrossIntervalDrawing"
+      @toggle-drawings-visibility="toggleDrawingsVisibility"
       @select-interval="selectInterval"
       @toggle-indicator="togglePineIndicator"
     />
     <div class="flex min-h-0 flex-1">
       <div class="relative min-w-0 flex-1">
         <ChartTooltip :chart-height="chartHeight" :tooltip="tooltip" />
-        <div ref="chartContainer" class="size-full" />
+        <DrawingMenu v-if="selectedDrawing" :drawing="selectedDrawing" @remove="removeSelectedDrawing" @toggle-lock="toggleSelectedDrawingLock" @update-style="updateSelectedDrawingStyle" />
+        <div ref="chartContainer" class="size-full" :style="{ cursor: activeDrawingTool ? 'crosshair' : drawingCursor }" />
       </div>
       <ChartSideBar class="shrink-0" @select-symbol="selectSymbol" @select-trade="selectTrade" />
     </div>

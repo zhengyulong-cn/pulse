@@ -47,7 +47,7 @@ export const useTradeAnnotations = (
       { time: openTime, position: isLong ? 'belowBar' : 'aboveBar', color: isLong ? '#ef5350' : '#26a69a', shape: isLong ? 'arrowUp' : 'arrowDown', text: `开仓 ${trade.openPrice}` },
       { time: closeTime, position: isLong ? 'aboveBar' : 'belowBar', color: isLong ? '#26a69a' : '#ef5350', shape: isLong ? 'arrowDown' : 'arrowUp', text: `平仓 ${trade.closePrice}` },
     ])
-    tradeLine.setLines([{ startTime: openTime, startValue: Number(trade.openPrice), endTime: closeTime, endValue: Number(trade.closePrice), color: isLong ? '#ef5350' : '#26a69a', width: 2 }])
+    tradeLine.setLines([{ startTime: openTime, startValue: Number(trade.openPrice), endTime: closeTime, endValue: Number(trade.closePrice), color: '#000000', width: 2 }])
     const openIndex = sortedBars.findIndex((bar) => bar.time === openBar.time)
     const closeIndex = sortedBars.findIndex((bar) => bar.time === closeBar.time)
     const tradeBarCount = Math.max(1, closeIndex - openIndex + 1)
