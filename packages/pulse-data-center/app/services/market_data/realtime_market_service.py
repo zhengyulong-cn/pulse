@@ -134,7 +134,7 @@ class RealtimeMarketService:
         self._redis.set(f"market:tick:{instrument_id}", json.dumps(tick))
         self._publish({"type": "tick", "data": tick})
         for interval, seconds in KLINE_INTERVAL_SECONDS.items():
-            bar_time = timestamp // 1_000_000_000 // seconds * seconds * 1_000
+            bar_time = (timestamp // 1_000_000_000 // seconds * seconds + seconds) * 1_000
             key = (instrument_id, interval)
             bar = self._bars.get(key)
             if bar is None or bar.time != bar_time:
@@ -160,10 +160,10 @@ class RealtimeMarketService:
             if not rows:
                 continue
             if interval in {"1m", "5m"}:
-                confirmed_bars = [asdict(bar) for _, current_row in rows[:-1] if (bar := self._bar_from_row(current_row)) is not None]
+                confirmed_bars = [asdict(bar) for _, current_row in rows[:-1] if (bar := self._bar_from_row(current_row, seconds)) is not None]
                 upsert_realtime_kline_bars(instrument_id, interval, confirmed_bars)
             _, row = rows[-1]
-            bar = self._bar_from_row(row)
+            bar = self._bar_from_row(row, seconds)
             if bar is None:
                 continue
             self._bars[(instrument_id, interval)] = bar
@@ -184,13 +184,13 @@ class RealtimeMarketService:
     def _get_confirmed_bar(self, api: TqApi, symbol: str, seconds: int, timestamp: int) -> dict[str, object] | None:
         serial = api.get_kline_serial(symbol, seconds, 3)
         for _, row in serial.iterrows():
-            bar = self._bar_from_row(row)
+            bar = self._bar_from_row(row, seconds)
             if bar and bar.time == timestamp:
                 return asdict(bar)
         return None
 
     @staticmethod
-    def _bar_from_row(row: object) -> RealtimeBar | None:
+    def _bar_from_row(row: object, interval_seconds: int) -> RealtimeBar | None:
         get_value = getattr(row, "get", None)
         if not callable(get_value):
             return None
@@ -200,7 +200,7 @@ class RealtimeMarketService:
             return None
         return RealtimeBar(
             close=float(prices[3]), high=float(prices[1]), hold=float(get_value("close_oi", 0) or 0),
-            low=float(prices[2]), open=float(prices[0]), time=timestamp // 1_000_000_000 * 1_000,
+            low=float(prices[2]), open=float(prices[0]), time=(timestamp // 1_000_000_000 + interval_seconds) * 1_000,
             volume=float(get_value("volume", 0) or 0),
         )
 

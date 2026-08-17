@@ -53,7 +53,6 @@ def list_future_cn_kline_bars_route(
             to_timestamp,
             limit,
             count_back,
-            _get_realtime_bar(instrument_id, interval),
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

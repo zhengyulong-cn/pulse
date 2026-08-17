@@ -71,7 +71,7 @@ const {
 const replayEnabled = computed(() => isReplaySelecting.value || isReplayActive.value)
 
 const renderKlines = (bars: FutureCnKlineBar[]) => {
-  allKlineBars.value = bars
+  allKlineBars.value = [...bars]
   renderVisibleBars(replayEndTime.value)
 }
 

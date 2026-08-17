@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from math import isnan
 from typing import Any, Callable
@@ -62,7 +62,7 @@ class TqSdkMarketDataProvider:
         return [
             kline
             for _, row in kline_frame.iterrows()
-            if (kline := self._to_kline_data(row)) is not None
+            if (kline := self._to_kline_data(row, interval_seconds)) is not None
         ]
 
     def _split_provider_symbol(self, provider_symbol: str) -> tuple[str, str]:
@@ -91,7 +91,7 @@ class TqSdkMarketDataProvider:
             ),
         )
 
-    def _to_kline_data(self, row: Any) -> KlineData | None:
+    def _to_kline_data(self, row: Any, interval_seconds: int) -> KlineData | None:
         date_time = self._to_kline_datetime(self._get_value(row, "datetime"))
         open_price = self._to_positive_decimal(self._get_value(row, "open"))
         close_price = self._to_positive_decimal(self._get_value(row, "close"))
@@ -101,7 +101,7 @@ class TqSdkMarketDataProvider:
             return None
 
         return KlineData(
-            date_time=date_time,
+            date_time=date_time + timedelta(seconds=interval_seconds),
             open=open_price,
             close=close_price,
             high=high_price,
