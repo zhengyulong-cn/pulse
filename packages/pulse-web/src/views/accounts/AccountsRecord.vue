@@ -245,11 +245,19 @@ const handleAccountDeleted = (accountId: number) => {
             <el-table-column label="平仓价" width="100" align="right"><template #default="{ row }">{{ row.closePrice ?? '—' }}</template></el-table-column>
             <el-table-column label="盈亏" width="112" align="right"><template #default="{ row }"><span class="font-bold" :class="pnlClass(row.realizedPnl)">{{ row.realizedPnl === null ? '未平仓' : `${Number(row.realizedPnl) > 0 ? '+' : ''}${row.realizedPnl}` }}</span></template></el-table-column>
             <el-table-column prop="fee" label="手续费" width="95" align="right" />
-            <el-table-column prop="openReason" label="开仓缘由" min-width="150" show-overflow-tooltip><template #default="{ row }">{{ row.openReason || '—' }}</template></el-table-column>
-            <el-table-column prop="closeReason" label="平仓缘由" min-width="150" show-overflow-tooltip><template #default="{ row }">{{ row.closeReason || '—' }}</template></el-table-column>
+            <el-table-column prop="openReason" label="开仓缘由" min-width="320">
+              <template #default="{ row }">
+                <span class="whitespace-pre-wrap">{{ row.openReason || '—' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="closeReason" label="平仓缘由" min-width="200">
+              <template #default="{ row }">
+                <span class="whitespace-pre-wrap">{{ row.closeReason || '—' }}</span>
+              </template>
+            </el-table-column>
             <el-table-column label="截图" min-width="96" align="center"><template #default="{ row }"><div v-if="row.screenshots?.length" class="flex items-center justify-center gap-1"><el-image v-for="screenshot in row.screenshots" :key="screenshot.path" :src="getUploadedFileUrl(screenshot.path)" :preview-src-list="getScreenshotUrls(row.screenshots)" preview-teleported fit="cover" class="size-8 rounded border border-slate-200" /><span class="text-xs text-slate-400">{{ row.screenshots.length }}</span></div><span v-else class="text-slate-400">—</span></template></el-table-column>
-            <el-table-column label="extra_json" min-width="170" show-overflow-tooltip><template #default="{ row }">{{ formatJson(row.extraJson) }}</template></el-table-column>
             <el-table-column label="操作" width="76" fixed="right"><template #default="{ row }"><el-button link type="primary" @click="editRecord(row)">修改</el-button></template></el-table-column>
+            <el-table-column label="extra_json" min-width="170" show-overflow-tooltip><template #default="{ row }">{{ formatJson(row.extraJson) }}</template></el-table-column>
           </el-table>
         </section>
       </template>

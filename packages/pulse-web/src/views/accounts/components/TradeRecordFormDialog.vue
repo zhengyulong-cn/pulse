@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import dayjs from 'dayjs'
-import { ElMessage, type UploadRequestOptions, type UploadUserFile } from 'element-plus'
+import { ElMessage, genFileId, type UploadRequestOptions, type UploadUserFile } from 'element-plus'
 import { Landmark } from '@lucide/vue'
 
 import {
@@ -116,6 +116,43 @@ const previewScreenshot = (file: UploadUserFile) => {
   screenshotPreviewVisible.value = true
 }
 
+const uploadPastedScreenshot = async (file: File) => {
+  if (form.screenshots.length >= 10) {
+    ElMessage.warning('最多上传 10 张截图。')
+    return
+  }
+
+  screenshotUploading.value = true
+  try {
+    const uploadedFile = (await uploadFiles([file], 'trade_records_screenshots'))[0]
+    if (!uploadedFile) throw new Error('截图上传没有返回文件信息。')
+
+    form.screenshots = [...form.screenshots, uploadedFile]
+    screenshotFiles.value.push({
+      uid: genFileId(),
+      name: uploadedFile.original_name,
+      response: uploadedFile,
+      status: 'success',
+      url: getUploadedFileUrl(uploadedFile.path),
+    })
+    ElMessage.success('截图已上传。')
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '截图上传失败。')
+  } finally {
+    screenshotUploading.value = false
+  }
+}
+
+const handleScreenshotPaste = (event: ClipboardEvent) => {
+  if (!visible.value || screenshotUploading.value) return
+
+  const image = Array.from(event.clipboardData?.files ?? []).find((file) => file.type.startsWith('image/'))
+  if (!image) return
+
+  event.preventDefault()
+  void uploadPastedScreenshot(image)
+}
+
 const save = async () => {
   if (!props.account) return
   if (!form.underlyingName.trim() || !form.underlyingCode.trim() || !form.quantity || !form.openPrice || !form.fee) {
@@ -172,12 +209,19 @@ const save = async () => {
 }
 
 watch(visible, (isVisible) => {
-  if (isVisible) resetForm()
-})
+  if (isVisible) {
+    resetForm()
+    window.addEventListener('paste', handleScreenshotPaste)
+    return
+  }
+  window.removeEventListener('paste', handleScreenshotPaste)
+}, { immediate: true })
+
+onBeforeUnmount(() => window.removeEventListener('paste', handleScreenshotPaste))
 </script>
 
 <template>
-  <el-dialog v-model="visible" :title="title" width="min(840px, calc(100vw - 32px))" destroy-on-close>
+  <el-dialog v-model="visible" :title="title" width="min(1080px, calc(100vw - 32px))" destroy-on-close>
     <div class="mb-4 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-blue-700"><Landmark :size="17" /><span>{{ isEditing ? '记录所属账户：' : '记录将添加到：' }}</span><strong>{{ account?.name }} · {{ account?.account }}（{{ account?.currency }}）</strong></div>
     <el-form label-position="top" @submit.prevent="save">
       <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -193,7 +237,7 @@ watch(visible, (isVisible) => {
         <el-form-item label="真实盈亏"><el-input v-model="form.realizedPnl" inputmode="decimal" placeholder="未平仓可留空" /></el-form-item>
         <el-form-item class="col-span-2"  label="开仓缘由"><el-input type="textarea" :rows="5" v-model="form.openReason" placeholder="例如：突破关键压力位" /></el-form-item>
         <el-form-item class="col-span-2" label="平仓缘由"><el-input type="textarea" :rows="5" v-model="form.closeReason" placeholder="例如：止盈离场" /></el-form-item>
-        <el-form-item label="截图">
+        <el-form-item class="col-span-5" label="截图">
           <div>
             <el-upload
               v-model:file-list="screenshotFiles"
