@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import { ChartNoAxesColumn, Eye, EyeOff, MousePointer2, Trash2, Workflow } from '@lucide/vue'
+import { ChartNoAxesColumn, Eye, EyeOff, History, MousePointer2, Trash2, Workflow } from '@lucide/vue'
 import { ref } from 'vue'
 
 import { listPineScripts, type PineScript } from '@/api/pine-scripts'
@@ -12,6 +12,7 @@ defineProps<{
   activeDrawingTool?: DrawingToolId
   crossIntervalDrawing: boolean
   drawingsVisible: boolean
+  replayActive: boolean
   selectedInterval: KlineQueryInterval
 }>()
 
@@ -22,6 +23,7 @@ const emit = defineEmits<{
   toggleCrossIntervalDrawing: []
   toggleDrawingsVisibility: []
   toggleIndicator: [script: PineScript]
+  toggleReplay: []
 }>()
 
 const isDrawingPanelVisible = ref(false)
@@ -82,6 +84,11 @@ const getScriptName = (script: PineScript) => (
         </button>
       </div>
     </el-popover>
+    <el-tooltip :content="replayActive ? '退出回放' : 'K 线回放'" placement="bottom">
+      <button type="button" class="flex items-center gap-1 rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100" :class="{ 'bg-blue-50 text-blue-600 hover:bg-blue-50': replayActive }" @click="emit('toggleReplay')">
+        <History :size="16" /> 回放
+      </button>
+    </el-tooltip>
     <button type="button" class="flex items-center gap-1 rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100" :class="{ 'bg-blue-50 text-blue-600 hover:bg-blue-50': activeDrawingTool || isDrawingPanelVisible }" :aria-expanded="isDrawingPanelVisible" @click="isDrawingPanelVisible = !isDrawingPanelVisible">
       <MousePointer2 :size="16" /> 绘图
     </button>
