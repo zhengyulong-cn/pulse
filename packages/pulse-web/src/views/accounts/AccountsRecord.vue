@@ -94,8 +94,8 @@ const getScreenshotUrls = (screenshots: TradeScreenshot[]) => screenshots.map((s
 const pnlClass = (value: string | null) => {
   if (value === null) return 'text-slate-400'
   const pnl = Number(value)
-  if (pnl > 0) return 'text-emerald-600'
-  if (pnl < 0) return 'text-rose-600'
+  if (pnl < 0) return 'text-emerald-600'
+  if (pnl > 0) return 'text-rose-600'
   return 'text-slate-600'
 }
 
