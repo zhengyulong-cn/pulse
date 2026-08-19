@@ -1,14 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import dayjs from 'dayjs'
-import {
-  CalendarDays,
-  CircleDollarSign,
-  ListChecks,
-  TrendingDown,
-  TrendingUp,
-  Trophy,
-} from '@lucide/vue'
+import { CalendarDays } from '@lucide/vue'
 
 import { getUploadedFileUrl, type TradeRecord, type TradeScreenshot } from '@/api/trading'
 
@@ -44,103 +36,12 @@ const pnlClass = (value: string | null) => {
   return 'text-slate-600'
 }
 
-const summary = computed(() => {
-  const settled = props.records.filter((record) => record.realizedPnl !== null)
-  const profitable = settled.filter((record) => Number(record.realizedPnl) > 0)
-  const losing = settled.filter((record) => Number(record.realizedPnl) < 0)
-  return {
-    total: props.records.length,
-    profitable: profitable.length,
-    losing: losing.length,
-    winRate: settled.length ? (profitable.length / settled.length) * 100 : null,
-    totalPnl: settled.reduce((total, record) => total + Number(record.realizedPnl), 0),
-  }
-})
-
 const updateFilter = (key: keyof ListFilters, value: string | string[]) =>
   emit('update-filter', key, value)
 </script>
 
 <template>
   <div>
-    <div class="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-      <article
-        class="flex min-h-26 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
-      >
-        <div>
-          <p class="mb-1.5 text-xs font-semibold text-slate-400">总交易笔数</p>
-          <strong class="text-3xl font-bold tracking-tight text-slate-800">{{
-            summary.total
-          }}</strong>
-        </div>
-        <span class="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600"
-          ><ListChecks :size="20"
-        /></span>
-      </article>
-      <article
-        class="flex min-h-26 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
-      >
-        <div>
-          <p class="mb-1.5 text-xs font-semibold text-slate-400">盈利笔数</p>
-          <strong class="text-3xl font-bold tracking-tight text-rose-500">{{
-            summary.profitable
-          }}</strong>
-        </div>
-        <span class="flex size-10 items-center justify-center rounded-xl bg-rose-50 text-rose-500"
-          ><TrendingUp :size="20"
-        /></span>
-      </article>
-      <article
-        class="flex min-h-26 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
-      >
-        <div>
-          <p class="mb-1.5 text-xs font-semibold text-slate-400">亏损笔数</p>
-          <strong class="text-3xl font-bold tracking-tight text-teal-500">{{
-            summary.losing
-          }}</strong>
-        </div>
-        <span class="flex size-10 items-center justify-center rounded-xl bg-teal-50 text-teal-500"
-          ><TrendingDown :size="20"
-        /></span>
-      </article>
-      <article
-        class="flex min-h-26 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
-      >
-        <div>
-          <p class="mb-1.5 text-xs font-semibold text-slate-400">胜率</p>
-          <strong class="text-3xl font-bold tracking-tight text-slate-800">{{
-            summary.winRate === null
-              ? '—'
-              : `${formatNumber(summary.winRate, { maximumFractionDigits: 1 })}%`
-          }}</strong>
-        </div>
-        <span
-          class="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-500"
-          ><Trophy :size="20"
-        /></span>
-      </article>
-      <article
-        class="flex min-h-26 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
-      >
-        <div>
-          <p class="mb-1.5 text-xs font-semibold text-slate-400">总盈亏</p>
-          <strong
-            class="text-3xl font-bold tracking-tight"
-            :class="
-              summary.totalPnl > 0
-                ? 'text-rose-500'
-                : summary.totalPnl < 0
-                  ? 'text-teal-500'
-                  : 'text-slate-800'
-            "
-            >{{ `${summary.totalPnl > 0 ? '+' : ''}${formatNumber(summary.totalPnl)}` }}</strong
-          >
-        </div>
-        <span class="flex size-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500"
-          ><CircleDollarSign :size="20"
-        /></span>
-      </article>
-    </div>
     <div
       class="mb-5 flex flex-row flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
     >

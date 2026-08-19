@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import { CalendarDays, CircleDollarSign, Percent, Scale } from '@lucide/vue'
 
 import type { TradeRecord } from '@/api/trading'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 const props = defineProps<{
   records: TradeRecord[]
@@ -17,23 +22,41 @@ type DailyAnalysis = {
   profitable: number
   losing: number
   breakeven: number
-  unsettled: number
   totalPnl: number
+  fee: number
+  unsettled: number
   grossProfit: number
   grossLoss: number
   winRate: number | null
   profitLossRatio: number | null
 }
 
+/**
+ * 根据真实时间计算交易日
+ *
+ * 交易日规则：
+ * 周五21:00 ~ 周一15:00 => 周一交易日
+ * 周一21:00 ~ 周二15:00 => 周二交易日
+ * 周二21:00 ~ 周三15:00 => 周三交易日
+ * 周三21:00 ~ 周四15:00 => 周四交易日
+ * 周四21:00 ~ 周五15:00 => 周五交易日
+ *
+ * 返回值为交易日当天 00:00:00
+ */
 const calcTradeDay = (value: string) => {
-  const parsed = dayjs(value)
-  let tradeDay = parsed.add(8 - parsed.utcOffset(), 'minute')
+  let tradeDay = dayjs(value).tz('Asia/Shanghai')
   const week = tradeDay.day()
   const minutes = tradeDay.hour() * 60 + tradeDay.minute()
 
-  if (week === 6) tradeDay = tradeDay.add(2, 'day')
-  else if (week === 0) tradeDay = tradeDay.add(1, 'day')
-  else if (minutes >= 21 * 60) tradeDay = tradeDay.add(week === 5 ? 3 : 1, 'day')
+  // 周六、周日的平仓记录统一归入下周一交易日。
+  if (week === 6) {
+    tradeDay = tradeDay.add(2, 'day')
+  } else if (week === 0) {
+    tradeDay = tradeDay.add(1, 'day')
+    // 21:00 及以后属于夜盘，交易日归入下一交易日。
+  } else if (minutes >= 21 * 60) {
+    tradeDay = tradeDay.add(week === 5 ? 3 : 1, 'day')
+  }
 
   return tradeDay.startOf('day').format('YYYY-MM-DD')
 }
@@ -47,7 +70,8 @@ const dailyAnalyses = computed<DailyAnalysis[]>(() => {
   const grouped = new Map<string, DailyAnalysis>()
 
   for (const record of props.records) {
-    const tradeDay = calcTradeDay(record.openTime)
+    if (!record.closeTime) continue
+    const tradeDay = calcTradeDay(record.closeTime)
     const current = grouped.get(tradeDay) ?? {
       tradeDay,
       total: 0,
@@ -55,8 +79,9 @@ const dailyAnalyses = computed<DailyAnalysis[]>(() => {
       profitable: 0,
       losing: 0,
       breakeven: 0,
-      unsettled: 0,
       totalPnl: 0,
+      fee: 0,
+      unsettled: 0,
       grossProfit: 0,
       grossLoss: 0,
       winRate: null,
@@ -64,6 +89,8 @@ const dailyAnalyses = computed<DailyAnalysis[]>(() => {
     }
 
     current.total += 1
+    const fee = Number(record.fee)
+    if (Number.isFinite(fee)) current.fee += fee
     if (record.realizedPnl === null) {
       current.unsettled += 1
     } else {
@@ -167,6 +194,7 @@ const summary = computed(() => {
         <el-table-column prop="tradeDay" label="交易日" width="128" fixed="left" />
         <el-table-column prop="total" label="交易笔数" width="92" align="right" />
         <el-table-column prop="settled" label="已平仓" width="88" align="right" />
+        <el-table-column prop="unsettled" label="未平仓" width="88" align="right" />
         <el-table-column label="盈利/亏损/持平" width="150" align="right"
           ><template #default="{ row }"
             ><span class="text-rose-500">{{ row.profitable }}</span
@@ -176,7 +204,6 @@ const summary = computed(() => {
             ><span class="text-slate-500">{{ row.breakeven }}</span></template
           ></el-table-column
         >
-        <el-table-column prop="unsettled" label="未平仓" width="88" align="right" />
         <el-table-column label="当日盈亏" width="120" align="right"
           ><template #default="{ row }"
             ><span
@@ -185,6 +212,9 @@ const summary = computed(() => {
               >{{ formatPnl(row.totalPnl) }}</span
             ></template
           ></el-table-column
+        >
+        <el-table-column label="手续费" width="100" align="right"
+          ><template #default="{ row }">{{ formatNumber(row.fee) }}</template></el-table-column
         >
         <el-table-column label="胜率" width="100" align="right"
           ><template #default="{ row }">{{
