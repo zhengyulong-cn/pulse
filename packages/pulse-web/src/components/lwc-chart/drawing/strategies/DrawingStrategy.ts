@@ -1,4 +1,14 @@
-import type { DrawingCoordinates, DrawingDragContext, DrawingHitPart, DrawingHitTestResult, DrawingPoint, DrawingRenderContext, TwoPointDrawing, TwoPointDrawingStrategy, TwoPointDrawingTool } from './types'
+import type {
+  DrawingCoordinates,
+  DrawingDragContext,
+  DrawingHitPart,
+  DrawingHitTestResult,
+  DrawingPoint,
+  DrawingRenderContext,
+  TwoPointDrawing,
+  TwoPointDrawingStrategy,
+  TwoPointDrawingTool,
+} from './types'
 
 export abstract class DrawingStrategy implements TwoPointDrawingStrategy {
   abstract readonly tool: TwoPointDrawingTool
@@ -11,29 +21,58 @@ export abstract class DrawingStrategy implements TwoPointDrawingStrategy {
 
   drawSelection(_drawing: DrawingCoordinates, _context: DrawingRenderContext): void {}
 
-  hitTest(_drawing: DrawingCoordinates, _x: number, _y: number): DrawingHitTestResult | undefined { return undefined }
+  hitTest(_drawing: DrawingCoordinates, _x: number, _y: number): DrawingHitTestResult | undefined {
+    return undefined
+  }
 
-  cursor(_part: DrawingHitPart) { return 'default' }
+  cursor(_part: DrawingHitPart) {
+    return 'default'
+  }
 
-  updateForDrag(_context: DrawingDragContext): Partial<TwoPointDrawing> | undefined { return undefined }
+  updateForDrag(_context: DrawingDragContext): Partial<TwoPointDrawing> | undefined {
+    return undefined
+  }
 
-  protected moveForDrag({ currentCoordinate, originCoordinate, originalCoordinates, pointAtCoordinate }: DrawingDragContext) {
+  protected moveForDrag({
+    currentCoordinate,
+    originCoordinate,
+    originalCoordinates,
+    pointAtCoordinate,
+  }: DrawingDragContext) {
     const deltaX = currentCoordinate.x - originCoordinate.x
     const deltaY = currentCoordinate.y - originCoordinate.y
-    const start = pointAtCoordinate(originalCoordinates.startX + deltaX, originalCoordinates.startY + deltaY)
-    const end = pointAtCoordinate(originalCoordinates.endX + deltaX, originalCoordinates.endY + deltaY)
+    const start = pointAtCoordinate(
+      originalCoordinates.startX + deltaX,
+      originalCoordinates.startY + deltaY,
+    )
+    const end = pointAtCoordinate(
+      originalCoordinates.endX + deltaX,
+      originalCoordinates.endY + deltaY,
+    )
     return start && end ? { start, end } : undefined
   }
 }
 
 export abstract class LineDrawingStrategy extends DrawingStrategy {
-  drawSelection(drawing: DrawingCoordinates, { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext) {
+  drawSelection(
+    drawing: DrawingCoordinates,
+    { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext,
+  ) {
     context.fillStyle = '#ffffff'
     context.strokeStyle = '#2563eb'
-    const handles: Array<[number, number]> = [[drawing.startX, drawing.startY], [drawing.endX, drawing.endY]]
+    const handles: Array<[number, number]> = [
+      [drawing.startX, drawing.startY],
+      [drawing.endX, drawing.endY],
+    ]
     for (const [x, y] of handles) {
       context.beginPath()
-      context.arc(x * horizontalPixelRatio, y * verticalPixelRatio, 5 * horizontalPixelRatio, 0, Math.PI * 2)
+      context.arc(
+        x * horizontalPixelRatio,
+        y * verticalPixelRatio,
+        5 * horizontalPixelRatio,
+        0,
+        Math.PI * 2,
+      )
       context.fill()
       context.stroke()
     }
@@ -45,7 +84,9 @@ export abstract class LineDrawingStrategy extends DrawingStrategy {
     return this.distanceToSegment(x, y, drawing) <= 7 ? { part: 'body' as const } : undefined
   }
 
-  cursor(part: DrawingHitPart) { return part === 'start' || part === 'end' ? 'nwse-resize' : 'move' }
+  cursor(part: DrawingHitPart) {
+    return part === 'start' || part === 'end' ? 'nwse-resize' : 'move'
+  }
 
   updateForDrag(context: DrawingDragContext) {
     if (context.part === 'start') return { start: context.current, end: context.original.end }
@@ -58,7 +99,13 @@ export abstract class LineDrawingStrategy extends DrawingStrategy {
     const deltaY = drawing.endY - drawing.startY
     const lengthSquared = deltaX ** 2 + deltaY ** 2
     if (lengthSquared === 0) return Math.hypot(x - drawing.startX, y - drawing.startY)
-    const position = Math.max(0, Math.min(1, ((x - drawing.startX) * deltaX + (y - drawing.startY) * deltaY) / lengthSquared))
-    return Math.hypot(x - (drawing.startX + position * deltaX), y - (drawing.startY + position * deltaY))
+    const position = Math.max(
+      0,
+      Math.min(1, ((x - drawing.startX) * deltaX + (y - drawing.startY) * deltaY) / lengthSquared),
+    )
+    return Math.hypot(
+      x - (drawing.startX + position * deltaX),
+      y - (drawing.startY + position * deltaY),
+    )
   }
 }

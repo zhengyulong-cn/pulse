@@ -1,7 +1,11 @@
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '/api/server'
 const dataCenterApiBaseUrl = import.meta.env.VITE_DATA_CENTER_API_BASE_URL ?? '/api/market-data'
 
-const requestFrom = async <Response>(baseUrl: string, path: string, init?: RequestInit): Promise<Response> => {
+const requestFrom = async <Response>(
+  baseUrl: string,
+  path: string,
+  init?: RequestInit,
+): Promise<Response> => {
   const response = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
@@ -11,7 +15,7 @@ const requestFrom = async <Response>(baseUrl: string, path: string, init?: Reque
   })
 
   if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { message?: string } | null
+    const payload = (await response.json().catch(() => null)) as { message?: string } | null
     throw new Error(payload?.message ?? `Request failed with status ${response.status}.`)
   }
 
@@ -25,5 +29,7 @@ const requestFrom = async <Response>(baseUrl: string, path: string, init?: Reque
 export const request = async <Response>(path: string, init?: RequestInit): Promise<Response> =>
   requestFrom<Response>(apiBaseUrl, path, init)
 
-export const dataCenterRequest = async <Response>(path: string, init?: RequestInit): Promise<Response> =>
-  requestFrom<Response>(dataCenterApiBaseUrl, path, init)
+export const dataCenterRequest = async <Response>(
+  path: string,
+  init?: RequestInit,
+): Promise<Response> => requestFrom<Response>(dataCenterApiBaseUrl, path, init)

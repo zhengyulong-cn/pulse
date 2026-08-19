@@ -1,7 +1,10 @@
 import { arrowSegmentDrawingStrategy } from './ArrowSegmentDrawingStrategy'
 import { arrowDownDrawingStrategy, arrowUpDrawingStrategy } from './PointArrowDrawingStrategy'
 import { MeasureDrawingStrategy, type MeasureBar } from './MeasureDrawingStrategy'
-import { longPositionDrawingStrategy, shortPositionDrawingStrategy } from './PositionMeasurementDrawingStrategy'
+import {
+  longPositionDrawingStrategy,
+  shortPositionDrawingStrategy,
+} from './PositionMeasurementDrawingStrategy'
 import { rectangleDrawingStrategy } from './RectangleDrawingStrategy'
 import { segmentDrawingStrategy } from './SegmentDrawingStrategy'
 import type { TwoPointDrawingStrategy, TwoPointDrawingTool } from './types'

@@ -52,7 +52,7 @@ const screenshotPreviewVisible = ref(false)
 const screenshotPreviewUrl = ref('')
 
 const isEditing = computed(() => props.record !== undefined)
-const title = computed(() => isEditing.value ? '修改交易记录' : '新增交易记录')
+const title = computed(() => (isEditing.value ? '修改交易记录' : '新增交易记录'))
 const formatApiDateTime = (value: Date) => dayjs(value).format('YYYY-MM-DDTHH:mm:ss.SSSZ')
 
 const resetForm = () => {
@@ -107,7 +107,10 @@ const uploadScreenshot = async (options: UploadRequestOptions) => {
 
 const removeScreenshot = (file: UploadUserFile) => {
   const uploadedFile = file.response as TradeScreenshot | undefined
-  if (uploadedFile?.path) form.screenshots = form.screenshots.filter((screenshot) => screenshot.path !== uploadedFile.path)
+  if (uploadedFile?.path)
+    form.screenshots = form.screenshots.filter(
+      (screenshot) => screenshot.path !== uploadedFile.path,
+    )
 }
 
 const previewScreenshot = (file: UploadUserFile) => {
@@ -146,7 +149,9 @@ const uploadPastedScreenshot = async (file: File) => {
 const handleScreenshotPaste = (event: ClipboardEvent) => {
   if (!visible.value || screenshotUploading.value) return
 
-  const image = Array.from(event.clipboardData?.files ?? []).find((file) => file.type.startsWith('image/'))
+  const image = Array.from(event.clipboardData?.files ?? []).find((file) =>
+    file.type.startsWith('image/'),
+  )
   if (!image) return
 
   event.preventDefault()
@@ -155,7 +160,13 @@ const handleScreenshotPaste = (event: ClipboardEvent) => {
 
 const save = async () => {
   if (!props.account) return
-  if (!form.underlyingName.trim() || !form.underlyingCode.trim() || !form.quantity || !form.openPrice || !form.fee) {
+  if (
+    !form.underlyingName.trim() ||
+    !form.underlyingCode.trim() ||
+    !form.quantity ||
+    !form.openPrice ||
+    !form.fee
+  ) {
     ElMessage.warning('请填写标的、手数、开仓价格和手续费。')
     return
   }
@@ -202,41 +213,92 @@ const save = async () => {
     visible.value = false
     emit('saved')
   } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : `交易记录${isEditing.value ? '更新' : '新增'}失败。`)
+    ElMessage.error(
+      error instanceof Error ? error.message : `交易记录${isEditing.value ? '更新' : '新增'}失败。`,
+    )
   } finally {
     saving.value = false
   }
 }
 
-watch(visible, (isVisible) => {
-  if (isVisible) {
-    resetForm()
-    window.addEventListener('paste', handleScreenshotPaste)
-    return
-  }
-  window.removeEventListener('paste', handleScreenshotPaste)
-}, { immediate: true })
+watch(
+  visible,
+  (isVisible) => {
+    if (isVisible) {
+      resetForm()
+      window.addEventListener('paste', handleScreenshotPaste)
+      return
+    }
+    window.removeEventListener('paste', handleScreenshotPaste)
+  },
+  { immediate: true },
+)
 
 onBeforeUnmount(() => window.removeEventListener('paste', handleScreenshotPaste))
 </script>
 
 <template>
-  <el-dialog v-model="visible" :title="title" width="min(1080px, calc(100vw - 32px))" destroy-on-close>
-    <div class="mb-4 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-blue-700"><Landmark :size="17" /><span>{{ isEditing ? '记录所属账户：' : '记录将添加到：' }}</span><strong>{{ account?.name }} · {{ account?.account }}（{{ account?.currency }}）</strong></div>
+  <el-dialog
+    v-model="visible"
+    :title="title"
+    width="min(1080px, calc(100vw - 32px))"
+    destroy-on-close
+  >
+    <div
+      class="mb-4 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-blue-700"
+    >
+      <Landmark :size="17" /><span>{{ isEditing ? '记录所属账户：' : '记录将添加到：' }}</span
+      ><strong>{{ account?.name }} · {{ account?.account }}（{{ account?.currency }}）</strong>
+    </div>
     <el-form label-position="top" @submit.prevent="save">
       <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-5">
-        <el-form-item label="标的名称" required><el-input v-model="form.underlyingName" placeholder="例如：沪深300" /></el-form-item>
-        <el-form-item label="标的代码" required><el-input v-model="form.underlyingCode" placeholder="例如：000300" /></el-form-item>
-        <el-form-item label="开仓方向" required><el-radio-group v-model="form.direction"><el-radio-button value="LONG">做多</el-radio-button><el-radio-button value="SHORT">做空</el-radio-button></el-radio-group></el-form-item>
-        <el-form-item label="手数" required><el-input v-model="form.quantity" inputmode="decimal" placeholder="例如：1" /></el-form-item>
-        <el-form-item label="开仓时间" required><el-date-picker v-model="form.openTime" type="datetime" class="!w-full" /></el-form-item>
-        <el-form-item label="开仓价格" required><el-input v-model="form.openPrice" inputmode="decimal" placeholder="例如：4000.25" /></el-form-item>
-        <el-form-item label="平仓时间"><el-date-picker v-model="form.closeTime" type="datetime" class="!w-full" clearable /></el-form-item>
-        <el-form-item label="平仓价格"><el-input v-model="form.closePrice" inputmode="decimal" placeholder="未平仓可留空" /></el-form-item>
-        <el-form-item label="手续费" required><el-input v-model="form.fee" inputmode="decimal" placeholder="例如：12.50" /></el-form-item>
-        <el-form-item label="真实盈亏"><el-input v-model="form.realizedPnl" inputmode="decimal" placeholder="未平仓可留空" /></el-form-item>
-        <el-form-item class="col-span-2"  label="开仓缘由"><el-input type="textarea" :rows="5" v-model="form.openReason" placeholder="例如：突破关键压力位" /></el-form-item>
-        <el-form-item class="col-span-2" label="平仓缘由"><el-input type="textarea" :rows="5" v-model="form.closeReason" placeholder="例如：止盈离场" /></el-form-item>
+        <el-form-item label="标的名称" required
+          ><el-input v-model="form.underlyingName" placeholder="例如：沪深300"
+        /></el-form-item>
+        <el-form-item label="标的代码" required
+          ><el-input v-model="form.underlyingCode" placeholder="例如：000300"
+        /></el-form-item>
+        <el-form-item label="开仓方向" required
+          ><el-radio-group v-model="form.direction"
+            ><el-radio-button value="LONG">做多</el-radio-button
+            ><el-radio-button value="SHORT">做空</el-radio-button></el-radio-group
+          ></el-form-item
+        >
+        <el-form-item label="手数" required
+          ><el-input v-model="form.quantity" inputmode="decimal" placeholder="例如：1"
+        /></el-form-item>
+        <el-form-item label="开仓时间" required
+          ><el-date-picker v-model="form.openTime" type="datetime" class="!w-full"
+        /></el-form-item>
+        <el-form-item label="开仓价格" required
+          ><el-input v-model="form.openPrice" inputmode="decimal" placeholder="例如：4000.25"
+        /></el-form-item>
+        <el-form-item label="平仓时间"
+          ><el-date-picker v-model="form.closeTime" type="datetime" class="!w-full" clearable
+        /></el-form-item>
+        <el-form-item label="平仓价格"
+          ><el-input v-model="form.closePrice" inputmode="decimal" placeholder="未平仓可留空"
+        /></el-form-item>
+        <el-form-item label="手续费" required
+          ><el-input v-model="form.fee" inputmode="decimal" placeholder="例如：12.50"
+        /></el-form-item>
+        <el-form-item label="真实盈亏"
+          ><el-input v-model="form.realizedPnl" inputmode="decimal" placeholder="未平仓可留空"
+        /></el-form-item>
+        <el-form-item class="col-span-2" label="开仓缘由"
+          ><el-input
+            type="textarea"
+            :rows="5"
+            v-model="form.openReason"
+            placeholder="例如：突破关键压力位"
+        /></el-form-item>
+        <el-form-item class="col-span-2" label="平仓缘由"
+          ><el-input
+            type="textarea"
+            :rows="5"
+            v-model="form.closeReason"
+            placeholder="例如：止盈离场"
+        /></el-form-item>
         <el-form-item class="col-span-5" label="截图">
           <div>
             <el-upload
@@ -251,16 +313,37 @@ onBeforeUnmount(() => window.removeEventListener('paste', handleScreenshotPaste)
               :disabled="screenshotUploading"
               @preview="previewScreenshot"
               @remove="removeScreenshot"
-            ><span class="text-xl leading-none">+</span></el-upload>
+              ><span class="text-xl leading-none">+</span></el-upload
+            >
             <p class="mt-1 text-xs text-slate-400">支持单张图片，上传后可点击预览。</p>
           </div>
         </el-form-item>
-        <el-form-item class="sm:col-span-2 lg:col-span-4" label="extra_json"><el-input v-model="form.extraJson" type="textarea" :rows="3" placeholder='例如：{ "strategy": "突破" }' /></el-form-item>
+        <el-form-item class="sm:col-span-2 lg:col-span-4" label="extra_json"
+          ><el-input
+            v-model="form.extraJson"
+            type="textarea"
+            :rows="3"
+            placeholder='例如：{ "strategy": "突破" }'
+        /></el-form-item>
       </div>
-      <div class="mt-2 flex justify-end gap-2"><el-button @click="visible = false">取消</el-button><el-button type="primary" native-type="submit" :loading="saving">{{ isEditing ? '保存修改' : '保存记录' }}</el-button></div>
+      <div class="mt-2 flex justify-end gap-2">
+        <el-button @click="visible = false">取消</el-button
+        ><el-button type="primary" native-type="submit" :loading="saving">{{
+          isEditing ? '保存修改' : '保存记录'
+        }}</el-button>
+      </div>
     </el-form>
-    <el-dialog v-model="screenshotPreviewVisible" append-to-body title="交易截图" width="min(920px, calc(100vw - 32px))">
-      <img :src="screenshotPreviewUrl" class="mx-auto max-h-[70vh] max-w-full object-contain" alt="交易截图" />
+    <el-dialog
+      v-model="screenshotPreviewVisible"
+      append-to-body
+      title="交易截图"
+      width="min(920px, calc(100vw - 32px))"
+    >
+      <img
+        :src="screenshotPreviewUrl"
+        class="mx-auto max-h-[70vh] max-w-full object-contain"
+        alt="交易截图"
+      />
     </el-dialog>
   </el-dialog>
 </template>

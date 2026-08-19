@@ -1,6 +1,14 @@
 import type { CanvasRenderingTarget2D } from 'fancy-canvas'
 import dayjs from 'dayjs'
-import type { IPrimitivePaneRenderer, IPrimitivePaneView, ISeriesApi, ISeriesPrimitive, SeriesAttachedParameter, SeriesType, Time } from 'lightweight-charts'
+import type {
+  IPrimitivePaneRenderer,
+  IPrimitivePaneView,
+  ISeriesApi,
+  ISeriesPrimitive,
+  SeriesAttachedParameter,
+  SeriesType,
+  Time,
+} from 'lightweight-charts'
 
 import type { DrawingStrategyRegistry } from './strategies/drawingStrategyRegistry'
 import type { DrawingCoordinates, TwoPointDrawing } from './strategies/types'
@@ -11,7 +19,11 @@ export type { DrawingPoint, TwoPointDrawing, TwoPointDrawingTool } from './strat
 export type { DrawingHitPart } from './strategies/types'
 
 class DrawingRenderer implements IPrimitivePaneRenderer {
-  constructor(private readonly drawings: DrawingCoordinates[], private readonly selectedDrawingId: string | undefined, private readonly strategies: DrawingStrategyRegistry) {}
+  constructor(
+    private readonly drawings: DrawingCoordinates[],
+    private readonly selectedDrawingId: string | undefined,
+    private readonly strategies: DrawingStrategyRegistry,
+  ) {}
 
   draw(target: CanvasRenderingTarget2D) {
     target.useBitmapCoordinateSpace(({ context, horizontalPixelRatio, verticalPixelRatio }) => {
@@ -21,11 +33,18 @@ class DrawingRenderer implements IPrimitivePaneRenderer {
       context.fillStyle = '#2563eb'
       for (const drawing of this.drawings) {
         const style = (drawing as DrawingDocument).style
-        context.lineWidth = style?.lineWidth ? style.lineWidth * horizontalPixelRatio : 2 * horizontalPixelRatio
+        context.lineWidth = style?.lineWidth
+          ? style.lineWidth * horizontalPixelRatio
+          : 2 * horizontalPixelRatio
         context.strokeStyle = style?.color ?? '#2563eb'
         context.fillStyle = style?.color ?? '#2563eb'
-        this.strategies.get(drawing.tool)?.draw(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
-        if (drawing.id === this.selectedDrawingId) this.strategies.get(drawing.tool)?.drawSelection?.(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
+        this.strategies
+          .get(drawing.tool)
+          ?.draw(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
+        if (drawing.id === this.selectedDrawingId)
+          this.strategies
+            .get(drawing.tool)
+            ?.drawSelection?.(drawing, { context, horizontalPixelRatio, verticalPixelRatio })
       }
       context.restore()
     })
@@ -51,14 +70,29 @@ class DrawingPaneView implements IPrimitivePaneView {
       const endY = this.series.priceToCoordinate(drawing.end.price)
       if (startX === null || endX === null || startY === null || endY === null) return []
       const positionLevels = drawing.positionLevels
-      const upperY = positionLevels ? this.series.priceToCoordinate(positionLevels.upperPrice) : undefined
-      const lowerY = positionLevels ? this.series.priceToCoordinate(positionLevels.lowerPrice) : undefined
-      return [{ ...drawing, endX, endY, startX, startY, ...(upperY !== null && lowerY !== null ? { upperY, lowerY } : {}) }]
+      const upperY = positionLevels
+        ? this.series.priceToCoordinate(positionLevels.upperPrice)
+        : undefined
+      const lowerY = positionLevels
+        ? this.series.priceToCoordinate(positionLevels.lowerPrice)
+        : undefined
+      return [
+        {
+          ...drawing,
+          endX,
+          endY,
+          startX,
+          startY,
+          ...(upperY !== null && lowerY !== null ? { upperY, lowerY } : {}),
+        },
+      ]
     })
   }
 
   renderer() {
-    return this.coordinates.length ? new DrawingRenderer(this.coordinates, this.selectedDrawingId(), this.strategies) : null
+    return this.coordinates.length
+      ? new DrawingRenderer(this.coordinates, this.selectedDrawingId(), this.strategies)
+      : null
   }
 
   getCoordinates() {
@@ -72,7 +106,11 @@ class DrawingPaneView implements IPrimitivePaneView {
     if (!Number.isFinite(target)) return null
     const nearestTime = this.series.data().reduce<Time | undefined>((nearest, bar) => {
       if (typeof bar.time !== 'number') return nearest
-      if (nearest === undefined || Math.abs(Number(bar.time) - target) < Math.abs(Number(nearest) - target)) return bar.time
+      if (
+        nearest === undefined ||
+        Math.abs(Number(bar.time) - target) < Math.abs(Number(nearest) - target)
+      )
+        return bar.time
       return nearest
     }, undefined)
     return nearestTime === undefined ? null : this.chart.timeScale().timeToCoordinate(nearestTime)
@@ -91,7 +129,13 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
 
   attached(parameter: SeriesAttachedParameter<Time, SeriesType>) {
     this.requestUpdate = parameter.requestUpdate
-    this.paneView = new DrawingPaneView(parameter.chart, parameter.series, () => this.allDrawings(), () => this.selectedDrawingId, this.strategies)
+    this.paneView = new DrawingPaneView(
+      parameter.chart,
+      parameter.series,
+      () => this.allDrawings(),
+      () => this.selectedDrawingId,
+      this.strategies,
+    )
   }
 
   updateAllViews() {
@@ -148,12 +192,16 @@ export class DrawingPrimitive implements ISeriesPrimitive<Time> {
   }
 
   updateDrawing(id: string, update: Partial<TwoPointDrawing>) {
-    this.drawings = this.drawings.map((drawing) => drawing.id === id ? { ...drawing, ...update, updatedAt: dayjs().toISOString() } : drawing)
+    this.drawings = this.drawings.map((drawing) =>
+      drawing.id === id ? { ...drawing, ...update, updatedAt: dayjs().toISOString() } : drawing,
+    )
     this.refresh()
   }
 
   updateDocument(id: string, update: Partial<DrawingDocument>) {
-    this.drawings = this.drawings.map((drawing) => drawing.id === id ? { ...drawing, ...update, updatedAt: dayjs().toISOString() } : drawing)
+    this.drawings = this.drawings.map((drawing) =>
+      drawing.id === id ? { ...drawing, ...update, updatedAt: dayjs().toISOString() } : drawing,
+    )
     this.refresh()
   }
 

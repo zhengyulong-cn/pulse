@@ -4,7 +4,10 @@ import type { DrawingCoordinates, DrawingRenderContext } from './types'
 export class SegmentDrawingStrategy extends LineDrawingStrategy {
   readonly tool = 'segment' as const
 
-  draw(drawing: DrawingCoordinates, { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext) {
+  draw(
+    drawing: DrawingCoordinates,
+    { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext,
+  ) {
     context.beginPath()
     context.moveTo(drawing.startX * horizontalPixelRatio, drawing.startY * verticalPixelRatio)
     context.lineTo(drawing.endX * horizontalPixelRatio, drawing.endY * verticalPixelRatio)

@@ -4,7 +4,7 @@ import type { PineChartBar } from '@/indicators/PinePlotRenderer'
 
 type ReplayPhase = 'inactive' | 'selecting' | 'paused' | 'playing'
 
-const toMilliseconds = (time: number) => time < 10_000_000_000 ? time * 1_000 : time
+const toMilliseconds = (time: number) => (time < 10_000_000_000 ? time * 1_000 : time)
 
 const findBarIndexAtOrBefore = (bars: PineChartBar[], time: number) => {
   for (let index = bars.length - 1; index >= 0; index -= 1) {
@@ -87,7 +87,8 @@ export const useChartReplay = (
 
   const setCrosshairTime = (time: number | undefined) => {
     crosshairTime = time === undefined ? undefined : toMilliseconds(time)
-    const index = crosshairTime === undefined ? -1 : findBarIndexAtOrBefore(getBars(), crosshairTime)
+    const index =
+      crosshairTime === undefined ? -1 : findBarIndexAtOrBefore(getBars(), crosshairTime)
     candidateTime.value = index < 0 ? undefined : getBars()[index]?.time
   }
 

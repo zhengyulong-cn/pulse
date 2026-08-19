@@ -30,7 +30,7 @@ export const useRealtimeQuotes = (instrumentIds: Ref<number[]>) => {
     socket = new WebSocket(getWebSocketUrl())
     socket.addEventListener('open', sendSubscription)
     socket.addEventListener('message', ({ data }) => {
-      const event = JSON.parse(data) as { type?: string, data?: RealtimeTick }
+      const event = JSON.parse(data) as { type?: string; data?: RealtimeTick }
       if (event.type !== 'tick' || !event.data) return
       quotes.value = new Map(quotes.value).set(event.data.instrument_id, event.data)
     })
@@ -40,11 +40,15 @@ export const useRealtimeQuotes = (instrumentIds: Ref<number[]>) => {
     })
   }
 
-  watch(instrumentIds, () => {
-    if (instrumentIds.value.length === 0) return
-    connect()
-    sendSubscription()
-  }, { immediate: true })
+  watch(
+    instrumentIds,
+    () => {
+      if (instrumentIds.value.length === 0) return
+      connect()
+      sendSubscription()
+    },
+    { immediate: true },
+  )
 
   onBeforeUnmount(() => socket?.close())
 

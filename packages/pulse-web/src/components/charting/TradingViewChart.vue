@@ -22,7 +22,7 @@ type ChartWidget = {
   createButton: () => HTMLElement
   createDropdown: (options: {
     align: 'left' | 'right'
-    items: Array<{ onSelect: () => void, title: string }>
+    items: Array<{ onSelect: () => void; title: string }>
     title: string
     tooltip?: string
   }) => Promise<AdvancedIndicatorsDropdownApi>
@@ -46,8 +46,8 @@ declare global {
 const chartContainer = ref<HTMLElement>()
 const chartWidget = shallowRef<ChartWidget>()
 const loadError = ref<string>()
-const selectedSymbol = ref("jm2701")
-const selectedInterval = ref("5")
+const selectedSymbol = ref('jm2701')
+const selectedInterval = ref('5')
 const {
   activeScriptIds: activePineScriptIds,
   dispose: disposePineIndicators,
@@ -60,13 +60,15 @@ const {
 } = usePineIndicators()
 let advancedIndicatorsDropdown: AdvancedIndicatorsDropdownApi | undefined
 let replayButton: HTMLElement | undefined
-let activeReplayChart: (PineChartApi & {
-  crossHairMoved: () => {
-    subscribe: (context: unknown, callback: (params: { time?: number }) => void) => void
-    unsubscribe: (context: unknown, callback: (params: { time?: number }) => void) => void
-  }
-  resetData: () => void
-}) | undefined
+let activeReplayChart:
+  | (PineChartApi & {
+      crossHairMoved: () => {
+        subscribe: (context: unknown, callback: (params: { time?: number }) => void) => void
+        unsubscribe: (context: unknown, callback: (params: { time?: number }) => void) => void
+      }
+      resetData: () => void
+    })
+  | undefined
 let replayCrosshairListener: ((params: { time?: number }) => void) | undefined
 let replayBarSubscriber: ((bar: PineChartBar) => void) | undefined
 let replayPreviewMarkerId: string | undefined
@@ -108,14 +110,16 @@ const {
   publishReplayBar,
 )
 
-const replayCandidateLabel = computed(() => replayCandidateTime.value === undefined
-  ? '移动鼠标选择起始 K 线'
-  : new Intl.DateTimeFormat('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(replayCandidateTime.value))
+const replayCandidateLabel = computed(() =>
+  replayCandidateTime.value === undefined
+    ? '移动鼠标选择起始 K 线'
+    : new Intl.DateTimeFormat('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(replayCandidateTime.value),
+)
 
 const clearReplayPreviewMarker = () => {
   replayPreviewMarkerVersion += 1
@@ -155,17 +159,20 @@ const updateReplayPreviewMarker = async () => {
   const version = ++replayPreviewMarkerVersion
   if (replayPreviewMarkerId) activeReplayChart.removeEntity(replayPreviewMarkerId)
   replayPreviewMarkerId = undefined
-  const markerId = await activeReplayChart.createShape({ time: Math.trunc(time / 1_000) }, {
-    shape: 'vertical_line',
-    lock: true,
-    disableSelection: true,
-    disableSave: true,
-    disableUndo: true,
-    overrides: {
-      linecolor: '#2962ff',
-      linewidth: 2,
+  const markerId = await activeReplayChart.createShape(
+    { time: Math.trunc(time / 1_000) },
+    {
+      shape: 'vertical_line',
+      lock: true,
+      disableSelection: true,
+      disableSave: true,
+      disableUndo: true,
+      overrides: {
+        linecolor: '#2962ff',
+        linewidth: 2,
+      },
     },
-  })
+  )
   if (version === replayPreviewMarkerVersion) replayPreviewMarkerId = markerId
   else activeReplayChart.removeEntity(markerId)
 }
@@ -179,28 +186,36 @@ const resolveChartSymbol = (
   onResolve: (symbolInfo: Record<string, unknown>) => void,
 ) => {
   searchResultsBySymbol.set(instrument.symbol, instrument)
-  window.setTimeout(() => onResolve({
-    name: instrument.symbol,
-    ticker: instrument.symbol,
-    description: instrument.name,
-    type: 'futures',
-    session: '24x7',
-    timezone: 'Asia/Shanghai',
-    exchange: instrument.exchange_name,
-    minmov: 1,
-    pricescale: 100,
-    has_intraday: true,
-    supported_resolutions: ['1', '5', '15', '30', '60'],
-  }), 0)
+  window.setTimeout(
+    () =>
+      onResolve({
+        name: instrument.symbol,
+        ticker: instrument.symbol,
+        description: instrument.name,
+        type: 'futures',
+        session: '24x7',
+        timezone: 'Asia/Shanghai',
+        exchange: instrument.exchange_name,
+        minmov: 1,
+        pricescale: 100,
+        has_intraday: true,
+        supported_resolutions: ['1', '5', '15', '30', '60'],
+      }),
+    0,
+  )
 }
 
 const datafeed = {
   onReady: (callback: (configuration: Record<string, unknown>) => void) => {
-    window.setTimeout(() => callback({
-      supported_resolutions: ['1', '5', '15', '30', '60'],
-      supports_search: true,
-      supports_group_request: false,
-    }), 0)
+    window.setTimeout(
+      () =>
+        callback({
+          supported_resolutions: ['1', '5', '15', '30', '60'],
+          supports_search: true,
+          supports_group_request: false,
+        }),
+      0,
+    )
   },
   resolveSymbol: (
     symbol: string,
@@ -216,7 +231,9 @@ const datafeed = {
     const symbolCode = getSymbolCode(symbol)
     void searchMarketInstruments(symbolCode).then(
       (instruments) => {
-        const matchedInstrument = instruments.find((candidate) => candidate.symbol.toLowerCase() === symbolCode.toLowerCase())
+        const matchedInstrument = instruments.find(
+          (candidate) => candidate.symbol.toLowerCase() === symbolCode.toLowerCase(),
+        )
         if (matchedInstrument) {
           resolveChartSymbol(matchedInstrument, onResolve)
           return
@@ -240,15 +257,19 @@ const datafeed = {
 
     void searchMarketInstruments(query).then(
       (instruments) => {
-        instruments.forEach((instrument) => searchResultsBySymbol.set(instrument.symbol, instrument))
-        onResult(instruments.map((instrument) => ({
-          symbol: instrument.symbol,
-          full_name: `${instrument.exchange_mic}:${instrument.symbol}`,
-          description: instrument.name,
-          exchange: instrument.exchange_name,
-          ticker: instrument.symbol,
-          type: instrument.instrument_type.toLowerCase(),
-        })))
+        instruments.forEach((instrument) =>
+          searchResultsBySymbol.set(instrument.symbol, instrument),
+        )
+        onResult(
+          instruments.map((instrument) => ({
+            symbol: instrument.symbol,
+            full_name: `${instrument.exchange_mic}:${instrument.symbol}`,
+            description: instrument.name,
+            exchange: instrument.exchange_name,
+            ticker: instrument.symbol,
+            type: instrument.instrument_type.toLowerCase(),
+          })),
+        )
       },
       () => onResult([]),
     )
@@ -256,7 +277,7 @@ const datafeed = {
   getBars: (
     symbolInfo: { ticker?: string },
     resolution: string,
-    periodParams: { from: number, to: number, countBack?: number },
+    periodParams: { from: number; to: number; countBack?: number },
     onHistory: (bars: PineChartBar[], metadata: { noData: boolean }) => void,
     onError: (reason: string) => void,
   ) => {
@@ -276,7 +297,13 @@ const datafeed = {
 
     const pineRequiredBars = 1_000
     const countBack = Math.max(periodParams.countBack ?? 0, pineRequiredBars)
-    void listFutureCnKlineBars(instrumentId, interval, periodParams.from, periodParams.to, countBack).then(
+    void listFutureCnKlineBars(
+      instrumentId,
+      interval,
+      periodParams.from,
+      periodParams.to,
+      countBack,
+    ).then(
       (bars) => {
         const visibleBars = isReplayActive.value
           ? bars.filter((bar) => bar.time <= replayEndTime.value!)
@@ -301,33 +328,57 @@ const datafeed = {
   },
 }
 
-const loadChartingLibrary = () => new Promise<TradingViewGlobal>((resolve, reject) => {
-  if (window.TradingView?.widget) {
-    resolve(window.TradingView)
-    return
-  }
+const loadChartingLibrary = () =>
+  new Promise<TradingViewGlobal>((resolve, reject) => {
+    if (window.TradingView?.widget) {
+      resolve(window.TradingView)
+      return
+    }
 
-  const existingScript = document.getElementById('tradingview-charting-library') as HTMLScriptElement | null
-  if (existingScript) {
-    existingScript.addEventListener('load', () => window.TradingView ? resolve(window.TradingView) : reject(new Error('Charting Library failed to initialize')), { once: true })
-    existingScript.addEventListener('error', () => reject(new Error('Charting Library failed to load')), { once: true })
-    return
-  }
+    const existingScript = document.getElementById(
+      'tradingview-charting-library',
+    ) as HTMLScriptElement | null
+    if (existingScript) {
+      existingScript.addEventListener(
+        'load',
+        () =>
+          window.TradingView
+            ? resolve(window.TradingView)
+            : reject(new Error('Charting Library failed to initialize')),
+        { once: true },
+      )
+      existingScript.addEventListener(
+        'error',
+        () => reject(new Error('Charting Library failed to load')),
+        { once: true },
+      )
+      return
+    }
 
-  const script = document.createElement('script')
-  script.id = 'tradingview-charting-library'
-  script.src = `${chartingLibraryPath}charting_library.standalone.js`
-  script.async = true
-  script.addEventListener('load', () => window.TradingView ? resolve(window.TradingView) : reject(new Error('Charting Library failed to initialize')), { once: true })
-  script.addEventListener('error', () => reject(new Error('Charting Library failed to load')), { once: true })
-  document.head.appendChild(script)
-})
+    const script = document.createElement('script')
+    script.id = 'tradingview-charting-library'
+    script.src = `${chartingLibraryPath}charting_library.standalone.js`
+    script.async = true
+    script.addEventListener(
+      'load',
+      () =>
+        window.TradingView
+          ? resolve(window.TradingView)
+          : reject(new Error('Charting Library failed to initialize')),
+      { once: true },
+    )
+    script.addEventListener('error', () => reject(new Error('Charting Library failed to load')), {
+      once: true,
+    })
+    document.head.appendChild(script)
+  })
 
 const destroyChart = () => {
   resetReplay()
   clearReplayPreviewMarker()
   removeReplaySelectionListener()
-  if (activeReplayChart && replayCrosshairListener) activeReplayChart.crossHairMoved().unsubscribe(null, replayCrosshairListener)
+  if (activeReplayChart && replayCrosshairListener)
+    activeReplayChart.crossHairMoved().unsubscribe(null, replayCrosshairListener)
   activeReplayChart = undefined
   replayCrosshairListener = undefined
   replayBarSubscriber = undefined
@@ -403,7 +454,10 @@ const renderChart = async () => {
 
 onMounted(() => void renderChart())
 
-watch(() => [selectedSymbol.value], () => void renderChart())
+watch(
+  () => [selectedSymbol.value],
+  () => void renderChart(),
+)
 
 const selectWatchlistSymbol = (symbol: string) => {
   selectedSymbol.value = symbol
@@ -429,12 +483,23 @@ onBeforeUnmount(() => {
       @toggle-playback="toggleReplayPlayback"
     />
     <div v-if="isReplaySelecting" class="absolute inset-x-0 top-12 z-10 flex justify-center">
-      <div class="flex items-center gap-2 rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-600 shadow-sm">
+      <div
+        class="flex items-center gap-2 rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-600 shadow-sm"
+      >
         {{ replayCandidateLabel }}，单击左键确认
-        <button type="button" class="rounded px-1.5 py-1 text-xs text-slate-500 hover:bg-slate-100" @click="exitReplay">取消</button>
+        <button
+          type="button"
+          class="rounded px-1.5 py-1 text-xs text-slate-500 hover:bg-slate-100"
+          @click="exitReplay"
+        >
+          取消
+        </button>
       </div>
     </div>
-    <div v-if="loadError" class="absolute inset-0 flex items-center justify-center bg-white text-sm text-red-600">
+    <div
+      v-if="loadError"
+      class="absolute inset-0 flex items-center justify-center bg-white text-sm text-red-600"
+    >
       {{ loadError }}
     </div>
     <ChartSideBar @select-symbol="selectWatchlistSymbol" />

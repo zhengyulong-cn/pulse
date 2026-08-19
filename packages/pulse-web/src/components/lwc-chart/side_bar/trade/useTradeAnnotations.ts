@@ -27,7 +27,9 @@ export const useTradeAnnotations = (
 
     const openTimestamp = dayjs(trade.openTime).unix()
     const closeTimestamp = dayjs(trade.closeTime).unix()
-    const rangeBars = bars.filter((bar) => bar.time >= openTimestamp * 1000 && bar.time <= closeTimestamp * 1000)
+    const rangeBars = bars.filter(
+      (bar) => bar.time >= openTimestamp * 1000 && bar.time <= closeTimestamp * 1000,
+    )
     if (!rangeBars.length) {
       pendingTrade.value = undefined
       clear()
@@ -35,19 +37,44 @@ export const useTradeAnnotations = (
     }
 
     const sortedBars = [...bars].sort((first, second) => first.time - second.time)
-    const nearest = (timestamp: number) => rangeBars.reduce((closest, bar) => (
-      Math.abs(dayjs(bar.time).unix() - timestamp) < Math.abs(dayjs(closest.time).unix() - timestamp) ? bar : closest
-    ))
+    const nearest = (timestamp: number) =>
+      rangeBars.reduce((closest, bar) =>
+        Math.abs(dayjs(bar.time).unix() - timestamp) <
+        Math.abs(dayjs(closest.time).unix() - timestamp)
+          ? bar
+          : closest,
+      )
     const openBar = nearest(openTimestamp)
     const closeBar = nearest(closeTimestamp)
     const openTime = dayjs(openBar.time).unix() as Time
     const closeTime = dayjs(closeBar.time).unix() as Time
     const isLong = trade.direction === 'LONG'
     tradeMarkers?.setMarkers([
-      { time: openTime, position: isLong ? 'belowBar' : 'aboveBar', color: isLong ? '#ef5350' : '#26a69a', shape: isLong ? 'arrowUp' : 'arrowDown', text: `开仓 ${trade.openPrice}` },
-      { time: closeTime, position: isLong ? 'aboveBar' : 'belowBar', color: isLong ? '#26a69a' : '#ef5350', shape: isLong ? 'arrowDown' : 'arrowUp', text: `平仓 ${trade.closePrice}` },
+      {
+        time: openTime,
+        position: isLong ? 'belowBar' : 'aboveBar',
+        color: isLong ? '#ef5350' : '#26a69a',
+        shape: isLong ? 'arrowUp' : 'arrowDown',
+        text: `开仓 ${trade.openPrice}`,
+      },
+      {
+        time: closeTime,
+        position: isLong ? 'aboveBar' : 'belowBar',
+        color: isLong ? '#26a69a' : '#ef5350',
+        shape: isLong ? 'arrowDown' : 'arrowUp',
+        text: `平仓 ${trade.closePrice}`,
+      },
     ])
-    tradeLine.setLines([{ startTime: openTime, startValue: Number(trade.openPrice), endTime: closeTime, endValue: Number(trade.closePrice), color: '#000000', width: 2 }])
+    tradeLine.setLines([
+      {
+        startTime: openTime,
+        startValue: Number(trade.openPrice),
+        endTime: closeTime,
+        endValue: Number(trade.closePrice),
+        color: '#000000',
+        width: 2,
+      },
+    ])
     const openIndex = sortedBars.findIndex((bar) => bar.time === openBar.time)
     const closeIndex = sortedBars.findIndex((bar) => bar.time === closeBar.time)
     const tradeBarCount = Math.max(1, closeIndex - openIndex + 1)

@@ -56,11 +56,13 @@ class PineLineRenderer implements IPrimitivePaneRenderer {
         context.beginPath()
         context.strokeStyle = line.color ?? '#2962ff'
         context.lineWidth = (line.width ?? 1) * verticalPixelRatio
-        context.setLineDash(line.style === 'style_dashed'
-          ? [6 * horizontalPixelRatio, 4 * horizontalPixelRatio]
-          : line.style === 'style_dotted'
-            ? [2 * horizontalPixelRatio, 3 * horizontalPixelRatio]
-            : [])
+        context.setLineDash(
+          line.style === 'style_dashed'
+            ? [6 * horizontalPixelRatio, 4 * horizontalPixelRatio]
+            : line.style === 'style_dotted'
+              ? [2 * horizontalPixelRatio, 3 * horizontalPixelRatio]
+              : [],
+        )
         context.moveTo(drawStartX, drawStartY)
         context.lineTo(drawEndX, drawEndY)
         context.stroke()

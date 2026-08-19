@@ -33,14 +33,18 @@ export const useChartTooltip = (
       return
     }
 
-    const previousBar = [...barsByTime.values()].reduce<TooltipBar | undefined>((previous, item) => {
-      if (Number(item.time) >= Number(time)) return previous
-      if (!previous || Number(item.time) > Number(previous.time)) return item
-      return previous
-    }, undefined)
+    const previousBar = [...barsByTime.values()].reduce<TooltipBar | undefined>(
+      (previous, item) => {
+        if (Number(item.time) >= Number(time)) return previous
+        if (!previous || Number(item.time) > Number(previous.time)) return item
+        return previous
+      },
+      undefined,
+    )
     const comparisonPrice = previousBar?.close ?? bar.open
-    const change = comparisonPrice === 0 ? 0 : (bar.close - comparisonPrice) / comparisonPrice * 100
-    const amplitude = comparisonPrice === 0 ? 0 : (bar.high - bar.low) / comparisonPrice * 100
+    const change =
+      comparisonPrice === 0 ? 0 : ((bar.close - comparisonPrice) / comparisonPrice) * 100
+    const amplitude = comparisonPrice === 0 ? 0 : ((bar.high - bar.low) / comparisonPrice) * 100
     tooltip.value = { amplitude, bar, change, x: point.x, y: point.y }
   }
 

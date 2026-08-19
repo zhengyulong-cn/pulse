@@ -1,10 +1,22 @@
 import { DrawingStrategy } from './DrawingStrategy'
-import type { DrawingCoordinates, DrawingDragContext, DrawingHitPart, DrawingRenderContext, TwoPointDrawing } from './types'
+import type {
+  DrawingCoordinates,
+  DrawingDragContext,
+  DrawingHitPart,
+  DrawingRenderContext,
+  TwoPointDrawing,
+} from './types'
 
 const formatPrice = (value: number) => value.toFixed(2)
 const formatPercent = (value: number) => `${value.toFixed(2)}%`
 
-const drawLabel = (context: CanvasRenderingContext2D, text: string, x: number, y: number, color: string) => {
+const drawLabel = (
+  context: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  color: string,
+) => {
   context.save()
   context.font = '12px sans-serif'
   const width = context.measureText(text).width + 10
@@ -20,14 +32,25 @@ const drawLabel = (context: CanvasRenderingContext2D, text: string, x: number, y
 }
 
 export class PositionMeasurementDrawingStrategy extends DrawingStrategy {
-  constructor(readonly tool: 'long_position' | 'short_position') { super() }
+  constructor(readonly tool: 'long_position' | 'short_position') {
+    super()
+  }
 
   create(id: string, start: DrawingCoordinates['start'], end: DrawingCoordinates['end']) {
     const distance = Math.abs(end.price - start.price)
-    return { id, start, end, positionLevels: { lowerPrice: start.price - distance, upperPrice: start.price + distance }, tool: this.tool }
+    return {
+      id,
+      start,
+      end,
+      positionLevels: { lowerPrice: start.price - distance, upperPrice: start.price + distance },
+      tool: this.tool,
+    }
   }
 
-  draw(drawing: DrawingCoordinates, { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext) {
+  draw(
+    drawing: DrawingCoordinates,
+    { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext,
+  ) {
     const { lowerPrice, upperPrice } = this.getLevels(drawing)
     const isLong = this.tool === 'long_position'
     const entryPrice = drawing.start.price
@@ -57,21 +80,52 @@ export class PositionMeasurementDrawingStrategy extends DrawingStrategy {
     context.restore()
     const ratio = Math.abs(targetPrice - entryPrice) / Math.abs(entryPrice - stopPrice)
     const labelX = left + width / 2
-    drawLabel(context, `止盈价 ${formatPrice(targetPrice)} (${formatPercent(Math.abs(targetPrice - entryPrice) / entryPrice * 100)})`, labelX, targetY - 14 * verticalPixelRatio, '#16a34a')
-    drawLabel(context, `开仓价 ${formatPrice(entryPrice)} 风险回报比 ${ratio.toFixed(2)}`, labelX, entryY, '#ca8a04')
-    drawLabel(context, `止损价 ${formatPrice(stopPrice)} (${formatPercent(Math.abs(stopPrice - entryPrice) / entryPrice * 100)})`, labelX, stopY + 14 * verticalPixelRatio, '#dc2626')
+    drawLabel(
+      context,
+      `止盈价 ${formatPrice(targetPrice)} (${formatPercent((Math.abs(targetPrice - entryPrice) / entryPrice) * 100)})`,
+      labelX,
+      targetY - 14 * verticalPixelRatio,
+      '#16a34a',
+    )
+    drawLabel(
+      context,
+      `开仓价 ${formatPrice(entryPrice)} 风险回报比 ${ratio.toFixed(2)}`,
+      labelX,
+      entryY,
+      '#ca8a04',
+    )
+    drawLabel(
+      context,
+      `止损价 ${formatPrice(stopPrice)} (${formatPercent((Math.abs(stopPrice - entryPrice) / entryPrice) * 100)})`,
+      labelX,
+      stopY + 14 * verticalPixelRatio,
+      '#dc2626',
+    )
   }
 
-  drawSelection(drawing: DrawingCoordinates, { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext) {
+  drawSelection(
+    drawing: DrawingCoordinates,
+    { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext,
+  ) {
     const { lowerPrice, upperPrice } = this.getLevels(drawing)
     const left = Math.min(drawing.startX, drawing.endX)
     const right = Math.max(drawing.startX, drawing.endX)
-    const handles: Array<[number, number]> = [[left, this.priceToCoordinate(drawing, upperPrice)], [left, this.priceToCoordinate(drawing, lowerPrice)], [left, drawing.startY], [right, drawing.startY]]
+    const handles: Array<[number, number]> = [
+      [left, this.priceToCoordinate(drawing, upperPrice)],
+      [left, this.priceToCoordinate(drawing, lowerPrice)],
+      [left, drawing.startY],
+      [right, drawing.startY],
+    ]
     context.fillStyle = '#ffffff'
     context.strokeStyle = '#2563eb'
     for (const [x, y] of handles) {
       context.beginPath()
-      context.rect(x * horizontalPixelRatio - 4 * horizontalPixelRatio, y * verticalPixelRatio - 4 * verticalPixelRatio, 8 * horizontalPixelRatio, 8 * verticalPixelRatio)
+      context.rect(
+        x * horizontalPixelRatio - 4 * horizontalPixelRatio,
+        y * verticalPixelRatio - 4 * verticalPixelRatio,
+        8 * horizontalPixelRatio,
+        8 * verticalPixelRatio,
+      )
       context.fill()
       context.stroke()
     }
@@ -85,12 +139,18 @@ export class PositionMeasurementDrawingStrategy extends DrawingStrategy {
     const right = Math.max(drawing.startX, drawing.endX)
     const isLong = this.tool === 'long_position'
     const handles: Array<[DrawingHitPart, number, number]> = [
-      ['position_target', left, isLong ? upperY : lowerY], ['position_stop', left, isLong ? lowerY : upperY],
-      ['position_entry_left', left, drawing.startY], ['position_entry_right', right, drawing.startY],
+      ['position_target', left, isLong ? upperY : lowerY],
+      ['position_stop', left, isLong ? lowerY : upperY],
+      ['position_entry_left', left, drawing.startY],
+      ['position_entry_right', right, drawing.startY],
     ]
-    const handle = handles.find(([, handleX, handleY]) => Math.hypot(x - handleX, y - handleY) <= 10)
+    const handle = handles.find(
+      ([, handleX, handleY]) => Math.hypot(x - handleX, y - handleY) <= 10,
+    )
     if (handle) return { part: handle[0] }
-    return x >= left && x <= right && y >= Math.min(upperY, lowerY) && y <= Math.max(upperY, lowerY) ? { part: 'body' as const } : undefined
+    return x >= left && x <= right && y >= Math.min(upperY, lowerY) && y <= Math.max(upperY, lowerY)
+      ? { part: 'body' as const }
+      : undefined
   }
 
   cursor(part: DrawingHitPart) {
@@ -108,28 +168,56 @@ export class PositionMeasurementDrawingStrategy extends DrawingStrategy {
       const moved = this.moveForDrag(context)
       if (!moved) return undefined
       const delta = moved.start.price - original.start.price
-      return { ...moved, positionLevels: { lowerPrice: levels.lowerPrice + delta, upperPrice: levels.upperPrice + delta } }
+      return {
+        ...moved,
+        positionLevels: {
+          lowerPrice: levels.lowerPrice + delta,
+          upperPrice: levels.upperPrice + delta,
+        },
+      }
     }
     if (part === 'position_target') {
-      if (isLong ? current.price <= original.start.price : current.price >= original.start.price) return undefined
-      return { start: original.start, end: original.end, positionLevels: isLong ? { ...levels, upperPrice: current.price } : { ...levels, lowerPrice: current.price } }
+      if (isLong ? current.price <= original.start.price : current.price >= original.start.price)
+        return undefined
+      return {
+        start: original.start,
+        end: original.end,
+        positionLevels: isLong
+          ? { ...levels, upperPrice: current.price }
+          : { ...levels, lowerPrice: current.price },
+      }
     }
     if (part === 'position_stop') {
-      if (isLong ? current.price >= original.start.price : current.price <= original.start.price) return undefined
-      return { start: original.start, end: original.end, positionLevels: isLong ? { ...levels, lowerPrice: current.price } : { ...levels, upperPrice: current.price } }
+      if (isLong ? current.price >= original.start.price : current.price <= original.start.price)
+        return undefined
+      return {
+        start: original.start,
+        end: original.end,
+        positionLevels: isLong
+          ? { ...levels, lowerPrice: current.price }
+          : { ...levels, upperPrice: current.price },
+      }
     }
     if (part === 'position_entry_left') {
       if (current.price < levels.lowerPrice || current.price > levels.upperPrice) return undefined
       return { start: current, end: original.end, positionLevels: levels }
     }
-    if (part === 'position_entry_right') return { start: original.start, end: { ...original.end, time: current.time }, positionLevels: levels }
+    if (part === 'position_entry_right')
+      return {
+        start: original.start,
+        end: { ...original.end, time: current.time },
+        positionLevels: levels,
+      }
     return undefined
   }
 
   private getLevels(drawing: TwoPointDrawing) {
     if (drawing.positionLevels) return drawing.positionLevels
     const distance = Math.abs(drawing.end.price - drawing.start.price)
-    return { lowerPrice: drawing.start.price - distance, upperPrice: drawing.start.price + distance }
+    return {
+      lowerPrice: drawing.start.price - distance,
+      upperPrice: drawing.start.price + distance,
+    }
   }
 
   private priceToCoordinate(drawing: DrawingCoordinates, price: number) {
@@ -137,7 +225,10 @@ export class PositionMeasurementDrawingStrategy extends DrawingStrategy {
     if (price === upperPrice && drawing.upperY !== undefined) return drawing.upperY
     if (price === lowerPrice && drawing.lowerY !== undefined) return drawing.lowerY
     const priceDelta = drawing.end.price - drawing.start.price
-    return priceDelta === 0 ? drawing.startY : drawing.startY + (price - drawing.start.price) / priceDelta * (drawing.endY - drawing.startY)
+    return priceDelta === 0
+      ? drawing.startY
+      : drawing.startY +
+          ((price - drawing.start.price) / priceDelta) * (drawing.endY - drawing.startY)
   }
 }
 

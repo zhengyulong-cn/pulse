@@ -21,11 +21,10 @@ export type PineBox = {
   top: number
 }
 
-type BoxCoordinates = PineBox & { bottomY: number, leftX: number, rightX: number, topY: number }
+type BoxCoordinates = PineBox & { bottomY: number; leftX: number; rightX: number; topY: number }
 
-const withTransparency = (color: string, alpha = '33') => (
+const withTransparency = (color: string, alpha = '33') =>
   /^#[0-9a-f]{6}$/i.test(color) ? `${color}${alpha}` : color
-)
 
 class PineBoxRenderer implements IPrimitivePaneRenderer {
   constructor(private readonly boxes: BoxCoordinates[]) {}
@@ -38,7 +37,9 @@ class PineBoxRenderer implements IPrimitivePaneRenderer {
         const extendLeft = box.extend === 'left' || box.extend === 'both'
         const extendRight = box.extend === 'right' || box.extend === 'both'
         const left = (extendLeft ? 0 : box.leftX) * horizontalPixelRatio
-        const right = (extendRight ? bitmapSize.width / horizontalPixelRatio : box.rightX) * horizontalPixelRatio
+        const right =
+          (extendRight ? bitmapSize.width / horizontalPixelRatio : box.rightX) *
+          horizontalPixelRatio
         const top = Math.min(box.topY, box.bottomY) * verticalPixelRatio
         const bottom = Math.max(box.topY, box.bottomY) * verticalPixelRatio
         const width = right - left
@@ -48,13 +49,16 @@ class PineBoxRenderer implements IPrimitivePaneRenderer {
         context.fillStyle = box.backgroundColor ?? 'rgba(41, 98, 255, 0.15)'
         context.fillRect(left, top, width, height)
         context.beginPath()
-        context.strokeStyle = box.borderColor ?? withTransparency(box.backgroundColor ?? '#2962ff', 'cc')
+        context.strokeStyle =
+          box.borderColor ?? withTransparency(box.backgroundColor ?? '#2962ff', 'cc')
         context.lineWidth = (box.borderWidth ?? 1) * verticalPixelRatio
-        context.setLineDash(box.borderStyle === 'style_dashed'
-          ? [6 * horizontalPixelRatio, 4 * horizontalPixelRatio]
-          : box.borderStyle === 'style_dotted'
-            ? [2 * horizontalPixelRatio, 3 * horizontalPixelRatio]
-            : [])
+        context.setLineDash(
+          box.borderStyle === 'style_dashed'
+            ? [6 * horizontalPixelRatio, 4 * horizontalPixelRatio]
+            : box.borderStyle === 'style_dotted'
+              ? [2 * horizontalPixelRatio, 3 * horizontalPixelRatio]
+              : [],
+        )
         context.rect(left, top, width, height)
         context.stroke()
       }

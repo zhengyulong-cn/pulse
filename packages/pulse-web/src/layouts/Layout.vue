@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { Settings, HeartPulse } from '@lucide/vue';
-import Menu from '@/layouts/components/Menu.vue';
+import { Settings, HeartPulse } from '@lucide/vue'
+import Menu from '@/layouts/components/Menu.vue'
 </script>
 
 <template>
   <div class="min-h-screen bg-page text-page-foreground">
-    <header class="sticky top-0 z-40 h-10 border-b border-header-border bg-header text-header-foreground shadow-sm">
+    <header
+      class="sticky top-0 z-40 h-10 border-b border-header-border bg-header text-header-foreground shadow-sm"
+    >
       <div class="flex h-full w-full items-center gap-3 px-3 sm:px-4">
         <a
           class="flex shrink-0 items-center gap-1.5 rounded-sm px-1 text-header-foreground outline-none transition-colors hover:text-brand-hover focus-visible:ring-2 focus-visible:ring-brand"
           href="/"
           aria-label="Pulse 首页"
         >
-          <span class="flex size-6 items-center justify-center rounded-sm bg-brand text-brand-foreground">
+          <span
+            class="flex size-6 items-center justify-center rounded-sm bg-brand text-brand-foreground"
+          >
             <HeartPulse :size="15" :stroke-width="2.5" aria-hidden="true" />
           </span>
           <span class="text-sm font-semibold tracking-wide text-brand">Pulse</span>

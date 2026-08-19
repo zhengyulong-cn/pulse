@@ -18,7 +18,7 @@ export type PineLabel = {
   value: number
 }
 
-type LabelCoordinate = PineLabel & { x: number, y: number }
+type LabelCoordinate = PineLabel & { x: number; y: number }
 
 class PineLabelRenderer implements IPrimitivePaneRenderer {
   constructor(private readonly labels: LabelCoordinate[]) {}
@@ -43,7 +43,13 @@ class PineLabelRenderer implements IPrimitivePaneRenderer {
 
         context.fillStyle = label.backgroundColor ?? '#2962ff'
         context.beginPath()
-        context.roundRect(x - width / 2, label.position === 'up' ? y : y - height, width, height, 3 * verticalPixelRatio)
+        context.roundRect(
+          x - width / 2,
+          label.position === 'up' ? y : y - height,
+          width,
+          height,
+          3 * verticalPixelRatio,
+        )
         context.fill()
         context.fillStyle = label.textColor ?? '#ffffff'
         context.fillText(label.text, x, label.position === 'up' ? y + height / 2 : y - height / 2)

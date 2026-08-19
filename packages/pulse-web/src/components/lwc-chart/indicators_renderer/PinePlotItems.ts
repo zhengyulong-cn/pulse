@@ -12,15 +12,14 @@ const drawingKeyByKind: Record<Exclude<PinePlotItemKind, 'plot'>, string> = {
   table: '__tables__',
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> => (
+const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
-)
 
 const getItems = (value: unknown) => {
   if (!isRecord(value) || !Array.isArray(value.data)) return []
-  return value.data.flatMap((item) => (
-    isRecord(item) && Array.isArray(item.value) ? item.value : [item]
-  )).filter((item) => item !== null && item !== undefined)
+  return value.data
+    .flatMap((item) => (isRecord(item) && Array.isArray(item.value) ? item.value : [item]))
+    .filter((item) => item !== null && item !== undefined)
 }
 
 export const getPlotItems = (plots: unknown, kind: PinePlotItemKind): PinePlotItem[] => {
@@ -36,7 +35,10 @@ export const getPlotItems = (plots: unknown, kind: PinePlotItemKind): PinePlotIt
   return Object.entries(plots)
     .filter(([key]) => key === drawingKey || key.startsWith(`${drawingKey}-`))
     .flatMap(([key, value]) => {
-      const items = kind === 'table' && isRecord(value) && Array.isArray(value.cells) ? [value] : getItems(value)
+      const items =
+        kind === 'table' && isRecord(value) && Array.isArray(value.cells)
+          ? [value]
+          : getItems(value)
       return items.map((item) => ({ key, value: item }))
     })
 }

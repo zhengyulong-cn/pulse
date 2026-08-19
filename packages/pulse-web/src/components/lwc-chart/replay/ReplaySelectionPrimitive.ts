@@ -36,7 +36,8 @@ class ReplaySelectionPaneView implements IPrimitivePaneView {
 
   update() {
     const time = this.getTime()
-    this.x = time === undefined ? undefined : this.chart.timeScale().timeToCoordinate(time) ?? undefined
+    this.x =
+      time === undefined ? undefined : (this.chart.timeScale().timeToCoordinate(time) ?? undefined)
   }
 
   renderer() {

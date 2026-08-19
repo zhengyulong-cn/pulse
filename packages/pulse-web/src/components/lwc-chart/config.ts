@@ -7,7 +7,8 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 const formatShanghaiTime = (time: Time) => {
-  if (typeof time === 'number') return dayjs.unix(time).tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm')
+  if (typeof time === 'number')
+    return dayjs.unix(time).tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm')
   if (typeof time === 'string') return time
   return `${time.year}-${String(time.month).padStart(2, '0')}-${String(time.day).padStart(2, '0')}`
 }

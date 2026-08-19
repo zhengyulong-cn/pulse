@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Layout from "./layouts/Layout.vue";
+import Layout from './layouts/Layout.vue'
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 </script>
 

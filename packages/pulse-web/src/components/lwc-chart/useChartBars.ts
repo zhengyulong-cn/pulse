@@ -12,9 +12,10 @@ export const useChartBars = (
 ) => {
   const barsByTime = new Map<number, CompleteBar>()
 
-  const getChartBars = () => [...barsByTime.values()]
-    .sort((first, second) => Number(first.time) - Number(second.time))
-    .map(({ time, open, high, low, close }) => ({ time, open, high, low, close }))
+  const getChartBars = () =>
+    [...barsByTime.values()]
+      .sort((first, second) => Number(first.time) - Number(second.time))
+      .map(({ time, open, high, low, close }) => ({ time, open, high, low, close }))
 
   const render = (bars: FutureCnKlineBar[]) => {
     barsByTime.clear()
@@ -24,10 +25,12 @@ export const useChartBars = (
     })
     const chartBars = getChartBars()
     getSeries()?.setData(chartBars)
-    getChart()?.timeScale().setVisibleLogicalRange({
-      from: Math.max(0, chartBars.length - 200),
-      to: chartBars.length + 10,
-    })
+    getChart()
+      ?.timeScale()
+      .setVisibleLogicalRange({
+        from: Math.max(0, chartBars.length - 200),
+        to: chartBars.length + 10,
+      })
     onBarsRendered(bars)
   }
 

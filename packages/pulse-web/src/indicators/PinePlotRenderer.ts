@@ -16,19 +16,20 @@ type ChartPoint = {
 
 export type PineChartApi = {
   createMultipointShape: (points: ChartPoint[], options: Record<string, unknown>) => Promise<string>
-  createShape: (point: ChartPoint | Pick<ChartPoint, 'time'>, options: Record<string, unknown>) => Promise<string>
+  createShape: (
+    point: ChartPoint | Pick<ChartPoint, 'time'>,
+    options: Record<string, unknown>,
+  ) => Promise<string>
   removeEntity: (entityId: string) => void
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> => (
+const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
-)
 
-const toNumber = (value: unknown) => (
+const toNumber = (value: unknown) =>
   typeof value === 'number' && Number.isFinite(value) ? value : undefined
-)
 
-const toChartTime = (value: number) => value > 10_000_000_000 ? Math.trunc(value / 1000) : value
+const toChartTime = (value: number) => (value > 10_000_000_000 ? Math.trunc(value / 1000) : value)
 
 const getColor = (value: unknown, fallback: string) => {
   if (typeof value !== 'string' || value.length === 0) return fallback
@@ -50,7 +51,9 @@ const getPlotItems = (plots: unknown, name: string) => {
     .flatMap(([, plot]) => {
       if (!isRecord(plot) || !Array.isArray(plot.data)) return []
 
-      return plot.data.flatMap((item) => isRecord(item) && Array.isArray(item.value) ? item.value : [item])
+      return plot.data.flatMap((item) =>
+        isRecord(item) && Array.isArray(item.value) ? item.value : [item],
+      )
     })
 }
 
@@ -173,27 +176,31 @@ export class PinePlotRenderer {
     const right = toNumber(box.right)
     const top = toNumber(box.top)
     const bottom = toNumber(box.bottom)
-    if (left === undefined || right === undefined || top === undefined || bottom === undefined) return
+    if (left === undefined || right === undefined || top === undefined || bottom === undefined)
+      return
 
     const startTime = this.bars[left]?.time
     const endTime = this.bars[right]?.time
     if (startTime === undefined || endTime === undefined) return
 
-    const drawingId = await this.chart.createMultipointShape([
-      { price: top, time: toChartTime(startTime) },
-      { price: bottom, time: toChartTime(endTime) },
-    ], {
-      shape: 'rectangle',
-      lock: true,
-      disableSelection: true,
-      disableSave: true,
-      disableUndo: true,
-      overrides: {
-        backgroundColor: getColor(box.bgcolor, '#000000'),
-        borderColor: getColor(box.border_color, '#000000'),
-        linewidth: toNumber(box.border_width) ?? 1,
+    const drawingId = await this.chart.createMultipointShape(
+      [
+        { price: top, time: toChartTime(startTime) },
+        { price: bottom, time: toChartTime(endTime) },
+      ],
+      {
+        shape: 'rectangle',
+        lock: true,
+        disableSelection: true,
+        disableSave: true,
+        disableUndo: true,
+        overrides: {
+          backgroundColor: getColor(box.bgcolor, '#000000'),
+          borderColor: getColor(box.border_color, '#000000'),
+          linewidth: toNumber(box.border_width) ?? 1,
+        },
       },
-    })
+    )
     this.trackDrawing(drawingId, version)
   }
 
@@ -223,8 +230,10 @@ export class PinePlotRenderer {
       if (version !== this.renderVersion || !this.chart) return
 
       this.clearDrawings()
-      for (const line of getPlotItems(context.plots, '__lines__')) await this.drawLine(line, version)
-      for (const label of getPlotItems(context.plots, '__labels__')) await this.drawLabel(label, version)
+      for (const line of getPlotItems(context.plots, '__lines__'))
+        await this.drawLine(line, version)
+      for (const label of getPlotItems(context.plots, '__labels__'))
+        await this.drawLabel(label, version)
       for (const box of getPlotItems(context.plots, '__boxes__')) await this.drawBox(box, version)
     } catch (error) {
       console.error('Failed to render Pine indicator', error)

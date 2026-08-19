@@ -2,14 +2,18 @@ import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import type { Ref } from 'vue'
 
-import { listFutureCnKlineBars, searchMarketInstruments, type KlineQueryInterval } from '@/api/market-data'
+import {
+  listFutureCnKlineBars,
+  searchMarketInstruments,
+  type KlineQueryInterval,
+} from '@/api/market-data'
 import type { TradeRecord } from '@/api/trading'
 
-type Instrument = { id: number, symbol: string }
+type Instrument = { id: number; symbol: string }
 
 export const useTradeNavigation = (
   selectedInterval: Ref<KlineQueryInterval>,
-  selectKline: (options: { instrument?: Instrument, interval?: KlineQueryInterval }) => void,
+  selectKline: (options: { instrument?: Instrument; interval?: KlineQueryInterval }) => void,
   setPendingTrade: (trade: TradeRecord | undefined) => void,
 ) => {
   const selectTrade = async (trade: TradeRecord) => {
@@ -18,12 +22,20 @@ export const useTradeNavigation = (
       return
     }
     const instruments = await searchMarketInstruments(trade.underlyingCode)
-    const instrument = instruments.find((item) => item.symbol.toLowerCase() === trade.underlyingCode.toLowerCase())
+    const instrument = instruments.find(
+      (item) => item.symbol.toLowerCase() === trade.underlyingCode.toLowerCase(),
+    )
     if (!instrument) {
       ElMessage.warning(`未找到合约 ${trade.underlyingCode}`)
       return
     }
-    const bars = await listFutureCnKlineBars(instrument.id, selectedInterval.value, dayjs(trade.openTime).unix(), dayjs(trade.closeTime).unix(), 1)
+    const bars = await listFutureCnKlineBars(
+      instrument.id,
+      selectedInterval.value,
+      dayjs(trade.openTime).unix(),
+      dayjs(trade.closeTime).unix(),
+      1,
+    )
     if (!bars.length) {
       ElMessage.warning('交易区间内没有对应的 K 线')
       return

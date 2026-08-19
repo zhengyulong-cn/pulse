@@ -17,7 +17,9 @@ const emit = defineEmits<{
 const open = (event: MouseEvent, item: WatchlistItem) => {
   event.preventDefault()
 
-  const targetWatchlists = props.watchlists.filter((watchlist) => watchlist.id !== props.activeWatchlist.id)
+  const targetWatchlists = props.watchlists.filter(
+    (watchlist) => watchlist.id !== props.activeWatchlist.id,
+  )
   const moveMenuItems: MenuItem[] = targetWatchlists.map((watchlist) => ({
     label: watchlist.name,
     disabled: watchlist.items.some((targetItem) => targetItem.instrumentId === item.instrumentId),

@@ -1,11 +1,28 @@
-import { ArrowDown, ArrowUp, MoveUpRight, PencilLine, Ruler, Square, ArrowUpWideNarrow, ArrowDownNarrowWide } from '@lucide/vue'
+import {
+  ArrowDown,
+  ArrowUp,
+  MoveUpRight,
+  PencilLine,
+  Ruler,
+  Square,
+  ArrowUpWideNarrow,
+  ArrowDownNarrowWide,
+} from '@lucide/vue'
 import type { Component } from 'vue'
 
 export const drawingToolIds = [
-  'segment', 'arrow_segment', 'rectangle', 'text', 'arrow_up', 'arrow_down', 'long_position', 'short_position', 'measure',
+  'segment',
+  'arrow_segment',
+  'rectangle',
+  'text',
+  'arrow_up',
+  'arrow_down',
+  'long_position',
+  'short_position',
+  'measure',
 ] as const
 
-export type DrawingToolId = typeof drawingToolIds[number]
+export type DrawingToolId = (typeof drawingToolIds)[number]
 
 export type DrawingTool = {
   icon: Component

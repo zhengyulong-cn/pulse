@@ -29,10 +29,10 @@
 </template>
 
 <script setup lang="ts">
-import { type RouteRecordRaw, useRouter } from "vue-router";
-defineProps<{ menuList: RouteRecordRaw[] }>();
-const router = useRouter();
+import { type RouteRecordRaw, useRouter } from 'vue-router'
+defineProps<{ menuList: RouteRecordRaw[] }>()
+const router = useRouter()
 const handleClickMenu = (subItem: RouteRecordRaw) => {
-  router.push(subItem.path);
-};
+  router.push(subItem.path)
+}
 </script>

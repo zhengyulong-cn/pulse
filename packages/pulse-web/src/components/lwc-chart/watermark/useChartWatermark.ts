@@ -1,4 +1,9 @@
-import { createTextWatermark, type IChartApi, type ITextWatermarkPluginApi, type Time } from 'lightweight-charts'
+import {
+  createTextWatermark,
+  type IChartApi,
+  type ITextWatermarkPluginApi,
+  type Time,
+} from 'lightweight-charts'
 
 import type { KlineQueryInterval } from '@/api/market-data'
 
@@ -16,7 +21,11 @@ export const useChartWatermark = () => {
   const update = (symbol: string, interval: KlineQueryInterval) => {
     watermark?.applyOptions({
       lines: [
-        { text: `${symbol.toUpperCase()} · ${intervalLabels[interval]}`, color: 'rgba(148, 163, 184, 0.32)', fontSize: 64 },
+        {
+          text: `${symbol.toUpperCase()} · ${intervalLabels[interval]}`,
+          color: 'rgba(148, 163, 184, 0.32)',
+          fontSize: 64,
+        },
       ],
     })
   }

@@ -104,13 +104,19 @@ export type FutureCnKlineBar = {
 }
 
 export const listActiveFutureInstruments = () =>
-  dataCenterRequest<MarketInstrumentExchangeNode[]>('/api/v1/market-instruments/tree?instrument_type=FUTURE&is_active=true')
+  dataCenterRequest<MarketInstrumentExchangeNode[]>(
+    '/api/v1/market-instruments/tree?instrument_type=FUTURE&is_active=true',
+  )
 
 export const searchMarketInstruments = (query: string, limit = 20) =>
-  dataCenterRequest<MarketInstrumentSearchResult[]>(`/api/v1/market-instruments/search?${new URLSearchParams({ query, limit: String(limit) })}`)
+  dataCenterRequest<MarketInstrumentSearchResult[]>(
+    `/api/v1/market-instruments/search?${new URLSearchParams({ query, limit: String(limit) })}`,
+  )
 
 export const getMarketInstruments = (instrumentIds: number[]) =>
-  dataCenterRequest<MarketInstrument[]>(`/api/v1/market-instruments?${new URLSearchParams({ instrumentIds: instrumentIds.join(',') })}`)
+  dataCenterRequest<MarketInstrument[]>(
+    `/api/v1/market-instruments?${new URLSearchParams({ instrumentIds: instrumentIds.join(',') })}`,
+  )
 
 export const listLatestKlines = (instrumentIds: number[]) =>
   dataCenterRequest<LatestKline[]>(`/klines/latest?instrument_ids=${instrumentIds.join(',')}`)

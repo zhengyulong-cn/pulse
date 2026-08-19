@@ -4,7 +4,13 @@ import { ref, type Ref } from 'vue'
 import type { DrawingHitPart, DrawingPoint } from './DrawingPrimitive'
 import { DrawingPrimitive } from './DrawingPrimitive'
 import type { DrawingToolId } from './drawingTools'
-import { createDrawingDocument, loadDrawingDocuments, saveDrawingDocuments, type DrawingDocument, type DrawingDocumentScope } from './drawingDocument'
+import {
+  createDrawingDocument,
+  loadDrawingDocuments,
+  saveDrawingDocuments,
+  type DrawingDocument,
+  type DrawingDocumentScope,
+} from './drawingDocument'
 import type { DrawingStrategyRegistry } from './strategies/drawingStrategyRegistry'
 import type { TwoPointDrawing, TwoPointDrawingTool } from './strategies/types'
 
@@ -22,19 +28,20 @@ export const useDrawingInteraction = (
   const selectedDrawing = ref<DrawingDocument>()
   const isVisible = ref(true)
   let start: DrawingPoint | undefined
-  let drag: {
-    drawingId: string
-    origin: DrawingPoint
-    originCoordinate: { x: number, y: number }
-    original: TwoPointDrawing
-    originalCoordinates: { endX: number, endY: number, startX: number, startY: number }
-    part: DrawingHitPart
-    tool: TwoPointDrawingTool
-  } | undefined
+  let drag:
+    | {
+        drawingId: string
+        origin: DrawingPoint
+        originCoordinate: { x: number; y: number }
+        original: TwoPointDrawing
+        originalCoordinates: { endX: number; endY: number; startX: number; startY: number }
+        part: DrawingHitPart
+        tool: TwoPointDrawingTool
+      }
+    | undefined
 
-  const cursorForHit = (tool: TwoPointDrawingTool | undefined, part: DrawingHitPart | undefined) => (
-    tool && part ? strategies.get(tool)?.cursor?.(part) ?? 'default' : 'default'
-  )
+  const cursorForHit = (tool: TwoPointDrawingTool | undefined, part: DrawingHitPart | undefined) =>
+    tool && part ? (strategies.get(tool)?.cursor?.(part) ?? 'default') : 'default'
 
   const getPoint = (parameters: MouseEventParams<Time>): DrawingPoint | undefined => {
     const series = getSeries()
@@ -52,7 +59,13 @@ export const useDrawingInteraction = (
       const strategy = strategies.get(activeTool.value)
       const scope = getScope()
       if (!strategy || !scope) return
-      primitive.addDrawing(createDrawingDocument(scope, strategy.create(crypto.randomUUID(), point, point), isCrossInterval.value))
+      primitive.addDrawing(
+        createDrawingDocument(
+          scope,
+          strategy.create(crypto.randomUUID(), point, point),
+          isCrossInterval.value,
+        ),
+      )
       saveDrawingDocuments(scope, primitive.getDrawings())
       clearActiveTool()
       return
@@ -65,7 +78,13 @@ export const useDrawingInteraction = (
     if (!strategy) return
     const scope = getScope()
     if (!scope) return
-    primitive.addDrawing(createDrawingDocument(scope, strategy.create(crypto.randomUUID(), start, point), isCrossInterval.value))
+    primitive.addDrawing(
+      createDrawingDocument(
+        scope,
+        strategy.create(crypto.randomUUID(), start, point),
+        isCrossInterval.value,
+      ),
+    )
     saveDrawingDocuments(scope, primitive.getDrawings())
     start = undefined
     primitive.setDraft(undefined)
@@ -86,7 +105,14 @@ export const useDrawingInteraction = (
     const series = getSeries()
     const time = chart?.timeScale().coordinateToTime(x)
     const price = series?.coordinateToPrice(y)
-    if (time === null || time === undefined || price === null || price === undefined || typeof time !== 'number') return undefined
+    if (
+      time === null ||
+      time === undefined ||
+      price === null ||
+      price === undefined ||
+      typeof time !== 'number'
+    )
+      return undefined
     return { time, price }
   }
 
@@ -143,7 +169,13 @@ export const useDrawingInteraction = (
       currentCoordinate: { x, y },
       originCoordinate: drag.originCoordinate,
       original: drag.original,
-      originalCoordinates: { ...drag.originalCoordinates, id: drag.drawingId, tool: drag.tool, start: drag.original.start, end: drag.original.end },
+      originalCoordinates: {
+        ...drag.originalCoordinates,
+        id: drag.drawingId,
+        tool: drag.tool,
+        start: drag.original.start,
+        end: drag.original.end,
+      },
       part: drag.part,
       pointAtCoordinate: getPointAtCoordinate,
     })
@@ -153,7 +185,8 @@ export const useDrawingInteraction = (
   const handlePointerUp = (event: PointerEvent) => {
     if (!drag) return
     const container = event.currentTarget as HTMLElement
-    if (container.hasPointerCapture(event.pointerId)) container.releasePointerCapture(event.pointerId)
+    if (container.hasPointerCapture(event.pointerId))
+      container.releasePointerCapture(event.pointerId)
     drag = undefined
     saveDrawingDocuments(getScope(), primitive.getDrawings())
   }
@@ -188,7 +221,15 @@ export const useDrawingInteraction = (
   const clearDrawings = () => {
     const scope = getScope()
     if (!scope) return
-    primitive.setDrawings(primitive.getDrawings().filter((drawing) => drawing.anchor.instrumentId !== scope.instrumentId || drawing.anchor.interval !== scope.interval))
+    primitive.setDrawings(
+      primitive
+        .getDrawings()
+        .filter(
+          (drawing) =>
+            drawing.anchor.instrumentId !== scope.instrumentId ||
+            drawing.anchor.interval !== scope.interval,
+        ),
+    )
     saveDrawingDocuments(scope, [])
   }
 
@@ -230,5 +271,19 @@ export const useDrawingInteraction = (
     container?.removeEventListener('pointerleave', handlePointerLeave)
   }
 
-  return { attach, clearDrawings, cursor, dispose, isCrossInterval, isVisible, removeSelectedDrawing, restore, selectedDrawing, toggleCrossInterval, toggleSelectedDrawingLock, toggleVisibility, updateSelectedDrawingStyle }
+  return {
+    attach,
+    clearDrawings,
+    cursor,
+    dispose,
+    isCrossInterval,
+    isVisible,
+    removeSelectedDrawing,
+    restore,
+    selectedDrawing,
+    toggleCrossInterval,
+    toggleSelectedDrawingLock,
+    toggleVisibility,
+    updateSelectedDrawingStyle,
+  }
 }

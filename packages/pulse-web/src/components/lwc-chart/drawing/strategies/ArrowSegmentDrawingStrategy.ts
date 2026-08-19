@@ -4,7 +4,10 @@ import type { DrawingCoordinates, DrawingRenderContext } from './types'
 export class ArrowSegmentDrawingStrategy extends LineDrawingStrategy {
   readonly tool = 'arrow_segment' as const
 
-  draw(drawing: DrawingCoordinates, { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext) {
+  draw(
+    drawing: DrawingCoordinates,
+    { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext,
+  ) {
     const startX = drawing.startX * horizontalPixelRatio
     const startY = drawing.startY * verticalPixelRatio
     const endX = drawing.endX * horizontalPixelRatio
@@ -18,8 +21,14 @@ export class ArrowSegmentDrawingStrategy extends LineDrawingStrategy {
     const size = 9 * horizontalPixelRatio
     context.beginPath()
     context.moveTo(endX, endY)
-    context.lineTo(endX - size * Math.cos(angle - Math.PI / 6), endY - size * Math.sin(angle - Math.PI / 6))
-    context.lineTo(endX - size * Math.cos(angle + Math.PI / 6), endY - size * Math.sin(angle + Math.PI / 6))
+    context.lineTo(
+      endX - size * Math.cos(angle - Math.PI / 6),
+      endY - size * Math.sin(angle - Math.PI / 6),
+    )
+    context.lineTo(
+      endX - size * Math.cos(angle + Math.PI / 6),
+      endY - size * Math.sin(angle + Math.PI / 6),
+    )
     context.closePath()
     context.fill()
   }

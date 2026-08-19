@@ -16,9 +16,8 @@ export const usePineIndicators = () => {
   let replayEndTime: number | undefined
 
   const renderBars = () => {
-    const visibleBars = replayEndTime === undefined
-      ? bars
-      : bars.filter((bar) => bar.time <= replayEndTime!)
+    const visibleBars =
+      replayEndTime === undefined ? bars : bars.filter((bar) => bar.time <= replayEndTime!)
     renderers.forEach((renderer) => renderer.setBars(visibleBars))
   }
 

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { RouterModules } from '@/router/modules'
-import SubMenu from './SubMenu.vue';
-const route = useRoute();
-const activeMenu = computed(() => (route.meta.activeMenu ? route.meta.activeMenu : route.path) as string);
-const subMenuList = computed(() => RouterModules.filter(item => item.meta))
+import SubMenu from './SubMenu.vue'
+const route = useRoute()
+const activeMenu = computed(
+  () => (route.meta.activeMenu ? route.meta.activeMenu : route.path) as string,
+)
+const subMenuList = computed(() => RouterModules.filter((item) => item.meta))
 </script>
 
 <template>
@@ -35,7 +37,9 @@ const subMenuList = computed(() => RouterModules.filter(item => item.meta))
   color: var(--color-header-navigation);
   font-size: 0.875rem;
   font-weight: 500;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
 }
 
 .pulse-menu :deep(.el-menu-item:hover),

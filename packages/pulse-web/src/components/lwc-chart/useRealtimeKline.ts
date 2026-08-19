@@ -36,9 +36,15 @@ export const useRealtimeKline = (
     socket = new WebSocket(getWebSocketUrl())
     socket.addEventListener('open', sendSubscription)
     socket.addEventListener('message', ({ data }) => {
-      const event = JSON.parse(data) as { type?: string, data?: RealtimeBar }
+      const event = JSON.parse(data) as { type?: string; data?: RealtimeBar }
       const bar = event.data
-      if (event.type !== 'bar' || !bar || bar.instrument_id !== instrumentId.value || bar.interval !== interval.value) return
+      if (
+        event.type !== 'bar' ||
+        !bar ||
+        bar.instrument_id !== instrumentId.value ||
+        bar.interval !== interval.value
+      )
+        return
       onBar({ ...bar, time: dayjs(bar.time).unix() })
     })
     socket.addEventListener('close', () => {
@@ -52,12 +58,16 @@ export const useRealtimeKline = (
     socket.send(JSON.stringify({ action: 'subscribe', instrument_ids: [instrumentId.value] }))
   }
 
-  watch([instrumentId, interval], () => {
-    if (isSubscribed.value) {
-      connect()
-      sendSubscription()
-    }
-  }, { immediate: true })
+  watch(
+    [instrumentId, interval],
+    () => {
+      if (isSubscribed.value) {
+        connect()
+        sendSubscription()
+      }
+    },
+    { immediate: true },
+  )
 
   onBeforeUnmount(() => socket?.close())
 }

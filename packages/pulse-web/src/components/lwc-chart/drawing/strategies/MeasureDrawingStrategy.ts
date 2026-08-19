@@ -1,11 +1,30 @@
 import type { Time } from 'lightweight-charts'
 
 import { DrawingStrategy } from './DrawingStrategy'
-import type { DrawingCoordinates, DrawingDragContext, DrawingHitPart, DrawingRenderContext } from './types'
+import type {
+  DrawingCoordinates,
+  DrawingDragContext,
+  DrawingHitPart,
+  DrawingRenderContext,
+} from './types'
 
-export type MeasureBar = { close: number, high: number, low: number, open: number, time: Time, volume: number }
+export type MeasureBar = {
+  close: number
+  high: number
+  low: number
+  open: number
+  time: Time
+  volume: number
+}
 
-const drawLabel = (context: CanvasRenderingContext2D, lines: string[], x: number, y: number, color: string, ratio: number) => {
+const drawLabel = (
+  context: CanvasRenderingContext2D,
+  lines: string[],
+  x: number,
+  y: number,
+  color: string,
+  ratio: number,
+) => {
   context.save()
   context.font = `${12 * ratio}px sans-serif`
   context.textAlign = 'center'
@@ -19,16 +38,23 @@ const drawLabel = (context: CanvasRenderingContext2D, lines: string[], x: number
   context.roundRect(x - width / 2, y - height / 2, width, height, 5 * ratio)
   context.fill()
   context.fillStyle = '#ffffff'
-  lines.forEach((line, index) => context.fillText(line, x, y - (lines.length - 1) * lineHeight / 2 + index * lineHeight))
+  lines.forEach((line, index) =>
+    context.fillText(line, x, y - ((lines.length - 1) * lineHeight) / 2 + index * lineHeight),
+  )
   context.restore()
 }
 
 export class MeasureDrawingStrategy extends DrawingStrategy {
   readonly tool = 'measure' as const
 
-  constructor(private readonly getBars: () => MeasureBar[]) { super() }
+  constructor(private readonly getBars: () => MeasureBar[]) {
+    super()
+  }
 
-  draw(drawing: DrawingCoordinates, { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext) {
+  draw(
+    drawing: DrawingCoordinates,
+    { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext,
+  ) {
     const { left, right, top, bottom } = this.bounds(drawing)
     const isUp = drawing.end.price >= drawing.start.price
     const color = isUp ? '#f43f5e' : '#0d9488'
@@ -41,7 +67,12 @@ export class MeasureDrawingStrategy extends DrawingStrategy {
     const verticalDirection = Math.sign(endY - startY) || -1
     context.save()
     context.fillStyle = isUp ? 'rgba(220, 38, 38, 0.22)' : 'rgba(22, 163, 74, 0.22)'
-    context.fillRect(left * horizontalPixelRatio, top * verticalPixelRatio, (right - left) * horizontalPixelRatio, (bottom - top) * verticalPixelRatio)
+    context.fillRect(
+      left * horizontalPixelRatio,
+      top * verticalPixelRatio,
+      (right - left) * horizontalPixelRatio,
+      (bottom - top) * verticalPixelRatio,
+    )
     context.strokeStyle = color
     context.lineWidth = horizontalPixelRatio
     context.beginPath()
@@ -66,22 +97,58 @@ export class MeasureDrawingStrategy extends DrawingStrategy {
     context.fill()
     context.restore()
     const change = drawing.end.price - drawing.start.price
-    const percent = drawing.start.price === 0 ? 0 : change / drawing.start.price * 100
-    const minutes = stats.first && stats.last ? Math.round((Number(stats.last.time) - Number(stats.first.time)) / 60) : 0
-    const centerX = (left + right) / 2 * horizontalPixelRatio
+    const percent = drawing.start.price === 0 ? 0 : (change / drawing.start.price) * 100
+    const minutes =
+      stats.first && stats.last
+        ? Math.round((Number(stats.last.time) - Number(stats.first.time)) / 60)
+        : 0
+    const centerX = ((left + right) / 2) * horizontalPixelRatio
     const priceLabelY = (isUp ? top - 30 : bottom + 30) * verticalPixelRatio
     const detailLabelY = (isUp ? bottom + 30 : top - 30) * verticalPixelRatio
-    drawLabel(context, [`${change.toFixed(2)} (${percent.toFixed(2)}%)`, `${stats.length} K线, ${minutes} 分钟`, `Vol ${(stats.volume / 10000).toFixed(2)}万`], centerX, priceLabelY, color, horizontalPixelRatio)
-    drawLabel(context, [`均价: ${stats.average.toFixed(2)}    阳根: ${stats.up}`, `最高: ${stats.high.toFixed(2)}    阴根: ${stats.down}`, `最低: ${stats.low.toFixed(2)}    平线: ${stats.flat}`], centerX, detailLabelY, color, horizontalPixelRatio)
+    drawLabel(
+      context,
+      [
+        `${change.toFixed(2)} (${percent.toFixed(2)}%)`,
+        `${stats.length} K线, ${minutes} 分钟`,
+        `Vol ${(stats.volume / 10000).toFixed(2)}万`,
+      ],
+      centerX,
+      priceLabelY,
+      color,
+      horizontalPixelRatio,
+    )
+    drawLabel(
+      context,
+      [
+        `均价: ${stats.average.toFixed(2)}    阳根: ${stats.up}`,
+        `最高: ${stats.high.toFixed(2)}    阴根: ${stats.down}`,
+        `最低: ${stats.low.toFixed(2)}    平线: ${stats.flat}`,
+      ],
+      centerX,
+      detailLabelY,
+      color,
+      horizontalPixelRatio,
+    )
   }
 
-  drawSelection(drawing: DrawingCoordinates, { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext) {
+  drawSelection(
+    drawing: DrawingCoordinates,
+    { context, horizontalPixelRatio, verticalPixelRatio }: DrawingRenderContext,
+  ) {
     context.fillStyle = '#ffffff'
     context.strokeStyle = '#2563eb'
-    const points: Array<[number, number]> = [[drawing.startX, drawing.startY], [drawing.endX, drawing.endY]]
+    const points: Array<[number, number]> = [
+      [drawing.startX, drawing.startY],
+      [drawing.endX, drawing.endY],
+    ]
     for (const [x, y] of points) {
       context.beginPath()
-      context.rect(x * horizontalPixelRatio - 4 * horizontalPixelRatio, y * verticalPixelRatio - 4 * verticalPixelRatio, 8 * horizontalPixelRatio, 8 * verticalPixelRatio)
+      context.rect(
+        x * horizontalPixelRatio - 4 * horizontalPixelRatio,
+        y * verticalPixelRatio - 4 * verticalPixelRatio,
+        8 * horizontalPixelRatio,
+        8 * verticalPixelRatio,
+      )
       context.fill()
       context.stroke()
     }
@@ -91,10 +158,14 @@ export class MeasureDrawingStrategy extends DrawingStrategy {
     if (Math.hypot(x - drawing.startX, y - drawing.startY) <= 10) return { part: 'start' as const }
     if (Math.hypot(x - drawing.endX, y - drawing.endY) <= 10) return { part: 'end' as const }
     const { left, right, top, bottom } = this.bounds(drawing)
-    return x >= left && x <= right && y >= top && y <= bottom ? { part: 'body' as const } : undefined
+    return x >= left && x <= right && y >= top && y <= bottom
+      ? { part: 'body' as const }
+      : undefined
   }
 
-  cursor(part: DrawingHitPart) { return part === 'start' || part === 'end' ? 'nwse-resize' : 'move' }
+  cursor(part: DrawingHitPart) {
+    return part === 'start' || part === 'end' ? 'nwse-resize' : 'move'
+  }
 
   updateForDrag(context: DrawingDragContext) {
     if (context.part === 'start') return { start: context.current, end: context.original.end }
@@ -103,14 +174,31 @@ export class MeasureDrawingStrategy extends DrawingStrategy {
   }
 
   private bounds(drawing: DrawingCoordinates) {
-    return { left: Math.min(drawing.startX, drawing.endX), right: Math.max(drawing.startX, drawing.endX), top: Math.min(drawing.startY, drawing.endY), bottom: Math.max(drawing.startY, drawing.endY) }
+    return {
+      left: Math.min(drawing.startX, drawing.endX),
+      right: Math.max(drawing.startX, drawing.endX),
+      top: Math.min(drawing.startY, drawing.endY),
+      bottom: Math.max(drawing.startY, drawing.endY),
+    }
   }
 
   private stats(drawing: DrawingCoordinates) {
     const from = Math.min(Number(drawing.start.time), Number(drawing.end.time))
     const to = Math.max(Number(drawing.start.time), Number(drawing.end.time))
     const bars = this.getBars().filter((bar) => Number(bar.time) >= from && Number(bar.time) <= to)
-    if (!bars.length) return { average: 0, down: 0, first: undefined, flat: 0, high: 0, last: undefined, length: 0, low: 0, up: 0, volume: 0 }
+    if (!bars.length)
+      return {
+        average: 0,
+        down: 0,
+        first: undefined,
+        flat: 0,
+        high: 0,
+        last: undefined,
+        length: 0,
+        low: 0,
+        up: 0,
+        volume: 0,
+      }
     return {
       average: bars.reduce((sum, bar) => sum + bar.close, 0) / bars.length,
       down: bars.filter((bar) => bar.close < bar.open).length,

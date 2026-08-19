@@ -1,9 +1,7 @@
 import { listPineScripts, type PineScript } from '@/api/pine-scripts'
 
 export type AdvancedIndicatorsDropdownApi = {
-  applyOptions: (options: {
-    items: Array<{ onSelect: () => void, title: string }>
-  }) => void
+  applyOptions: (options: { items: Array<{ onSelect: () => void; title: string }> }) => void
   remove: () => void
 }
 
@@ -13,15 +11,14 @@ type ChartWidgetWithDropdown = {
   createDropdown: (options: {
     align: 'left' | 'right'
     icon?: string
-    items: Array<{ onSelect: () => void, title: string }>
+    items: Array<{ onSelect: () => void; title: string }>
     title: string
     tooltip?: string
   }) => Promise<ChartDropdownApi>
 }
 
-const getScriptName = (script: PineScript) => (
+const getScriptName = (script: PineScript) =>
   script.content.match(/indicator\s*\(\s*["']([^"']+)["']/)?.[1] ?? script.description
-)
 
 export const createAdvancedIndicatorsDropdown = async (
   widget: ChartWidgetWithDropdown,
@@ -37,22 +34,26 @@ export const createAdvancedIndicatorsDropdown = async (
   })
   let scripts: PineScript[] = []
 
-  const createItems = () => scripts.map((script) => ({
-    title: `${activeScriptIds().includes(script.id) ? '✓ ' : ''}${getScriptName(script)}`,
-    onSelect: () => {
-      toggleScript(script)
+  const createItems = () =>
+    scripts.map((script) => ({
+      title: `${activeScriptIds().includes(script.id) ? '✓ ' : ''}${getScriptName(script)}`,
+      onSelect: () => {
+        toggleScript(script)
+        dropdown.applyOptions({ items: createItems() })
+      },
+    }))
+
+  void listPineScripts('INDICATOR').then(
+    (nextScripts) => {
+      scripts = nextScripts
       dropdown.applyOptions({ items: createItems() })
     },
-  }))
-
-  void listPineScripts('INDICATOR').then((nextScripts) => {
-    scripts = nextScripts
-    dropdown.applyOptions({ items: createItems() })
-  }, () => {
-    dropdown.applyOptions({
-      items: [{ title: '指标加载失败', onSelect: () => undefined }],
-    })
-  })
+    () => {
+      dropdown.applyOptions({
+        items: [{ title: '指标加载失败', onSelect: () => undefined }],
+      })
+    },
+  )
 
   return dropdown
 }

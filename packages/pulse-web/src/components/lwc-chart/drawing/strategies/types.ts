@@ -5,7 +5,15 @@ export type DrawingPoint = {
   time: Time
 }
 
-export type TwoPointDrawingTool = 'arrow_down' | 'arrow_segment' | 'arrow_up' | 'long_position' | 'measure' | 'rectangle' | 'segment' | 'short_position'
+export type TwoPointDrawingTool =
+  | 'arrow_down'
+  | 'arrow_segment'
+  | 'arrow_up'
+  | 'long_position'
+  | 'measure'
+  | 'rectangle'
+  | 'segment'
+  | 'short_position'
 
 export type TwoPointDrawing = {
   end: DrawingPoint
@@ -56,8 +64,8 @@ export type DrawingHitTestResult = {
 
 export type DrawingDragContext = {
   current: DrawingPoint
-  currentCoordinate: { x: number, y: number }
-  originCoordinate: { x: number, y: number }
+  currentCoordinate: { x: number; y: number }
+  originCoordinate: { x: number; y: number }
   original: TwoPointDrawing
   originalCoordinates: DrawingCoordinates
   part: DrawingHitPart

@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { CandlestickSeries, createChart, type IChartApi, type ISeriesApi, type MouseEventParams, type Time } from 'lightweight-charts'
+import {
+  CandlestickSeries,
+  createChart,
+  type IChartApi,
+  type ISeriesApi,
+  type MouseEventParams,
+  type Time,
+} from 'lightweight-charts'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import type { FutureCnKlineBar } from '@/api/market-data'
@@ -31,17 +38,36 @@ let chart: IChartApi | undefined
 let candlestickSeries: ISeriesApi<'Candlestick'> | undefined
 let resizeObserver: ResizeObserver | undefined
 const replaySelectionPrimitive = new ReplaySelectionPrimitive()
-const { attach: attachTradeAnnotations, dispose: disposeTradeAnnotations, pendingTrade, render: renderTradeAnnotations } = useTradeAnnotations(() => chart, () => candlestickSeries)
-const { barsByTime, clear: clearChartBars, render: renderChartKlines, updateRealtime } = useChartBars(() => chart, () => candlestickSeries, renderTradeAnnotations)
+const {
+  attach: attachTradeAnnotations,
+  dispose: disposeTradeAnnotations,
+  pendingTrade,
+  render: renderTradeAnnotations,
+} = useTradeAnnotations(
+  () => chart,
+  () => candlestickSeries,
+)
+const {
+  barsByTime,
+  clear: clearChartBars,
+  render: renderChartKlines,
+  updateRealtime,
+} = useChartBars(
+  () => chart,
+  () => candlestickSeries,
+  renderTradeAnnotations,
+)
 const allKlineBars = ref<FutureCnKlineBar[]>([])
 
-const toChartTime = (time: number) => time > 10_000_000_000 ? Math.trunc(time / 1_000) : Math.trunc(time)
+const toChartTime = (time: number) =>
+  time > 10_000_000_000 ? Math.trunc(time / 1_000) : Math.trunc(time)
 const getReplayBars = () => allKlineBars.value.map((bar) => ({ time: toChartTime(bar.time) }))
 
 const renderVisibleBars = (endTime?: number) => {
-  const bars = endTime === undefined
-    ? allKlineBars.value
-    : allKlineBars.value.filter((bar) => toChartTime(bar.time) <= endTime)
+  const bars =
+    endTime === undefined
+      ? allKlineBars.value
+      : allKlineBars.value.filter((bar) => toChartTime(bar.time) <= endTime)
   renderChartKlines(bars)
 }
 
@@ -79,7 +105,10 @@ const handleRealtimeBar = (bar: Omit<FutureCnKlineBar, 'time'> & { time: number 
   const time = toChartTime(bar.time)
   const nextBar = { ...bar, time: time * 1_000 }
   const index = allKlineBars.value.findIndex((candidate) => toChartTime(candidate.time) === time)
-  if (index < 0) allKlineBars.value = [...allKlineBars.value, nextBar].sort((first, second) => first.time - second.time)
+  if (index < 0)
+    allKlineBars.value = [...allKlineBars.value, nextBar].sort(
+      (first, second) => first.time - second.time,
+    )
   else allKlineBars.value.splice(index, 1, nextBar)
 
   if (!isReplayActive.value) updateRealtime({ ...bar, time })
@@ -87,21 +116,60 @@ const handleRealtimeBar = (bar: Omit<FutureCnKlineBar, 'time'> & { time: number 
 const drawingStrategies = new DrawingStrategyRegistry(() => [...barsByTime.values()])
 const { tooltip, updateFromCrosshair } = useChartTooltip(() => candlestickSeries, barsByTime)
 const { activeDrawingTool, clearDrawingTool, selectDrawingTool } = useDrawingTool()
-const { attach: attachDrawingInteraction, clearDrawings, cursor: drawingCursor, dispose: disposeDrawingInteraction, isCrossInterval: crossIntervalDrawing, isVisible: drawingsVisible, removeSelectedDrawing, restore: restoreDrawings, selectedDrawing, toggleCrossInterval: toggleCrossIntervalDrawing, toggleSelectedDrawingLock, toggleVisibility: toggleDrawingsVisibility, updateSelectedDrawingStyle } = useDrawingInteraction(
+const {
+  attach: attachDrawingInteraction,
+  clearDrawings,
+  cursor: drawingCursor,
+  dispose: disposeDrawingInteraction,
+  isCrossInterval: crossIntervalDrawing,
+  isVisible: drawingsVisible,
+  removeSelectedDrawing,
+  restore: restoreDrawings,
+  selectedDrawing,
+  toggleCrossInterval: toggleCrossIntervalDrawing,
+  toggleSelectedDrawingLock,
+  toggleVisibility: toggleDrawingsVisibility,
+  updateSelectedDrawingStyle,
+} = useDrawingInteraction(
   () => chart,
   () => candlestickSeries,
   activeDrawingTool,
   drawingStrategies,
-  () => selectedInstrumentId.value === undefined ? undefined : { instrumentId: selectedInstrumentId.value, interval: selectedInterval.value },
+  () =>
+    selectedInstrumentId.value === undefined
+      ? undefined
+      : { instrumentId: selectedInstrumentId.value, interval: selectedInterval.value },
   clearDrawingTool,
 )
-const { attach: attachWatermark, dispose: disposeWatermark, update: updateWatermark } = useChartWatermark()
+const {
+  attach: attachWatermark,
+  dispose: disposeWatermark,
+  update: updateWatermark,
+} = useChartWatermark()
 
-const { loadDefaultInstrument, selectKline, selectedInstrumentId, selectedInterval, selectedSymbol } = useKlineData(renderKlines)
-const { activeScriptIds, dispose: disposePineIndicators, toggle: togglePineIndicator } = usePinePlotIndicators(() => candlestickSeries)
-const { selectInterval, selectSymbol, selectTrade } = useTradeNavigation(selectedInterval, selectKline, (trade) => { pendingTrade.value = trade })
+const {
+  loadDefaultInstrument,
+  selectKline,
+  selectedInstrumentId,
+  selectedInterval,
+  selectedSymbol,
+} = useKlineData(renderKlines)
+const {
+  activeScriptIds,
+  dispose: disposePineIndicators,
+  toggle: togglePineIndicator,
+} = usePinePlotIndicators(() => candlestickSeries)
+const { selectInterval, selectSymbol, selectTrade } = useTradeNavigation(
+  selectedInterval,
+  selectKline,
+  (trade) => {
+    pendingTrade.value = trade
+  },
+)
 
-watch([selectedSymbol, selectedInterval], () => updateWatermark(selectedSymbol.value, selectedInterval.value))
+watch([selectedSymbol, selectedInterval], () =>
+  updateWatermark(selectedSymbol.value, selectedInterval.value),
+)
 watch([selectedInstrumentId, selectedInterval], () => {
   if (replayEnabled.value) exitReplay()
   clearChartBars()
@@ -110,9 +178,11 @@ watch([selectedInstrumentId, selectedInterval], () => {
 
 useRealtimeKline(selectedInstrumentId, selectedInterval, handleRealtimeBar)
 
-const replayCandidateLabel = computed(() => replayCandidateTime.value === undefined
-  ? '移动鼠标选择起始 K 线'
-  : `${dayjs.unix(replayCandidateTime.value).format('YYYY-MM-DD HH:mm')}，单击确认`)
+const replayCandidateLabel = computed(() =>
+  replayCandidateTime.value === undefined
+    ? '移动鼠标选择起始 K 线'
+    : `${dayjs.unix(replayCandidateTime.value).format('YYYY-MM-DD HH:mm')}，单击确认`,
+)
 
 const updateReplayCandidate = (parameters: MouseEventParams<Time>) => {
   setReplayCandidateTime(typeof parameters.time === 'number' ? parameters.time : undefined)
@@ -129,7 +199,9 @@ const toggleReplay = () => {
 }
 
 watch([isReplaySelecting, replayCandidateTime], () => {
-  replaySelectionPrimitive.setTime(isReplaySelecting.value ? replayCandidateTime.value as Time | undefined : undefined)
+  replaySelectionPrimitive.setTime(
+    isReplaySelecting.value ? (replayCandidateTime.value as Time | undefined) : undefined,
+  )
 })
 
 const resizeChart = () => {
@@ -193,8 +265,15 @@ onBeforeUnmount(() => {
     <div class="flex min-h-0 flex-1">
       <div class="relative min-w-0 flex-1">
         <ChartTooltip :chart-height="chartHeight" :tooltip="tooltip" />
-        <div v-if="isReplaySelecting" class="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center">
-          <div class="rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-700 shadow-sm">{{ replayCandidateLabel }}</div>
+        <div
+          v-if="isReplaySelecting"
+          class="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center"
+        >
+          <div
+            class="rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-700 shadow-sm"
+          >
+            {{ replayCandidateLabel }}
+          </div>
         </div>
         <ReplayControls
           v-if="isReplayActive"
@@ -206,8 +285,18 @@ onBeforeUnmount(() => {
           @set-speed="setReplaySpeed"
           @toggle-playback="toggleReplayPlayback"
         />
-        <DrawingMenu v-if="selectedDrawing" :drawing="selectedDrawing" @remove="removeSelectedDrawing" @toggle-lock="toggleSelectedDrawingLock" @update-style="updateSelectedDrawingStyle" />
-        <div ref="chartContainer" class="size-full" :style="{ cursor: activeDrawingTool ? 'crosshair' : drawingCursor }" />
+        <DrawingMenu
+          v-if="selectedDrawing"
+          :drawing="selectedDrawing"
+          @remove="removeSelectedDrawing"
+          @toggle-lock="toggleSelectedDrawingLock"
+          @update-style="updateSelectedDrawingStyle"
+        />
+        <div
+          ref="chartContainer"
+          class="size-full"
+          :style="{ cursor: activeDrawingTool ? 'crosshair' : drawingCursor }"
+        />
       </div>
       <ChartSideBar class="shrink-0" @select-symbol="selectSymbol" @select-trade="selectTrade" />
     </div>

@@ -24,7 +24,11 @@ export const useKlineData = (onData: (bars: FutureCnKlineBar[]) => void) => {
   const selectedSymbol = ref('jm2701')
   const selectedInstrumentId = ref<number>()
   const selectedInterval = ref<KlineQueryInterval>('5m')
-  const klineQueryKey = computed(() => ['future-cn-kline-bars', selectedInstrumentId.value, selectedInterval.value])
+  const klineQueryKey = computed(() => [
+    'future-cn-kline-bars',
+    selectedInstrumentId.value,
+    selectedInterval.value,
+  ])
   const isKlineQueryEnabled = computed(() => selectedInstrumentId.value !== undefined)
 
   const klineQuery = useQuery({
@@ -34,13 +38,22 @@ export const useKlineData = (onData: (bars: FutureCnKlineBar[]) => void) => {
       const instrumentId = selectedInstrumentId.value
       if (instrumentId === undefined) throw new Error('未选择合约')
       const now = dayjs().unix()
-      return listFutureCnKlineBars(instrumentId, selectedInterval.value, now - 365 * 24 * 60 * 60, now, 800)
+      return listFutureCnKlineBars(
+        instrumentId,
+        selectedInterval.value,
+        now - 365 * 24 * 60 * 60,
+        now,
+        800,
+      )
     },
   })
 
-  watch(() => klineQuery.data.value, (bars) => {
-    if (bars) onData(bars)
-  })
+  watch(
+    () => klineQuery.data.value,
+    (bars) => {
+      if (bars) onData(bars)
+    },
+  )
 
   const selectKline = ({ instrument, interval }: SelectKlineOptions) => {
     if (instrument) {
@@ -52,7 +65,9 @@ export const useKlineData = (onData: (bars: FutureCnKlineBar[]) => void) => {
 
   const loadDefaultInstrument = async () => {
     const instruments = await searchMarketInstruments(selectedSymbol.value)
-    const instrument = instruments.find((item) => item.symbol.toLowerCase() === selectedSymbol.value.toLowerCase())
+    const instrument = instruments.find(
+      (item) => item.symbol.toLowerCase() === selectedSymbol.value.toLowerCase(),
+    )
     if (instrument) selectKline({ instrument })
   }
 

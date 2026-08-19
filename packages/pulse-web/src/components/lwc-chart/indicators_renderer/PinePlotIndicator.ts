@@ -24,15 +24,15 @@ type PinePlotPoint = {
 
 type PinePlot = {
   data?: unknown[]
-  options?: { color?: string, style?: string }
+  options?: { color?: string; style?: string }
 }
 
 type PineLineItem = {
   color?: string
   extend?: string
-  end?: { price?: number, timestamp?: number }
+  end?: { price?: number; timestamp?: number }
   style?: string
-  start?: { price?: number, timestamp?: number }
+  start?: { price?: number; timestamp?: number }
   width?: number
   x1?: number
   x2?: number
@@ -76,21 +76,23 @@ const toTimestamp = (time: unknown): Time | undefined => {
   return (time > 10_000_000_000 ? Math.trunc(time / 1_000) : Math.trunc(time)) as Time
 }
 
-const toPlotPoints = (plot: PinePlot) => (plot.data ?? []).flatMap((item, index) => {
-  const points = Array.isArray((item as { value?: unknown }).value)
-    ? (item as { value: unknown[] }).value
-    : [item]
-  return points.flatMap((pointValue) => {
-    const point = pointValue as PinePlotPoint
-    const time = toTimestamp(point.timestamp ?? point.time)
-    const value = point.value
-    const options = point.options
-    if (time === undefined || typeof value !== 'number' || !Number.isFinite(value)) return []
-    return [{ time, value, index, ...options }]
+const toPlotPoints = (plot: PinePlot) =>
+  (plot.data ?? []).flatMap((item, index) => {
+    const points = Array.isArray((item as { value?: unknown }).value)
+      ? (item as { value: unknown[] }).value
+      : [item]
+    return points.flatMap((pointValue) => {
+      const point = pointValue as PinePlotPoint
+      const time = toTimestamp(point.timestamp ?? point.time)
+      const value = point.value
+      const options = point.options
+      if (time === undefined || typeof value !== 'number' || !Number.isFinite(value)) return []
+      return [{ time, value, index, ...options }]
+    })
   })
-})
 
-const isHistogram = (plot: PinePlot) => plot.options?.style === 'histogram' || plot.options?.style === 'columns'
+const isHistogram = (plot: PinePlot) =>
+  plot.options?.style === 'histogram' || plot.options?.style === 'columns'
 
 export class PinePlotIndicator implements ISeriesPrimitive<Time> {
   private baseSeries: ISeriesApi<SeriesType> | undefined
@@ -142,9 +144,11 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
       const points = toPlotPoints(plot)
       const existingSeries = this.plotSeries.get(key)
       const histogram = isHistogram(plot)
-      const series = existingSeries ?? (histogram
-        ? this.chart!.addSeries(HistogramSeries, { color: plot.options?.color })
-        : this.chart!.addSeries(LineSeries, { color: plot.options?.color, lineWidth: 2 }))
+      const series =
+        existingSeries ??
+        (histogram
+          ? this.chart!.addSeries(HistogramSeries, { color: plot.options?.color })
+          : this.chart!.addSeries(LineSeries, { color: plot.options?.color, lineWidth: 2 }))
       this.plotSeries.set(key, series)
       series.setData(points.map(({ index: _index, ...point }) => point))
     })
@@ -155,19 +159,29 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
       const line = value as PineLineItem
       const startValue = line.start?.price ?? line.y1
       const endValue = line.end?.price ?? line.y2
-      const startTime = toTimestamp(line.start?.timestamp) ?? this.toLineTime(line.x1, line.xloc, candles)
-      const endTime = toTimestamp(line.end?.timestamp) ?? this.toLineTime(line.x2, line.xloc, candles)
-      if (typeof startValue !== 'number' || typeof endValue !== 'number' || startTime === undefined || endTime === undefined) return []
-      return [{
-        color: line.color,
-        extend: line.extend,
-        endTime,
-        endValue,
-        startTime,
-        startValue,
-        style: line.style,
-        width: line.width,
-      } satisfies PineLine]
+      const startTime =
+        toTimestamp(line.start?.timestamp) ?? this.toLineTime(line.x1, line.xloc, candles)
+      const endTime =
+        toTimestamp(line.end?.timestamp) ?? this.toLineTime(line.x2, line.xloc, candles)
+      if (
+        typeof startValue !== 'number' ||
+        typeof endValue !== 'number' ||
+        startTime === undefined ||
+        endTime === undefined
+      )
+        return []
+      return [
+        {
+          color: line.color,
+          extend: line.extend,
+          endTime,
+          endValue,
+          startTime,
+          startValue,
+          style: line.style,
+          width: line.width,
+        } satisfies PineLine,
+      ]
     })
     this.linePrimitive.setLines(lines)
   }
@@ -177,25 +191,33 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
       if (!value || typeof value !== 'object') return []
       const label = value as PineLabelItem
       const time = this.toLineTime(label.x, label.xloc, candles)
-      const candle = typeof label.x === 'number' && label.xloc !== 'bar_time'
-        ? candles[Math.trunc(label.x)]
-        : undefined
-      const price = typeof label.y === 'number'
-        ? label.y
-        : label.yloc === 'abovebar'
-          ? candle?.high
-          : label.yloc === 'belowbar'
-            ? candle?.low
-            : undefined
+      const candle =
+        typeof label.x === 'number' && label.xloc !== 'bar_time'
+          ? candles[Math.trunc(label.x)]
+          : undefined
+      const price =
+        typeof label.y === 'number'
+          ? label.y
+          : label.yloc === 'abovebar'
+            ? candle?.high
+            : label.yloc === 'belowbar'
+              ? candle?.low
+              : undefined
       if (time === undefined || price === undefined) return []
-      return [{
-        backgroundColor: label.color,
-        position: /up/i.test(label.style ?? '') ? 'up' : /down/i.test(label.style ?? '') ? 'down' : undefined,
-        text: label.text ?? '',
-        textColor: label.textcolor,
-        time,
-        value: price,
-      } satisfies PineLabel]
+      return [
+        {
+          backgroundColor: label.color,
+          position: /up/i.test(label.style ?? '')
+            ? 'up'
+            : /down/i.test(label.style ?? '')
+              ? 'down'
+              : undefined,
+          text: label.text ?? '',
+          textColor: label.textcolor,
+          time,
+          value: price,
+        } satisfies PineLabel,
+      ]
     })
     this.labelPrimitive.setLabels(labels)
   }
@@ -206,18 +228,26 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
       const box = value as PineBoxItem
       const leftTime = this.toLineTime(box.left, box.xloc, candles)
       const rightTime = this.toLineTime(box.right, box.xloc, candles)
-      if (leftTime === undefined || rightTime === undefined || typeof box.top !== 'number' || typeof box.bottom !== 'number') return []
-      return [{
-        backgroundColor: box.bgcolor,
-        borderColor: box.border_color,
-        borderStyle: box.border_style,
-        borderWidth: box.border_width,
-        bottom: box.bottom,
-        extend: box.extend,
-        leftTime,
-        rightTime,
-        top: box.top,
-      } satisfies PineBox]
+      if (
+        leftTime === undefined ||
+        rightTime === undefined ||
+        typeof box.top !== 'number' ||
+        typeof box.bottom !== 'number'
+      )
+        return []
+      return [
+        {
+          backgroundColor: box.bgcolor,
+          borderColor: box.border_color,
+          borderStyle: box.border_style,
+          borderWidth: box.border_width,
+          bottom: box.bottom,
+          extend: box.extend,
+          leftTime,
+          rightTime,
+          top: box.top,
+        } satisfies PineBox,
+      ]
     })
     this.boxPrimitive.setBoxes(boxes)
   }
@@ -247,14 +277,16 @@ export class PinePlotIndicator implements ISeriesPrimitive<Time> {
       if (!('open' in item) || typeof item.open !== 'number') return []
       const time = toTimestamp(item.time)
       if (time === undefined) return []
-      return [{
-        open: item.open,
-        high: item.high,
-        low: item.low,
-        close: item.close,
-        volume: 'volume' in item && typeof item.volume === 'number' ? item.volume : 0,
-        openTime: time,
-      }]
+      return [
+        {
+          open: item.open,
+          high: item.high,
+          low: item.low,
+          close: item.close,
+          volume: 'volume' in item && typeof item.volume === 'number' ? item.volume : 0,
+          openTime: time,
+        },
+      ]
     })
     if (candles.length === 0) return
 
