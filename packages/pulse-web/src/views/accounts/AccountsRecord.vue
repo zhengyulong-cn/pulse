@@ -51,6 +51,9 @@ const analysisTradeRecordsQuery = useQuery({
 const selectedAccount = computed(() =>
   accountsQuery.data.value?.find((account) => account.id === selectedAccountId.value),
 )
+const historicalTags = computed(() => [...new Set(
+  (analysisTradeRecordsQuery.data.value ?? []).flatMap((record) => record.tags ?? []),
+)].sort())
 watch(
   () => filters.keyword,
   (keyword) => {
@@ -222,6 +225,7 @@ const handleAccountDeleted = (accountId: number) => {
       v-model="recordDialogVisible"
       :account="selectedAccount"
       :record="editingRecord"
+      :historical-tags="historicalTags"
       @saved="refreshTradeRecords"
     /><BatchTradeRecordDialog
       v-model="batchRecordDialogVisible"

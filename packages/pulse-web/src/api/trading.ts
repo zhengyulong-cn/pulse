@@ -33,12 +33,13 @@ export type TradeRecord = {
   openPrice: string
   openReason: string | null
   screenshots: TradeScreenshot[] | null
+  reflection: string | null
+  tags: string[]
   closeTime: string | null
   closePrice: string | null
   closeReason: string | null
   realizedPnl: string | null
   fee: string
-  extraJson: Record<string, unknown> | null
 }
 
 export type CreateTradeRecordInput = Omit<TradeRecord, 'id'>

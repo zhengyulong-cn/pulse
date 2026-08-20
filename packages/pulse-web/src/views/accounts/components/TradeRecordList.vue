@@ -101,7 +101,7 @@ const updateFilter = (key: keyof ListFilters, value: string | string[]) =>
               "
               >{{ row.direction === 'LONG' ? '↑ 做多' : '↓ 做空' }}</span
             ></template
-          ></el-table-column
+          ></el-table-column>
         >
         <el-table-column prop="quantity" label="手数" width="84" align="right" /><el-table-column
           prop="openTime"
@@ -130,16 +130,16 @@ const updateFilter = (key: keyof ListFilters, value: string | string[]) =>
                 ? '未平仓'
                 : `${Number(row.realizedPnl) > 0 ? '+' : ''}${row.realizedPnl}`
             }}</span></template
-          ></el-table-column
+          ></el-table-column>
         ><el-table-column prop="fee" label="手续费" width="95" align="right" />
         <el-table-column prop="openReason" label="开仓缘由" min-width="320"
           ><template #default="{ row }"
             ><span class="whitespace-pre-wrap">{{ row.openReason || '—' }}</span></template
-          ></el-table-column
+          ></el-table-column>
         ><el-table-column prop="closeReason" label="平仓缘由" min-width="200"
           ><template #default="{ row }"
             ><span class="whitespace-pre-wrap">{{ row.closeReason || '—' }}</span></template
-          ></el-table-column
+          ></el-table-column>
         >
         <el-table-column label="截图" min-width="96" align="center"
           ><template #default="{ row }"
@@ -155,14 +155,23 @@ const updateFilter = (key: keyof ListFilters, value: string | string[]) =>
               /><span class="text-xs text-slate-400">{{ row.screenshots.length }}</span>
             </div>
             <span v-else class="text-slate-400">—</span></template
-          ></el-table-column
+          ></el-table-column>
         >
         <el-table-column label="操作" width="76" fixed="right"
           ><template #default="{ row }"
             ><el-button link type="primary" @click="emit('edit', row)">修改</el-button></template
-          ></el-table-column
-        ><el-table-column label="extra_json" min-width="170" show-overflow-tooltip
-          ><template #default="{ row }">{{ formatJson(row.extraJson) }}</template></el-table-column
+          ></el-table-column>
+        <el-table-column prop="reflection" label="交易反思" min-width="240"
+          ><template #default="{ row }"
+            ><span class="whitespace-pre-wrap">{{ row.reflection || '—' }}</span></template
+          ></el-table-column>
+        ><el-table-column label="标签" min-width="180"
+          ><template #default="{ row }"
+            ><div v-if="row.tags?.length" class="flex flex-wrap gap-1">
+              <el-tag v-for="tag in row.tags" :key="tag" size="small">{{ tag }}</el-tag>
+            </div>
+            <span v-else class="text-slate-400">—</span></template
+          ></el-table-column>
         >
       </el-table>
     </section>

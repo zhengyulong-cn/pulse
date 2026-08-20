@@ -177,13 +177,6 @@
                   "plane": "domain"
                 }
               },
-              "extraJson": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/json@1",
-                  "kind": "scalar"
-                }
-              },
               "fee": {
                 "nullable": false,
                 "type": {
@@ -233,10 +226,25 @@
                   "kind": "scalar"
                 }
               },
+              "reflection": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "screenshots": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/json@1",
+                  "kind": "scalar"
+                }
+              },
+              "tags": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -289,9 +297,6 @@
                 "direction": {
                   "column": "direction"
                 },
-                "extraJson": {
-                  "column": "extraJson"
-                },
                 "fee": {
                   "column": "fee"
                 },
@@ -313,8 +318,14 @@
                 "realizedPnl": {
                   "column": "realizedPnl"
                 },
+                "reflection": {
+                  "column": "reflection"
+                },
                 "screenshots": {
                   "column": "screenshots"
+                },
+                "tags": {
+                  "column": "tags"
                 },
                 "underlyingCode": {
                   "column": "underlyingCode"
@@ -653,11 +664,6 @@
                     "plane": "storage"
                   }
                 },
-                "extraJson": {
-                  "codecId": "pg/json@1",
-                  "nativeType": "json",
-                  "nullable": true
-                },
                 "fee": {
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
@@ -697,10 +703,25 @@
                   "nativeType": "numeric",
                   "nullable": true
                 },
+                "reflection": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "screenshots": {
                   "codecId": "pg/json@1",
                   "nativeType": "json",
                   "nullable": true
+                },
+                "tags": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": []
+                  },
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
                 },
                 "underlyingCode": {
                   "codecId": "pg/text@1",
@@ -946,7 +967,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "5fa7a6c2ccde4b9de27861143901b1531785a04426eceac726f786dc9d5846c3"
+    "storageHash": "fbd6fce1bf2e17620eca3bc65d1ab08ea02a6103a726c4961f13195a0bed6cf7"
   },
   "capabilities": {
     "postgres": {

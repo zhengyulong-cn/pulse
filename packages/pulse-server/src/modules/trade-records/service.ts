@@ -34,9 +34,10 @@ export type CreateTradeRecordBody = {
   closeTime?: string | null
   closePrice?: DecimalInput | null
   closeReason?: string | null
+  reflection?: string | null
+  tags?: string[]
   realizedPnl?: DecimalInput | null
   fee: DecimalInput
-  extraJson?: Record<string, unknown> | null
 }
 
 export type UpdateTradeRecordBody = Partial<CreateTradeRecordBody>
@@ -65,12 +66,13 @@ const normalizeTradeRecordForCreate = (tradeRecord: CreateTradeRecordBody) => ({
   openPrice: String(tradeRecord.openPrice),
   ...(tradeRecord.openReason === undefined ? {} : { openReason: tradeRecord.openReason }),
   ...(tradeRecord.screenshots === undefined ? {} : { screenshots: tradeRecord.screenshots as TradeRecordInput['screenshots'] }),
+  ...(tradeRecord.reflection === undefined ? {} : { reflection: tradeRecord.reflection }),
+  ...(tradeRecord.tags === undefined ? {} : { tags: tradeRecord.tags }),
   fee: String(tradeRecord.fee),
   ...(tradeRecord.closeTime === undefined ? {} : { closeTime: tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime) }),
   ...(tradeRecord.closePrice === undefined ? {} : { closePrice: tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice) }),
   ...(tradeRecord.closeReason === undefined ? {} : { closeReason: tradeRecord.closeReason }),
   ...(tradeRecord.realizedPnl === undefined ? {} : { realizedPnl: tradeRecord.realizedPnl === null ? null : String(tradeRecord.realizedPnl) }),
-  ...(tradeRecord.extraJson === undefined ? {} : { extraJson: tradeRecord.extraJson as TradeRecordInput['extraJson'] }),
 })
 
 const normalizeTradeRecordForUpdate = (tradeRecord: UpdateTradeRecordBody): TradeRecordUpdateInput => {
@@ -85,12 +87,13 @@ const normalizeTradeRecordForUpdate = (tradeRecord: UpdateTradeRecordBody): Trad
   if (tradeRecord.openPrice !== undefined) normalized.openPrice = String(tradeRecord.openPrice)
   if (tradeRecord.openReason !== undefined) normalized.openReason = tradeRecord.openReason
   if (tradeRecord.screenshots !== undefined) normalized.screenshots = tradeRecord.screenshots as TradeRecordInput['screenshots']
+  if (tradeRecord.reflection !== undefined) normalized.reflection = tradeRecord.reflection
+  if (tradeRecord.tags !== undefined) normalized.tags = tradeRecord.tags
   if (tradeRecord.closeTime !== undefined) normalized.closeTime = tradeRecord.closeTime === null ? null : parseDateTime(tradeRecord.closeTime)
   if (tradeRecord.closePrice !== undefined) normalized.closePrice = tradeRecord.closePrice === null ? null : String(tradeRecord.closePrice)
   if (tradeRecord.closeReason !== undefined) normalized.closeReason = tradeRecord.closeReason
   if (tradeRecord.realizedPnl !== undefined) normalized.realizedPnl = tradeRecord.realizedPnl === null ? null : String(tradeRecord.realizedPnl)
   if (tradeRecord.fee !== undefined) normalized.fee = String(tradeRecord.fee)
-  if (tradeRecord.extraJson !== undefined) normalized.extraJson = tradeRecord.extraJson as TradeRecordInput['extraJson']
 
   return normalized
 }

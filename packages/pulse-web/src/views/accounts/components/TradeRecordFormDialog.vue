@@ -18,6 +18,7 @@ const props = defineProps<{
   modelValue: boolean
   account?: TradingAccount
   record?: TradeRecord
+  historicalTags?: string[]
 }>()
 
 const emit = defineEmits<{
@@ -39,12 +40,13 @@ const form = reactive({
   openPrice: '',
   openReason: '',
   screenshots: [] as TradeScreenshot[],
+  reflection: '',
+  tags: [] as string[],
   closeTime: null as Date | null,
   closePrice: '',
   closeReason: '',
   realizedPnl: '',
   fee: '',
-  extraJson: '',
 })
 const screenshotFiles = ref<UploadUserFile[]>([])
 const screenshotUploading = ref(false)
@@ -65,6 +67,8 @@ const resetForm = () => {
   form.openPrice = record?.openPrice ?? ''
   form.openReason = record?.openReason ?? ''
   form.screenshots = record?.screenshots ? [...record.screenshots] : []
+  form.reflection = record?.reflection ?? ''
+  form.tags = record?.tags ? [...record.tags] : []
   screenshotFiles.value = form.screenshots.map((screenshot) => ({
     name: screenshot.original_name,
     response: screenshot,
@@ -76,7 +80,6 @@ const resetForm = () => {
   form.closeReason = record?.closeReason ?? ''
   form.realizedPnl = record?.realizedPnl ?? ''
   form.fee = record?.fee ?? ''
-  form.extraJson = record?.extraJson ? JSON.stringify(record.extraJson, null, 2) : ''
 }
 
 const beforeScreenshotUpload = (file: File) => {
@@ -171,18 +174,6 @@ const save = async () => {
     return
   }
 
-  let extraJson: Record<string, unknown> | null = null
-  if (form.extraJson.trim()) {
-    try {
-      const parsed = JSON.parse(form.extraJson)
-      if (parsed === null || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error()
-      extraJson = parsed as Record<string, unknown>
-    } catch {
-      ElMessage.warning('extra_json 必须是合法的 JSON 对象。')
-      return
-    }
-  }
-
   const payload = {
     accountId: props.account.id,
     underlyingName: form.underlyingName.trim(),
@@ -193,12 +184,13 @@ const save = async () => {
     openPrice: form.openPrice,
     openReason: form.openReason.trim() || null,
     screenshots: form.screenshots.length > 0 ? form.screenshots : null,
+    reflection: form.reflection.trim() || null,
+    tags: form.tags,
     closeTime: form.closeTime ? formatApiDateTime(form.closeTime) : null,
     closePrice: form.closePrice || null,
     closeReason: form.closeReason.trim() || null,
     realizedPnl: form.realizedPnl || null,
     fee: form.fee,
-    extraJson,
   }
 
   saving.value = true
@@ -299,6 +291,27 @@ onBeforeUnmount(() => window.removeEventListener('paste', handleScreenshotPaste)
             v-model="form.closeReason"
             placeholder="例如：止盈离场"
         /></el-form-item>
+        <el-form-item class="col-span-2" label="交易反思"
+          ><el-input
+            v-model="form.reflection"
+            type="textarea"
+            :rows="5"
+            placeholder="记录本次交易中做得好或需要改进的地方"
+        /></el-form-item>
+        <el-form-item class="col-span-2" label="标签">
+          <el-select
+            v-model="form.tags"
+            class="!w-full"
+            multiple
+            filterable
+            allow-create
+            default-first-option
+            :reserve-keyword="false"
+            placeholder="选择或输入标签"
+          >
+            <el-option v-for="tag in historicalTags ?? []" :key="tag" :label="tag" :value="tag" />
+          </el-select>
+        </el-form-item>
         <el-form-item class="col-span-5" label="截图">
           <div>
             <el-upload
@@ -318,13 +331,6 @@ onBeforeUnmount(() => window.removeEventListener('paste', handleScreenshotPaste)
             <p class="mt-1 text-xs text-slate-400">支持单张图片，上传后可点击预览。</p>
           </div>
         </el-form-item>
-        <el-form-item class="sm:col-span-2 lg:col-span-4" label="extra_json"
-          ><el-input
-            v-model="form.extraJson"
-            type="textarea"
-            :rows="3"
-            placeholder='例如：{ "strategy": "突破" }'
-        /></el-form-item>
       </div>
       <div class="mt-2 flex justify-end gap-2">
         <el-button @click="visible = false">取消</el-button

@@ -15,7 +15,7 @@ const decimalSchema = { anyOf: [{ type: 'number' }, { type: 'string', minLength:
 
 const tradeRecordSchema = {
   type: 'object',
-  required: ['id', 'accountId', 'underlyingName', 'underlyingCode', 'direction', 'quantity', 'openTime', 'openPrice', 'screenshots', 'fee'],
+  required: ['id', 'accountId', 'underlyingName', 'underlyingCode', 'direction', 'quantity', 'openTime', 'openPrice', 'screenshots', 'tags', 'fee'],
   properties: {
     id: { type: 'integer' },
     accountId: { type: 'integer' },
@@ -27,12 +27,13 @@ const tradeRecordSchema = {
     openPrice: decimalSchema,
     openReason: { type: ['string', 'null'] },
     screenshots: { anyOf: [{ type: 'array', items: { type: 'object', required: ['path', 'size', 'content_type', 'original_name'], properties: { path: { type: 'string' }, size: { type: 'integer', minimum: 0 }, content_type: { type: 'string' }, original_name: { type: 'string' } } } }, { type: 'null' }] },
+    reflection: { type: ['string', 'null'] },
+    tags: { type: 'array', items: { type: 'string' } },
     closeTime: { type: ['string', 'null'], format: 'date-time' },
     closePrice: { anyOf: [decimalSchema, { type: 'null' }] },
     closeReason: { type: ['string', 'null'] },
     realizedPnl: { anyOf: [decimalSchema, { type: 'null' }] },
     fee: decimalSchema,
-    extraJson: {},
   },
 } as const
 
@@ -46,12 +47,13 @@ const tradeRecordBodyProperties = {
   openPrice: decimalSchema,
   openReason: { type: ['string', 'null'] },
   screenshots: { anyOf: [{ type: 'array', items: { type: 'object' } }, { type: 'null' }] },
+  reflection: { type: ['string', 'null'] },
+  tags: { type: 'array', items: { type: 'string' } },
   closeTime: { type: ['string', 'null'], format: 'date-time' },
   closePrice: { anyOf: [decimalSchema, { type: 'null' }] },
   closeReason: { type: ['string', 'null'] },
   realizedPnl: { anyOf: [decimalSchema, { type: 'null' }] },
   fee: decimalSchema,
-  extraJson: {},
 } as const
 
 const batchTradeRecordProperties = {
@@ -63,12 +65,13 @@ const batchTradeRecordProperties = {
   openPrice: tradeRecordBodyProperties.openPrice,
   openReason: tradeRecordBodyProperties.openReason,
   screenshots: tradeRecordBodyProperties.screenshots,
+  reflection: tradeRecordBodyProperties.reflection,
+  tags: tradeRecordBodyProperties.tags,
   closeTime: tradeRecordBodyProperties.closeTime,
   closePrice: tradeRecordBodyProperties.closePrice,
   closeReason: tradeRecordBodyProperties.closeReason,
   realizedPnl: tradeRecordBodyProperties.realizedPnl,
   fee: tradeRecordBodyProperties.fee,
-  extraJson: tradeRecordBodyProperties.extraJson,
 } as const
 
 const idParamsSchema = {

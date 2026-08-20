@@ -29,12 +29,13 @@ model TradeRecord {
   openPrice      Decimal
   openReason     String?
   screenshots    Json?
+  reflection     String?
+  tags           String[]      @default([])
   closeTime      DateTime?
   closePrice     Decimal?
   closeReason    String?
   realizedPnl    Decimal?
   fee            Decimal
-  extraJson      Json?
   account        TradingAccount @relation(fields: [accountId], references: [id])
 
   @@index([accountId])
