@@ -13,6 +13,7 @@ const intervalLabels: Record<KlineQueryInterval, string> = {
   '15m': '15分钟',
   '30m': '30分钟',
   '1h': '1小时',
+  '3h': '3小时',
 }
 
 export const useChartWatermark = () => {

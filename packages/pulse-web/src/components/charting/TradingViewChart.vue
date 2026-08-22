@@ -282,12 +282,13 @@ const datafeed = {
     onError: (reason: string) => void,
   ) => {
     const instrumentId = searchResultsBySymbol.get(symbolInfo.ticker ?? '')?.id
-    const intervalByResolution: Record<string, '1m' | '5m' | '15m' | '30m' | '1h'> = {
+    const intervalByResolution: Record<string, '1m' | '5m' | '15m' | '30m' | '1h' | '3h'> = {
       '1': '1m',
       '5': '5m',
       '15': '15m',
       '30': '30m',
       '60': '1h',
+      '180': '3h',
     }
     const interval = intervalByResolution[resolution]
     if (!instrumentId || !interval) {

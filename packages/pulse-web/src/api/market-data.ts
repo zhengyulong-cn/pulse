@@ -59,7 +59,7 @@ export type MarketInstrumentExchangeNode = {
 }
 
 export type KlineInterval = '1m' | '5m'
-export type KlineQueryInterval = KlineInterval | '15m' | '30m' | '1h'
+export type KlineQueryInterval = KlineInterval | '15m' | '30m' | '1h' | '3h'
 
 export type LatestKline = {
   instrument_id: number

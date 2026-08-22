@@ -13,7 +13,7 @@ from app.services.market_data.tqsdk_exchange_mapping import TQSDK_EXCHANGE_TO_MI
 
 KLINE_DATA_LENGTH = 5000
 KlineInterval = Literal["1m", "5m"]
-KlineQueryInterval = Literal["1m", "5m", "15m", "30m", "1h"]
+KlineQueryInterval = Literal["1m", "5m", "15m", "30m", "1h", "3h"]
 KLINE_INTERVAL_CONFIG = {
     "1m": (60, FutureCnKline1m),
     "5m": (300, FutureCnKline5m),
@@ -22,6 +22,7 @@ KLINE_AGGREGATION_CONFIG = {
     "15m": 15 * 60,
     "30m": 30 * 60,
     "1h": 60 * 60,
+    "3h": 3 * 60 * 60,
 }
 
 

@@ -14,7 +14,7 @@ from tqsdk import TqApi, TqAuth
 from app.config.settings import settings
 from app.services.market_data.future_cn_kline_service import upsert_realtime_kline_bar, upsert_realtime_kline_bars
 
-KLINE_INTERVAL_SECONDS = {"1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1h": 3600}
+KLINE_INTERVAL_SECONDS = {"1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1h": 3600, "1h": 10800}
 REALTIME_BACKFILL_BAR_COUNT = 500
 SHANGHAI_TIMEZONE = ZoneInfo("Asia/Shanghai")
 

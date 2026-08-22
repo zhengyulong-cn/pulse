@@ -31,6 +31,7 @@ const intervalOrder: Record<KlineQueryInterval, number> = {
   '15m': 15,
   '30m': 30,
   '1h': 60,
+  '3h': 180,
 }
 
 const storageKey = ({ instrumentId, interval }: DrawingDocumentScope) =>
