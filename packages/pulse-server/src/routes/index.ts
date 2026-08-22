@@ -5,6 +5,7 @@ import { tradeRecordRoutes } from '../modules/trade-records/routes.js'
 import { watchlistRoutes } from '../modules/watchlists/routes.js'
 import { pineScriptRoutes } from '../modules/pine-scripts/routes.js'
 import { fileRoutes } from '../modules/files/routes.js'
+import { futureTrendStatusRoutes } from '../modules/future-trend-status/routes.js'
 import { healthRoutes } from './health.js'
 
 export const routes: FastifyPluginAsync = async (app) => {
@@ -14,4 +15,5 @@ export const routes: FastifyPluginAsync = async (app) => {
   await app.register(watchlistRoutes)
   await app.register(pineScriptRoutes)
   await app.register(fileRoutes)
+  await app.register(futureTrendStatusRoutes)
 }

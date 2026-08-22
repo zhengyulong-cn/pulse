@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { List, ListChecks } from '@lucide/vue'
+import { ChartNoAxesCombined, List, ListChecks } from '@lucide/vue'
 import { ref } from 'vue'
 
 import type { TradeRecord } from '@/api/trading'
 import TradeRecordsPanel from './TradeRecordsPanel.vue'
 import WatchlistPanel from './WatchlistPanel.vue'
+import FutureTrendStatusDialog from './future_trend_status/FutureTrendStatusDialog.vue'
 
-type ToolId = 'watchlist' | 'trades'
+type ToolId = 'watchlist' | 'trades' | 'future-trend-status'
 
 const activeTool = ref<ToolId | null>('watchlist')
+const isFutureTrendStatusVisible = ref(false)
 const emit = defineEmits<{
   selectSymbol: [instrument: { id: number; symbol: string }]
   selectTrade: [record: TradeRecord]
@@ -17,9 +19,14 @@ const emit = defineEmits<{
 const tools = [
   { id: 'watchlist' as const, title: '自选列表', icon: List },
   { id: 'trades' as const, title: '交易记录', icon: ListChecks },
+  { id: 'future-trend-status' as const, title: '期货走势状态', icon: ChartNoAxesCombined },
 ]
 
 const toggleTool = (toolId: ToolId) => {
+  if (toolId === 'future-trend-status') {
+    isFutureTrendStatusVisible.value = true
+    return
+  }
   activeTool.value = activeTool.value === toolId ? null : toolId
 }
 </script>
@@ -48,7 +55,9 @@ const toggleTool = (toolId: ToolId) => {
         type="button"
         class="flex size-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         :class="{
-          'bg-blue-50 text-blue-600 hover:bg-blue-50 hover:text-blue-600': activeTool === tool.id,
+          'bg-blue-50 text-blue-600 hover:bg-blue-50 hover:text-blue-600':
+            activeTool === tool.id ||
+            (tool.id === 'future-trend-status' && isFutureTrendStatusVisible),
         }"
         :aria-label="tool.title"
         :aria-pressed="activeTool === tool.id"
@@ -59,4 +68,5 @@ const toggleTool = (toolId: ToolId) => {
       </button>
     </nav>
   </aside>
+  <FutureTrendStatusDialog v-model="isFutureTrendStatusVisible" />
 </template>

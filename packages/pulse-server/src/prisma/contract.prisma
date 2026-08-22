@@ -10,6 +10,23 @@ enum PineScriptType {
   STRATEGY
 }
 
+enum FutureTrendDirection {
+  UP
+  DOWN
+}
+
+enum FutureTrendSegmentType {
+  TREND_IMPULSE
+  TREND_PULLBACK
+  RANGE_INTERNAL
+}
+
+enum FutureTrendLifecycle {
+  DECAY
+  GROWTH
+  STRONG
+}
+
 model TradingAccount {
   id           Int           @id @default(autoincrement())
   name         String
@@ -71,4 +88,22 @@ model PineScript {
   updatedAt   DateTime       @default(now())
 
   @@index([type])
+}
+
+model FutureTrendStatusSnapshot {
+  id                   Int                    @id @default(autoincrement())
+  snapshotKey          String
+  snapshotAt           DateTime
+  contract             String
+  trend3hDirection     FutureTrendDirection?
+  trend3hSegmentType   FutureTrendSegmentType?
+  trend3hLifecycle     FutureTrendLifecycle?
+  trend30fDirection    FutureTrendDirection?
+  trend30fSegmentType  FutureTrendSegmentType?
+  trend30fLifecycle    FutureTrendLifecycle?
+
+  @@unique([snapshotKey, contract])
+  @@index([snapshotAt])
+  @@index([snapshotKey])
+  @@index([contract, snapshotAt])
 }
