@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, ref, watch } from 'vue'
 
 import {
   createFutureTrendStatusSnapshot,
+  deleteFutureTrendStatusSnapshot,
   getFutureTrendStatusSnapshot,
   getLatestFutureTrendStatusSnapshot,
   listFutureTrendStatusSnapshots,
@@ -135,6 +136,27 @@ const selectHistorySnapshot = async (snapshotKey: string) => {
   }
 }
 
+const deleteHistorySnapshot = async (snapshot: FutureTrendStatusSnapshot) => {
+  try {
+    await ElMessageBox.confirm(
+      `确认删除 ${dayjs(snapshot.snapshotAt).format('YYYY-MM-DD HH:mm:ss')} 的快照吗？`,
+      '删除历史快照',
+      { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' },
+    )
+  } catch {
+    return
+  }
+
+  try {
+    await deleteFutureTrendStatusSnapshot(snapshot.snapshotKey)
+    snapshots.value = snapshots.value.filter((item) => item.snapshotKey !== snapshot.snapshotKey)
+    ElMessage.success('历史快照已删除。')
+    if (!snapshots.value.length) isHistoryVisible.value = false
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '删除历史快照失败。')
+  }
+}
+
 watch(visible, (isVisible) => {
   if (!isVisible) {
     isHistoryVisible.value = false
@@ -248,18 +270,23 @@ watch(visible, (isVisible) => {
 
     <el-drawer v-model="isHistoryVisible" title="历史快照" size="380px" append-to-body>
       <div v-loading="isHistoryLoading" class="space-y-2">
-        <button
+        <div
           v-for="snapshot in snapshots"
           :key="snapshot.snapshotKey"
-          type="button"
-          class="w-full rounded-md border border-slate-200 px-3 py-3 text-left transition hover:border-blue-300 hover:bg-blue-50"
-          @click="selectHistorySnapshot(snapshot.snapshotKey)"
+          class="flex w-full items-center gap-2 rounded-md border border-slate-200 px-3 py-3 transition hover:border-blue-300 hover:bg-blue-50"
         >
-          <p class="font-medium text-slate-800">
-            {{ dayjs(snapshot.snapshotAt).format('YYYY-MM-DD HH:mm:ss') }}
-          </p>
-          <p class="mt-1 text-xs text-slate-500">{{ snapshot.items.length }} 个合约</p>
-        </button>
+          <button
+            type="button"
+            class="min-w-0 flex-1 text-left"
+            @click="selectHistorySnapshot(snapshot.snapshotKey)"
+          >
+            <p class="font-medium text-slate-800">
+              {{ dayjs(snapshot.snapshotAt).format('YYYY-MM-DD HH:mm:ss') }}
+            </p>
+            <p class="mt-1 text-xs text-slate-500">{{ snapshot.items.length }} 个合约</p>
+          </button>
+          <el-button link type="danger" @click="deleteHistorySnapshot(snapshot)">删除</el-button>
+        </div>
         <p
           v-if="!isHistoryLoading && !snapshots.length"
           class="py-10 text-center text-sm text-slate-400"

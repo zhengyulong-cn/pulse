@@ -37,6 +37,9 @@ export const listFutureTrendStatusSnapshots = () =>
 export const getFutureTrendStatusSnapshot = (snapshotKey: string) =>
   request<FutureTrendStatusSnapshot>(`/future-trend-status/snapshots/${snapshotKey}`)
 
+export const deleteFutureTrendStatusSnapshot = (snapshotKey: string) =>
+  request<void>(`/future-trend-status/snapshots/${snapshotKey}`, { method: 'DELETE' })
+
 export const createFutureTrendStatusSnapshot = (items: FutureTrendStatusInput[]) =>
   request<FutureTrendStatusSnapshot>('/future-trend-status/snapshots', {
     method: 'POST',

@@ -65,6 +65,14 @@ export const futureTrendStatusRoutes: FastifyPluginAsync = async (app) => {
     return snapshot ?? reply.code(404).send({ message: 'Future trend status snapshot not found.' })
   })
 
+  app.delete<{ Params: SnapshotParams }>('/future-trend-status/snapshots/:snapshotKey', {
+    schema: { tags: ['Future Trend Status'], summary: 'Delete a future trend status snapshot', params: { type: 'object', required: ['snapshotKey'], properties: { snapshotKey: { type: 'string', minLength: 1 } } }, response: { 204: { type: 'null' } } },
+  }, async (request, reply) => {
+    const deleted = await futureTrendStatusService.delete(app.db, request.params.snapshotKey)
+    if (!deleted) return reply.code(404).send({ message: 'Future trend status snapshot not found.' })
+    return reply.code(204).send()
+  })
+
   app.post<{ Body: CreateSnapshotBody }>('/future-trend-status/snapshots', {
     schema: { tags: ['Future Trend Status'], summary: 'Create a future trend status snapshot', body: { type: 'object', required: ['items'], properties: { items: { type: 'array', minItems: 1, items: { type: 'object', required: ['contract'], properties: statusItemBodyProperties } } } }, response: { 201: snapshotSchema } },
   }, async (request, reply) => reply.code(201).send(await futureTrendStatusService.create(app.db, request.body.items)))

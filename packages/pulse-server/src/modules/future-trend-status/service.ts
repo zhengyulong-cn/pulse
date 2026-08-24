@@ -73,6 +73,18 @@ export const futureTrendStatusService = {
     return toSnapshotGroup(items)
   },
 
+  async delete(database: Database, snapshotKey: string): Promise<boolean> {
+    const items = await database.orm.public.FutureTrendStatusSnapshot
+      .where({ snapshotKey })
+      .all()
+    if (!items.length) return false
+
+    await Promise.all(items.map((item) =>
+      database.orm.public.FutureTrendStatusSnapshot.where({ id: item.id }).delete(),
+    ))
+    return true
+  },
+
   async create(database: Database, inputs: FutureTrendStatusInput[]): Promise<FutureTrendStatusSnapshotGroup> {
     const snapshotKey = randomUUID()
     const snapshotAt = new Date()
