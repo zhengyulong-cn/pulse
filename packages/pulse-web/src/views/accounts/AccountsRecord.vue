@@ -16,7 +16,7 @@ import TradeRecordFormDialog from './components/TradeRecordFormDialog.vue'
 import TradeRecordList from './components/TradeRecordList.vue'
 
 type PnlFilter = 'PROFIT' | 'LOSS' | 'BREAKEVEN' | 'UNSETTLED' | ''
-const selectedAccountId = ref<number | undefined>(1)
+const selectedAccountId = ref<number | undefined>(3)
 const activeTab = ref<'records' | 'analysis'>('records')
 const accountDialogVisible = ref(false)
 const recordDialogVisible = ref(false)
