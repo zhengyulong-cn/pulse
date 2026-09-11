@@ -127,11 +127,13 @@ const summary = computed(() => {
   const settled = dailyAnalyses.value.reduce((total, item) => total + item.settled, 0)
   const profitable = dailyAnalyses.value.reduce((total, item) => total + item.profitable, 0)
   const totalPnl = dailyAnalyses.value.reduce((total, item) => total + item.totalPnl, 0)
+  const totalFee = dailyAnalyses.value.reduce((total, item) => total + item.fee, 0)
   const grossProfit = dailyAnalyses.value.reduce((total, item) => total + item.grossProfit, 0)
   const grossLoss = dailyAnalyses.value.reduce((total, item) => total + item.grossLoss, 0)
   return {
     days: dailyAnalyses.value.length,
     totalPnl,
+    totalFee,
     winRate: settled ? (profitable / settled) * 100 : null,
     profitLossRatio: grossLoss ? grossProfit / grossLoss : grossProfit ? null : 0,
   }
@@ -140,7 +142,7 @@ const summary = computed(() => {
 
 <template>
   <div v-loading="loading" class="space-y-4">
-    <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-6">
       <article
         class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
       >
@@ -159,6 +161,28 @@ const summary = computed(() => {
             class="text-2xl font-bold"
             :class="summary.totalPnl >= 0 ? 'text-rose-500' : 'text-teal-500'"
             >{{ formatPnl(summary.totalPnl) }}</strong
+          >
+        </div>
+        <CircleDollarSign class="text-amber-500" :size="21" />
+      </article>
+      <article
+        class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
+      >
+        <div>
+          <p class="mb-1 text-xs font-semibold text-slate-400">手续费</p>
+          <strong class="text-2xl font-bold text-slate-800">{{ formatNumber(summary.totalFee) }}</strong>
+        </div>
+        <CircleDollarSign class="text-orange-500" :size="21" />
+      </article>
+      <article
+        class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
+      >
+        <div>
+          <p class="mb-1 text-xs font-semibold text-slate-400">净盈亏</p>
+          <strong
+            class="text-2xl font-bold"
+            :class="summary.totalPnl - summary.totalFee >= 0 ? 'text-rose-500' : 'text-teal-500'"
+            >{{ formatPnl(summary.totalPnl - summary.totalFee) }}</strong
           >
         </div>
         <CircleDollarSign class="text-amber-500" :size="21" />
@@ -194,7 +218,6 @@ const summary = computed(() => {
         <el-table-column prop="tradeDay" label="交易日" width="128" fixed="left" />
         <el-table-column prop="total" label="交易笔数" width="92" align="right" />
         <el-table-column prop="settled" label="已平仓" width="88" align="right" />
-        <el-table-column prop="unsettled" label="未平仓" width="88" align="right" />
         <el-table-column label="盈利/亏损/持平" width="150" align="right"
           ><template #default="{ row }"
             ><span class="text-rose-500">{{ row.profitable }}</span
@@ -215,6 +238,15 @@ const summary = computed(() => {
         >
         <el-table-column label="手续费" width="100" align="right"
           ><template #default="{ row }">{{ formatNumber(row.fee) }}</template></el-table-column
+        >
+        <el-table-column label="净盈亏" width="120" align="right"
+          ><template #default="{ row }"
+            ><span
+              class="font-bold"
+              :class="row.totalPnl >= 0 ? 'text-rose-500' : 'text-teal-500'"
+              >{{ formatPnl(row.totalPnl - row.fee) }}</span
+            ></template
+          ></el-table-column
         >
         <el-table-column label="胜率" width="100" align="right"
           ><template #default="{ row }">{{
