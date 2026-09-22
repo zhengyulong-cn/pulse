@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { ElMessage } from 'element-plus'
-import { Plus, RefreshCw, WalletCards } from '@lucide/vue'
+import { FileDown, Plus, RefreshCw, WalletCards } from '@lucide/vue'
+import * as XLSX from 'xlsx'
 import {
   listTradeRecords,
   listTradingAccounts,
@@ -22,6 +23,7 @@ const accountDialogVisible = ref(false)
 const recordDialogVisible = ref(false)
 const batchRecordDialogVisible = ref(false)
 const editingRecord = ref<TradeRecord>()
+const exporting = ref(false)
 const debouncedKeyword = ref('')
 const sort = reactive({
   by: 'openTime' as NonNullable<TradeRecordReq['sortBy']>,
@@ -110,6 +112,61 @@ const openBatchRecordDialog = () => {
   if (selectedAccountId.value === undefined) return ElMessage.warning('请先选择交易账户。')
   batchRecordDialogVisible.value = true
 }
+const formatExportDate = (value: string | null) => (value ? value.replace('T', ' ').replace(/\.\d{3}Z$/, '') : '')
+const exportTradeRecords = async () => {
+  if (selectedAccountId.value === undefined || !selectedAccount.value) {
+    ElMessage.warning('请先选择交易账户。')
+    return
+  }
+
+  exporting.value = true
+  try {
+    const records = await listTradeRecords(selectedAccountId.value, {
+      sortBy: 'openTime',
+      sortOrder: 'asc',
+    })
+    const rows = records.map((record) => ({
+      ID: record.id,
+      标的名称: record.underlyingName,
+      标的代码: record.underlyingCode,
+      方向: record.direction === 'LONG' ? '做多' : '做空',
+      手数: record.quantity,
+      开仓时间: formatExportDate(record.openTime),
+      开仓价: record.openPrice,
+      开仓缘由: record.openReason ?? '',
+      平仓时间: formatExportDate(record.closeTime),
+      平仓价: record.closePrice ?? '',
+      平仓缘由: record.closeReason ?? '',
+      盈亏: record.realizedPnl ?? '',
+      手续费: record.fee,
+      交易反思: record.reflection ?? '',
+      标签: record.tags.join('、'),
+      截图: record.screenshots?.map((screenshot) => screenshot.path).join('\n') ?? '',
+    }))
+    const worksheet = XLSX.utils.json_to_sheet(rows)
+    worksheet['!cols'] = [
+      { wch: 8 }, { wch: 16 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 22 },
+      { wch: 14 }, { wch: 30 }, { wch: 22 }, { wch: 14 }, { wch: 30 }, { wch: 14 },
+      { wch: 14 }, { wch: 30 }, { wch: 24 }, { wch: 36 },
+    ]
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, '交易记录')
+    const output = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const blob = new Blob([output], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    const accountName = selectedAccount.value.name.replace(/[\\/:*?"<>|]/g, '_')
+    link.download = `${accountName}_交易记录_${new Date().toISOString().slice(0, 10)}.xlsx`
+    link.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success(`已导出 ${records.length} 条交易记录。`)
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '交易记录导出失败。')
+  } finally {
+    exporting.value = false
+  }
+}
 const editRecord = (record: TradeRecord) => {
   editingRecord.value = record
   recordDialogVisible.value = true
@@ -155,6 +212,12 @@ const handleAccountDeleted = (accountId: number) => {
             :loading="accountsQuery.isFetching.value"
             @click="accountsQuery.refetch()"
             ><RefreshCw :size="16" />刷新</el-button
+          ><el-button
+            class="!h-9 !rounded-lg !border-slate-200 !font-semibold !text-slate-600"
+            :disabled="selectedAccountId === undefined"
+            :loading="exporting"
+            @click="exportTradeRecords"
+            ><FileDown :size="16" />导出记录</el-button
           ><el-button
             type="primary"
             class="!h-9 !rounded-lg !font-semibold"
